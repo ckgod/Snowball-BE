@@ -6,7 +6,7 @@ import com.ckgod.infrastructure.kis.KisApiClient
 import com.ckgod.infrastructure.kis.KisAuthService
 import com.ckgod.infrastructure.kis.api.KisStockApi
 import io.ktor.client.*
-import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
@@ -22,7 +22,7 @@ fun main() {
 fun Application.module() {
     val config = environment.config
 
-    val httpClient = HttpClient(OkHttp) {
+    val httpClient = HttpClient(CIO) {
         install(Logging) {
             logger = Logger.DEFAULT
             level = LogLevel.ALL
