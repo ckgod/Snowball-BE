@@ -4,3 +4,15 @@ ktor:
       - com.ckgod.ApplicationKt.module
   deployment:
     port: 8080
+
+kis:
+  real:
+    baseUrl: "https://openapi.koreainvestment.com:9443"
+    appKey: ${KIS_REAL_APP_KEY}
+    appSecret: ${KIS_REAL_APP_SECRET}
+    accountNo: ${KIS_REAL_ACCOUNT_NO}
+  mock:
+    baseUrl: "https://openapivts.koreainvestment.com:29443"
+    appKey: ${KIS_MOCK_APP_KEY}
+    appSecret: ${KIS_MOCK_APP_SECRET}
+    accountNo: ${KIS_MOCK_ACCOUNT_NO}
