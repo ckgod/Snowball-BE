@@ -1,9 +1,9 @@
-package com.ckgod.infrastructure.kis.dto
+package com.ckgod.infrastructure.kis.response
 
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-data class KisStockPriceDto(
+data class KisStockPriceResponse(
     val stckPrpr: String,      // 주식 현재가 (stck_prpr)
     val prdyCtrt: String,      // 전일 대비율 (prdy_ctrt)
     val acmlVol: String,       // 누적 거래량 (acml_vol)
@@ -11,8 +11,8 @@ data class KisStockPriceDto(
     val prdyVrssSign: String   // 전일 대비 부호 (prdy_vrss_sign)
 ) {
     companion object {
-        fun from(json: JsonObject): KisStockPriceDto {
-            return KisStockPriceDto(
+        fun from(json: JsonObject): KisStockPriceResponse {
+            return KisStockPriceResponse(
                 stckPrpr = json["stck_prpr"]?.jsonPrimitive?.content ?: "0",
                 prdyCtrt = json["prdy_ctrt"]?.jsonPrimitive?.content ?: "0.0",
                 acmlVol = json["acml_vol"]?.jsonPrimitive?.content ?: "0",

@@ -4,6 +4,7 @@ ktor = "3.3.2"
 logback = "1.5.13"
 exposed = "1.0.0-rc-4"
 h2 = "2.4.240"
+kotlinx-datetime = "0.6.0"
 
 [libraries]
 # Ktor Server
@@ -35,6 +36,9 @@ exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", versio
 
 # Database - H2
 h2-database = { module = "com.h2database:h2", version.ref = "h2" }
+
+# DateTime
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 
 # Testing
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }

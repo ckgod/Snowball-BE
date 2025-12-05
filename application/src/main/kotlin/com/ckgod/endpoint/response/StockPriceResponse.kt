@@ -1,4 +1,4 @@
-package com.ckgod.endpoint.dto
+package com.ckgod.endpoint.response
 
 import kotlinx.serialization.Serializable
 

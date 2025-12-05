@@ -58,7 +58,6 @@ fun Application.module() {
         accountNo = config.property("kis.mock.accountNo").getString().trim(),
     )
 
-    // Repository 인스턴스 생성 (DI)
     val authTokenRepository = AuthTokenRepositoryImpl()
 
     val realAuthService = KisAuthService(realConfig, httpClient, authTokenRepository)
