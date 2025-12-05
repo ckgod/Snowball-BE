@@ -1,20 +1,22 @@
 package com.ckgod.infrastructure.kis.api
 
 import com.ckgod.infrastructure.kis.KisApiClient
+import com.ckgod.infrastructure.kis.api.spec.KisApiSpec
 import com.ckgod.infrastructure.kis.response.KisStockPriceResponse
 
 class KisStockApi(private val apiClient: KisApiClient) {
 
-    suspend fun getStockPrice(stockCode: String): KisStockPriceResponse {
-        val response = apiClient.get(
-            path = "/uapi/domestic-stock/v1/quotations/inquire-price",
-            trId = "FHKST01010100"
-        ) {
-            url {
-                parameters.append("FID_COND_MRKT_DIV_CODE", "J")
-                parameters.append("FID_INPUT_ISCD", stockCode)
-            }
-        }
+    suspend fun getStockPrice(
+        stockCode: String,
+        marketDivCode: String = "J"
+    ): KisStockPriceResponse {
+        val spec = KisApiSpec.InquirePrice
+        val queryParams = spec.buildQuery(stockCode, marketDivCode)
+
+        val response = apiClient.request(
+            spec = spec,
+            queryParams = queryParams
+        )
 
         return KisStockPriceResponse.from(response)
     }

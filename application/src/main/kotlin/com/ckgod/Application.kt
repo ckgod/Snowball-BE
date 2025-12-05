@@ -43,7 +43,7 @@ fun Application.module() {
     }
 
     val realConfig = KisConfig(
-        key = KisMode.REAL.toString(),
+        mode = KisMode.REAL,
         baseUrl = config.property("kis.real.baseUrl").getString().trim(),
         appKey = config.property("kis.real.appKey").getString().trim(),
         appSecret = config.property("kis.real.appSecret").getString().trim(),
@@ -51,7 +51,7 @@ fun Application.module() {
     )
 
     val mockConfig = KisConfig(
-        key = KisMode.MOCK.toString(),
+        mode = KisMode.MOCK,
         baseUrl = config.property("kis.mock.baseUrl").getString().trim(),
         appKey = config.property("kis.mock.appKey").getString().trim(),
         appSecret = config.property("kis.mock.appSecret").getString().trim(),

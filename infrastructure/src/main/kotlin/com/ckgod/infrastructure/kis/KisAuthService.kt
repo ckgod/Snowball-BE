@@ -27,15 +27,15 @@ class KisAuthService(
     private val mutex = Mutex()
 
     init {
-        val savedToken = authTokenRepository.getToken(config.key)
+        val savedToken = authTokenRepository.getToken(config.mode.toString())
         if (savedToken != null && savedToken.expireAt.isAfter(LocalDateTime.now())) {
             accessToken = savedToken.accessToken
             tokenExpiryTime = savedToken.expireAt
 
             val remainingSeconds = java.time.Duration.between(LocalDateTime.now(), tokenExpiryTime).seconds
-            println("[${config.key}] DB에서 기존 토큰 로드 완료 (남은 시간: ${remainingSeconds}초)")
+            println("[${config.mode}] DB에서 기존 토큰 로드 완료 (남은 시간: ${remainingSeconds}초)")
         } else if (savedToken != null) {
-            println("[${config.key}] DB에 저장된 토큰이 만료되었습니다. 새로 발급이 필요합니다.")
+            println("[${config.mode}] DB에 저장된 토큰이 만료되었습니다. 새로 발급이 필요합니다.")
         }
     }
 
@@ -74,10 +74,10 @@ class KisAuthService(
         tokenExpiryTime = parseExpiryTime(expiredStr)
 
         val remainingSeconds = java.time.Duration.between(LocalDateTime.now(), tokenExpiryTime).seconds
-        println("[${config.key}] success refresh token (expires at: $expiredStr, remaining: ${remainingSeconds}s)")
+        println("[${config.mode}] success refresh token (expires at: $expiredStr, remaining: ${remainingSeconds}s)")
 
-        authTokenRepository.saveToken(config.key, accessToken!!, tokenExpiryTime!!)
-        println("[${config.key}] 토큰이 DB에 저장되었습니다.")
+        authTokenRepository.saveToken(config.mode.toString(), accessToken!!, tokenExpiryTime!!)
+        println("[${config.mode}] 토큰이 DB에 저장되었습니다.")
 
         return accessToken!!
     }
@@ -88,7 +88,7 @@ class KisAuthService(
                 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 LocalDateTime.parse(expiredStr, formatter)
             } catch (_: Exception) {
-                println("[${config.key}] 만료 시간 파싱 실패: $expiredStr, 기본값(24시간) 사용")
+                println("[${config.mode}] 만료 시간 파싱 실패: $expiredStr, 기본값(24시간) 사용")
                 LocalDateTime.now().plusDays(1)
             }
         } else {
