@@ -1,6 +1,7 @@
 package com.ckgod.database
 
 import com.ckgod.database.auth.AuthTokens
+import com.ckgod.database.stocks.KospiStocks
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -17,12 +18,13 @@ object DatabaseFactory {
 
         val dbFile = File("./data/stock_db")
         val driverClassName = "org.h2.Driver"
-        val jdbcUrl = "jdbc:h2:file:${dbFile.absolutePath};DB_CLOSE_DELAY=-1;"
+        val jdbcUrl = "jdbc:h2:file:${dbFile.absolutePath};DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE"
 
         Database.connect(jdbcUrl, driverClassName)
 
         transaction {
             SchemaUtils.create(AuthTokens)
+            SchemaUtils.create(KospiStocks)
         }
 
         initialized = true

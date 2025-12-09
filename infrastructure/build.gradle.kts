@@ -13,5 +13,7 @@ dependencies {
     implementation(libs.bundles.ktor.client)
     implementation(libs.ktor.serialization.kotlinx.json)
 
+    api(libs.quartz)
+
     testImplementation(libs.kotlin.test.junit)
 }

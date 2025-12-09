@@ -5,6 +5,7 @@ logback = "1.5.13"
 exposed = "1.0.0-rc-4"
 h2 = "2.4.240"
 kotlinx-datetime = "0.6.0"
+quartz = "2.3.2"
 
 [libraries]
 # Ktor Server
@@ -39,6 +40,9 @@ h2-database = { module = "com.h2database:h2", version.ref = "h2" }
 
 # DateTime
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+
+# Quartz
+quartz = { module = "org.quartz-scheduler:quartz", version.ref = "quartz" }
 
 # Testing
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
