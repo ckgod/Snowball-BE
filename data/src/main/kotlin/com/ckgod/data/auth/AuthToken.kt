@@ -1,4 +1,4 @@
-package com.ckgod.domain.auth
+package com.ckgod.data.auth
 
 import java.time.LocalDateTime
 

@@ -1,15 +1,15 @@
-package com.ckgod.database.auth
+package com.ckgod.data.auth
 
-import com.ckgod.domain.auth.AuthToken
-import com.ckgod.domain.auth.AuthTokenRepository
+import com.ckgod.database.auth.AuthTokens
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import java.time.LocalDateTime
 
-class AuthTokenRepositoryImpl : AuthTokenRepository {
+class AuthTokenRepository {
 
-    override fun getToken(key: String): AuthToken? = transaction {
+    fun getToken(key: String): AuthToken? = transaction {
         AuthTokens.selectAll()
             .where { AuthTokens.key eq key }
             .firstOrNull()
@@ -21,7 +21,7 @@ class AuthTokenRepositoryImpl : AuthTokenRepository {
             }
     }
 
-    override fun saveToken(key: String, accessToken: String, expireAt: LocalDateTime): Unit = transaction {
+    fun saveToken(key: String, accessToken: String, expireAt: LocalDateTime): InsertStatement<Number> = transaction {
         AuthTokens.deleteWhere { AuthTokens.key eq key }
 
         AuthTokens.insert {
@@ -29,16 +29,13 @@ class AuthTokenRepositoryImpl : AuthTokenRepository {
             it[AuthTokens.accessToken] = accessToken
             it[AuthTokens.expireAt] = expireAt
         }
-        Unit
     }
 
-    override fun deleteToken(key: String): Unit = transaction {
+    fun deleteToken(key: String): Int = transaction {
         AuthTokens.deleteWhere { AuthTokens.key eq key }
-        Unit
     }
 
-    override fun deleteAllTokens(): Unit = transaction {
+    fun deleteAllTokens(): Int = transaction {
         AuthTokens.deleteAll()
-        Unit
     }
 }

@@ -1,10 +1,10 @@
 package com.ckgod
 
+import com.ckgod.data.auth.AuthTokenRepository
 import com.ckgod.data.config.KisConfig
 import com.ckgod.data.config.KisMode
 import com.ckgod.data.repository.KisStockPriceRepository
 import com.ckgod.database.DatabaseFactory
-import com.ckgod.database.auth.AuthTokenRepositoryImpl
 import com.ckgod.database.stocks.StockRepositoryImpl
 import com.ckgod.domain.usecase.GetStockPriceUseCase
 import com.ckgod.infrastructure.kis.KisApiClient
@@ -78,7 +78,7 @@ fun Application.module() {
     )
 
     // ========== Data Layer (Repositories) ==========
-    val authTokenRepository = AuthTokenRepositoryImpl()
+    val authTokenRepository = AuthTokenRepository()
 
     val realAuthService = KisAuthService(realConfig, httpClient, authTokenRepository)
     val mockAuthService = KisAuthService(mockConfig, httpClient, authTokenRepository)

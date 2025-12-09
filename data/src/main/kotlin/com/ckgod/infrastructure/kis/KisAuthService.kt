@@ -1,7 +1,7 @@
 package com.ckgod.infrastructure.kis
 
 import com.ckgod.data.config.KisConfig
-import com.ckgod.domain.auth.AuthTokenRepository
+import com.ckgod.data.auth.AuthTokenRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
