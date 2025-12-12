@@ -9,6 +9,8 @@ import com.ckgod.kis.config.KisConfig
 import com.ckgod.kis.config.KisMode
 import com.ckgod.kis.stock.api.KisStockApi
 import com.ckgod.kis.stock.repository.StockRepositoryImpl
+import com.ckgod.presentation.config.configureAuthPlugin
+import com.ckgod.presentation.config.configureRateLimiter
 import com.ckgod.presentation.config.configureSerialization
 import com.ckgod.presentation.routing.configureRouting
 import io.ktor.client.*
@@ -48,6 +50,12 @@ fun Application.module() {
         }
     }
 
+    // ========== Security Configuration ==========
+    val apiKey = config.property("api.key").getString()
+    val maxRequests = config.property("api.rateLimit.maxRequests").getString().toInt()
+    val windowSeconds = config.property("api.rateLimit.windowSeconds").getString().toLong()
+    val kisUserId = config.property("kis.userId").getString().trim()
+
     // ========== Configuration ==========
     val realConfig = KisConfig(
         mode = KisMode.REAL,
@@ -84,6 +92,9 @@ fun Application.module() {
     val getCurrentPriceUseCase = GetCurrentPriceUseCase(realStockRepository)
 
     // ========== Presentation Layer Setup ==========
+    configureAuthPlugin(apiKey)
+    configureRateLimiter(maxRequests, windowSeconds)
+
     configureSerialization()
-    configureRouting(getCurrentPriceUseCase)
+    configureRouting(getCurrentPriceUseCase, kisUserId)
 }

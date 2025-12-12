@@ -5,25 +5,41 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Route.stockRoutes(getCurrentPriceUseCase: GetCurrentPriceUseCase) {
+fun Route.stockRoutes(
+    getCurrentPriceUseCase: GetCurrentPriceUseCase,
+    userId: String
+) {
     route("/oversea/nas/price") {
         /**
-         * GET /oversea/nas/price?auth=********&code=TQQQ
+         * GET /oversea/nas/price?code=TQQQ
          */
         get {
-            val userId = call.request.queryParameters["auth"]
-                ?: return@get call.respondText("id가 누락되었습니다")
             val code = call.request.queryParameters["code"]
-                ?: return@get call.respondText("종목 코드가 누락되었습니다.")
+                ?: return@get call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf("error" to "종목 코드가 필요합니다")
+                )
 
             try {
                 val marketPrice = getCurrentPriceUseCase(userId, code)
-                    ?: throw IllegalArgumentException("존재하지 않는 종목코드 입니다.")
+                    ?: return@get call.respond(
+                        HttpStatusCode.NotFound,
+                        mapOf("error" to "존재하지 않는 종목 코드입니다")
+                    )
 
                 call.respond(marketPrice)
+            } catch (e: IllegalArgumentException) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf("error" to "잘못된 요청입니다")
+                )
             } catch (e: Exception) {
+                println("Error processing stock price request: ${e.message}")
                 e.printStackTrace()
-                call.respondText("error: ${e.message}", status = HttpStatusCode.InternalServerError)
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    mapOf("error" to "요청 처리 중 오류가 발생했습니다")
+                )
             }
         }
     }

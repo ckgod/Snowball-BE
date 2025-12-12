@@ -5,7 +5,14 @@ ktor:
   deployment:
     port: 8080
 
+api:
+  key: ${API_KEY}
+  rateLimit:
+    maxRequests: 100
+    windowSeconds: 60
+
 kis:
+  userId: ${KIS_USER_ID}
   real:
     baseUrl: "https://openapi.koreainvestment.com:9443"
     appKey: ${KIS_REAL_APP_KEY}
