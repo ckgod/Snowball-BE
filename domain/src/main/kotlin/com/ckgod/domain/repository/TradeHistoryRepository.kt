@@ -3,10 +3,16 @@ package com.ckgod.domain.repository
 import com.ckgod.domain.model.TradeHistory
 
 /**
- * 거래 이력 저장소
+ * 거래 히스토리 Repository
  */
 interface TradeHistoryRepository {
-    suspend fun save(trade: TradeHistory): TradeHistory
-    suspend fun findByStrategyStateId(strategyStateId: String): List<TradeHistory>
-    suspend fun findByUserId(userId: String, limit: Int = 100): List<TradeHistory>
+    /**
+     * 거래 내역 저장
+     */
+    suspend fun save(history: TradeHistory): TradeHistory
+
+    /**
+     * 모든 거래 내역 조회 (최신순, 페이징)
+     */
+    suspend fun findAll(limit: Int = 100): List<TradeHistory>
 }

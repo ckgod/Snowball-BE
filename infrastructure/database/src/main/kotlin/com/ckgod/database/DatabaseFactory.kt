@@ -1,9 +1,6 @@
 package com.ckgod.database
 
 import com.ckgod.database.auth.AuthTokens
-import com.ckgod.database.trading.Orders
-import com.ckgod.database.trading.StrategyStates
-import com.ckgod.database.trading.TradeHistories
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
@@ -25,7 +22,11 @@ object DatabaseFactory {
         Database.connect(jdbcUrl, driverClassName)
 
         transaction {
-            val allTables = arrayOf(AuthTokens, StrategyStates, Orders, TradeHistories)
+            val allTables = arrayOf(
+                AuthTokens,
+                InvestmentStatusTable,
+                TradeHistoryTable
+            )
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(*allTables)
             if (statements.isNotEmpty()) {
                 println("Database migration required. Executing ${statements.size} statement(s)...")
