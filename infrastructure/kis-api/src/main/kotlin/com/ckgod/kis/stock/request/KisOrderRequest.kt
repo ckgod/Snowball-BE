@@ -23,7 +23,7 @@ data class KisOrderRequest(
             exchange = orderRequest.exchange.code,
             ticker = orderRequest.ticker,
             quantity = orderRequest.quantity.toString(),
-            price = orderRequest.price.toString(),
+            price = String.format("%.2f", orderRequest.price),
             oderType = orderRequest.type.code
         )
     }
