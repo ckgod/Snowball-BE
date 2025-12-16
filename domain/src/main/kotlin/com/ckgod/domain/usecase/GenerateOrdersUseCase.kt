@@ -39,13 +39,10 @@ class GenerateOrdersUseCase(
         // 현재 상태 조회
         val currentStatus = investmentStatusRepository.get(status.ticker) ?: return null
 
-        // 한투 API - 현재가 조회
-        val marketPrice = stockRepository.getCurrentPrice(status.ticker) ?: return null
-        val currentPrice = marketPrice.price.toDoubleOrNull() ?: 0.0
-
         // 현재 보유 정보 조회
         val holding = accountRepository.getBalance(status.ticker)
         val currentQuantity = holding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
+        val currentPrice = holding?.currentPrice?.toDoubleOrNull() ?: 0.0
 
         // 매수 주문 생성
         val buyOrders = generateBuyOrders(
