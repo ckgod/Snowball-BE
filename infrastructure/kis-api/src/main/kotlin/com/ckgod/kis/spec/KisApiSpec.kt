@@ -16,26 +16,6 @@ sealed class KisApiSpec(
     }
 
     /**
-     * 주식 현재가 조회
-     * GET /uapi/domestic-stock/v1/quotations/inquire-price
-     */
-    data object InquirePrice : KisApiSpec(
-        method = HttpMethod.Get,
-        path = "/uapi/domestic-stock/v1/quotations/inquire-price",
-        realTrId = "FHKST01010100",
-        mockTrId = "FHKST01010100",
-        description = "주식 현재가 조회"
-    ) {
-        fun buildQuery(
-            stockCode: String,
-            marketDivCode: String = "J"
-        ): Map<String, String> = mapOf(
-            "FID_COND_MRKT_DIV_CODE" to marketDivCode,
-            "FID_INPUT_ISCD" to stockCode
-        )
-    }
-
-    /**
      * @see <a href="https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/overseas-price/v1/quotations/price-detail">해외주식 현재가 상세</a>
      */
     data object QuotationPriceDetail : KisApiSpec(
@@ -73,6 +53,34 @@ sealed class KisApiSpec(
             "ACNT_PRDT_CD" to accountCode,
             "OVRS_EXCG_CD" to exchange,
             "TR_CRCY_CD" to currency,
+            "CTX_AREA_FK200" to "",
+            "CTX_AREA_NK200" to ""
+        )
+    }
+
+    data object InquirePeriodProfit : KisApiSpec(
+        method = HttpMethod.Get,
+        path = "/uapi/overseas-stock/v1/trading/inquire-period-profit",
+        realTrId = "TTTS3039R",
+        mockTrId = "모의투자 미지원",
+        description = "해외주식 기간손익"
+    ) {
+        fun buildQuery(
+            accountNo: String,
+            accountCode: String,
+            startDate: String,
+            endDate: String,
+            overseaCurrency: String = "01"
+        ): Map<String, String> = mapOf(
+            "CANO" to accountNo,
+            "ACNT_PRDT_CD" to accountCode,
+            "INQR_STRT_DT" to startDate,
+            "INQR_END_DT" to endDate,
+            "WCRC_FRCR_DVSN_CD" to overseaCurrency, // 원화 외화 구분 코드
+            "OVRS_EXCG_CD" to "NASD", // 해외 거래소 코드
+            "NATN_CD" to "", // 국가 코드
+            "CRCY_CD" to "USD", // 통화 코드
+            "PDNO" to "",
             "CTX_AREA_FK200" to "",
             "CTX_AREA_NK200" to ""
         )

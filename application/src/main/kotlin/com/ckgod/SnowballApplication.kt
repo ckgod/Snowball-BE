@@ -68,7 +68,7 @@ fun Application.simpleModule() {
     val httpClient = HttpClient(CIO) {
         install(Logging) {
             logger = Logger.SIMPLE
-            level = LogLevel.INFO
+            level = LogLevel.BODY
         }
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })

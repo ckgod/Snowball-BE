@@ -3,9 +3,33 @@ package com.ckgod.kis.stock.api
 import com.ckgod.kis.KisApiClient
 import com.ckgod.kis.spec.KisApiSpec
 import com.ckgod.kis.stock.response.KisBalanceResponse
+import com.ckgod.kis.stock.response.KisDateProfitResponse
 import com.ckgod.kis.stock.response.KisPriceResponse
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 class KisApiService(private val apiClient: KisApiClient) {
+
+    suspend fun getRecentDayProfit(): KisDateProfitResponse {
+        val spec = KisApiSpec.InquirePeriodProfit
+
+        fun yesterday(): String {
+            val kstZone = ZoneId.of("Asia/Seoul")
+            val yesterday = LocalDate.now(kstZone).minusDays(1)
+            val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+            return yesterday.format(formatter)
+        }
+
+        val queryParams = spec.buildQuery(
+            accountNo = apiClient.config.accountNo,
+            accountCode = apiClient.config.accountCode,
+            startDate = yesterday(),
+            endDate = yesterday()
+        )
+
+        return apiClient.request(spec, queryParams)
+    }
 
     suspend fun getMarketCurrentPrice(
         stockCode: String
