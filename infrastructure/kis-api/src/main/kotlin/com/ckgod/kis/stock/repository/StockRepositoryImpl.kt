@@ -4,6 +4,9 @@ import com.ckgod.domain.model.MarketPrice
 import com.ckgod.domain.model.OrderRequest
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.kis.stock.api.KisApiService
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 class StockRepositoryImpl(private val kisApiService: KisApiService) : StockRepository {
 
@@ -16,11 +19,17 @@ class StockRepositoryImpl(private val kisApiService: KisApiService) : StockRepos
     }
 
     override suspend fun postOrder(buyOrders: List<OrderRequest>, sellOrders: List<OrderRequest>) {
-        sellOrders.forEach { order ->
-            kisApiService.postOrder(order)
-        }
-        buyOrders.forEach { order ->
-            kisApiService.postOrder(order)
+        coroutineScope {
+            val sellJobs = sellOrders.map { order ->
+                async { kisApiService.postOrder(order) }
+            }
+
+            val buyJobs = buyOrders.map { order ->
+                async { kisApiService.postOrder(order) }
+            }
+
+            sellJobs.awaitAll()
+            buyJobs.awaitAll()
         }
     }
 }
