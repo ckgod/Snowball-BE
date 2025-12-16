@@ -34,6 +34,7 @@ class InvestmentStatusRepositoryImpl : InvestmentStatusRepository {
             it[buyLocPrice] = status.buyLocPrice
             it[sellLocPrice] = status.sellLocPrice
             it[updatedAt] = status.updatedAt
+            it[initialCapital] = status.initialCapital
         }
         status
     }
@@ -47,7 +48,8 @@ class InvestmentStatusRepositoryImpl : InvestmentStatusRepository {
             targetRate = this[InvestmentStatusTable.targetRate],
             buyLocPrice = this[InvestmentStatusTable.buyLocPrice],
             sellLocPrice = this[InvestmentStatusTable.sellLocPrice],
-            updatedAt = this[InvestmentStatusTable.updatedAt]
+            updatedAt = this[InvestmentStatusTable.updatedAt],
+            initialCapital = this[InvestmentStatusTable.initialCapital]
         )
     }
 }

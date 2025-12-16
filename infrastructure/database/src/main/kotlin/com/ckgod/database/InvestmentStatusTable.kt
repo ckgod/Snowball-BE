@@ -11,6 +11,7 @@ object InvestmentStatusTable : Table("investment_status") {
     val ticker = varchar("ticker", 20)            // 종목명
     val totalInvested = double("total_invested")         // 매수 누적액
     val oneTimeAmount = double("one_time_amount")        // 1회 매수금
+    val initialCapital = double("initial_capital")       // 원금
     val avgPrice = double("avg_price")                   // 평단가
     val targetRate = double("target_rate")               // 기준 %
     val buyLocPrice = double("buy_loc_price")            // 매수 주문 가격

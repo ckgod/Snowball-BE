@@ -7,6 +7,7 @@ data class InvestmentStatus(
     val ticker: String,              // 종목명 (예: TQQQ)
     val totalInvested: Double,        // 매수 누적액 (T값 분자)
     val oneTimeAmount: Double,        // 1회 매수금 (T값 분모)
+    val initialCapital: Double,       // 원금
     val division: Int = 40,           // 분할 수
     val avgPrice: Double,             // 내 평단가
     val targetRate: Double,           // 오늘의 별% (목표 수익률)
@@ -30,6 +31,7 @@ data class InvestmentStatus(
             return InvestmentStatus(
                 ticker = ticker,
                 totalInvested = 0.0,
+                initialCapital = initialCapital,
                 oneTimeAmount = oneTimeAmount,
                 division = division,
                 avgPrice = 0.0,
