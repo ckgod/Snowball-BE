@@ -33,7 +33,6 @@ class SchedulerService(
             }
         }
 
-        // TODO 장이 안열리는 주말은 제외
         // 1. 정산 Job (오전 7시)
         scheduleSyncJob()
 
@@ -70,7 +69,7 @@ class SchedulerService(
         val trigger = TriggerBuilder.newTrigger()
             .withIdentity("orderTrigger", "trading")
             .withSchedule(
-                CronScheduleBuilder.dailyAtHourAndMinute(18, 0)
+                CronScheduleBuilder.cronSchedule("0 0 18 ? * MON-FRI")
                     .inTimeZone(java.util.TimeZone.getTimeZone("Asia/Seoul"))
             )
             .build()
