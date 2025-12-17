@@ -1,6 +1,7 @@
 package com.ckgod.presentation.routing
 
 import com.ckgod.domain.repository.InvestmentStatusRepository
+import com.ckgod.presentation.response.StatusListResponse
 import com.ckgod.presentation.response.StatusResponse
 import io.ktor.http.*
 import io.ktor.server.response.*
@@ -19,7 +20,6 @@ fun Route.mainStatusRoute(
         val ticker = call.request.queryParameters["ticker"]
 
         if (ticker != null) {
-            // 특정 종목 조회
             val status = investmentStatusRepository.get(ticker)
 
             if (status == null) {
@@ -57,9 +57,9 @@ fun Route.mainStatusRoute(
 
             call.respond(
                 HttpStatusCode.OK,
-                mapOf(
-                    "total" to allStatuses.size,
-                    "statuses" to allStatuses.map { status ->
+                StatusListResponse(
+                    total = allStatuses.size,
+                    statusList = allStatuses.map { status ->
                         StatusResponse(
                             ticker = status.ticker,
                             currentT = status.tValue,

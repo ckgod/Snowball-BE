@@ -20,7 +20,6 @@ fun Application.configureRouting(
             accountRoutes(getAccountStatusUseCase)
             mainStatusRoute(investmentStatusRepository)
             historyRoutes(tradeHistoryRepository)
-            investmentRoutes(investmentStatusRepository)
         }
     }
 }

@@ -14,3 +14,9 @@ data class StatusResponse(
     val totalInvested: Double,
     val updatedAt: String
 )
+
+@Serializable
+data class StatusListResponse(
+    val total: Int,
+    val statusList: List<StatusResponse>
+)
