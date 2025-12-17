@@ -45,70 +45,59 @@ class GenerateOrdersUseCase(
 
     private suspend fun generateSingle(status: InvestmentStatus): OrderResult? {
         val ticker = status.ticker
-        logger.debug("[GenerateOrders] [$ticker] 단일 종목 주문 생성 시작")
 
-        // 1. 현재 상태 조회
-        logger.debug("[GenerateOrders] [$ticker] Step 1: 현재 상태 조회")
         val currentStatus = investmentStatusRepository.get(ticker)
         if (currentStatus == null) {
-            logger.warn("[GenerateOrders] [$ticker] 현재 상태 조회 실패 - DB에 없음")
+            logger.warn("[GenerateOrders] [$ticker] DB에 상태 정보 없음")
             return null
         }
-        logger.debug("[GenerateOrders] [$ticker] 현재 T값: ${currentStatus.tValue}, Phase: ${currentStatus.phase}")
 
         val currentPrice = stockRepository.getCurrentPrice(ticker)?.price?.toDoubleOrNull() ?: 0.0
-        // TODO currentPrice 조회 실패시 종료
         if (currentPrice == 0.0) {
             logger.warn("[GenerateOrders] [$ticker] 현재가 조회 실패")
             return null
         }
-        // 2. 현재 보유 정보 조회
-        logger.debug("[GenerateOrders] [$ticker] Step 2: 현재 보유 정보 조회")
+
         val holding = accountRepository.getBalance(ticker)
-        if (holding == null) {
-            logger.warn("[GenerateOrders] [$ticker] 보유 정보 조회 - 보유 주식 없음")
-        }
         val currentQuantity = holding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
-        logger.debug("[GenerateOrders] [$ticker] 보유수량: $currentQuantity, 현재가: $currentPrice")
 
-        // 3. 매수 주문 생성
-        logger.debug("[GenerateOrders] [$ticker] Step 3: 매수 주문 생성")
-        val buyOrders = try {
-            generateBuyOrders(
-                status = currentStatus,
-                currentPrice = currentPrice
-            )
-        } catch (e: Exception) {
-            logger.error("[GenerateOrders] [$ticker] 매수 주문 생성 중 예외 발생", e)
-            throw e
-        }
-        logger.info("[GenerateOrders] [$ticker] 매수 주문 생성 완료: ${buyOrders.size}개")
-
-        // 4. 매도 주문 생성
-        logger.debug("[GenerateOrders] [$ticker] Step 4: 매도 주문 생성")
+        // 매도 주문 생성
         val sellOrders = try {
             generateSellOrders(
                 status = currentStatus,
                 currentQuantity = currentQuantity,
             )
         } catch (e: Exception) {
-            logger.error("[GenerateOrders] [$ticker] 매도 주문 생성 중 예외 발생", e)
+            logger.error("[GenerateOrders] [$ticker] 매도 주문 생성 실패", e)
             throw e
         }
-        logger.info("[GenerateOrders] [$ticker] 매도 주문 생성 완료: ${sellOrders.size}개")
 
-        // 5. 실제 주문 API 전송
-        logger.debug("[GenerateOrders] [$ticker] Step 5: 주문 API 전송")
+        // 최저 매도 가격 계산 (MOC 주문 제외)
+        val minSellPrice = sellOrders.filter { it.price > 0 }.minOfOrNull { it.price } ?: Double.MAX_VALUE
+
+        // 매수 주문 생성
+        val buyOrders = try {
+            generateBuyOrders(
+                status = currentStatus,
+                currentPrice = currentPrice,
+                maxBuyPrice = if (minSellPrice < Double.MAX_VALUE) minSellPrice - 0.01 else null
+            )
+        } catch (e: Exception) {
+            logger.error("[GenerateOrders] [$ticker] 매수 주문 생성 실패", e)
+            throw e
+        }
+
+        logger.info("[GenerateOrders] [$ticker] 주문 생성 완료 - 매수: ${buyOrders.size}개, 매도: ${sellOrders.size}개")
+
+        // 주문 API 전송
         try {
             stockRepository.postOrder(buyOrders, sellOrders)
-            logger.info("[GenerateOrders] [$ticker] 주문 API 전송 완료")
+            logger.info("[GenerateOrders] [$ticker] 주문 전송 완료")
         } catch (e: Exception) {
-            logger.error("[GenerateOrders] [$ticker] 주문 API 전송 실패", e)
+            logger.error("[GenerateOrders] [$ticker] 주문 전송 실패", e)
             throw e
         }
 
-        // 6. 주문 정보 반환
-        logger.debug("[GenerateOrders] [$ticker] Step 6: 주문 정보 반환")
         return OrderResult(
             ticker = ticker,
             currentPrice = currentPrice,
@@ -129,15 +118,24 @@ class GenerateOrdersUseCase(
      * - 1회 매수액 전체를 별% LOC로 매수 시도
      *
      * 전후반 공통으로 크게 하락하는 경우를 대비해, 1회 정액 매수를 맞추기 위해 아래로 LOC 매수를 추가 시도한다.
+     *
+     * @param maxBuyPrice 최대 매수 가격 (매도 가격보다 낮게 설정)
      */
     private fun generateBuyOrders(
         status: InvestmentStatus,
         currentPrice: Double,
+        maxBuyPrice: Double? = null
     ): List<OrderRequest> {
         val orders = mutableListOf<OrderRequest>()
 
         // 별% LOC 매수 가격
-        val starBuyPrice = currentPrice * (1.0 + status.starPercent / 100.0)
+        val rawStarBuyPrice = currentPrice * (1.0 + status.starPercent / 100.0)
+        val starBuyPrice = if (maxBuyPrice != null && rawStarBuyPrice >= maxBuyPrice) {
+            logger.info("[GenerateOrders] [${status.ticker}] 별% 매수가 조정: ${"%.2f".format(rawStarBuyPrice)} -> ${"%.2f".format(maxBuyPrice)}")
+            maxBuyPrice
+        } else {
+            rawStarBuyPrice
+        }
 
         when (status.phase) {
             TradePhase.FRONT_HALF -> {
@@ -159,14 +157,21 @@ class GenerateOrdersUseCase(
 
                 // 2. 평단가(0%) LOC 매수 (절반)
                 if (status.avgPrice > 0) {
-                    val avgBuyQty = (halfAmount / status.avgPrice).toInt()
+                    val avgBuyPrice = if (maxBuyPrice != null && status.avgPrice >= maxBuyPrice) {
+                        logger.info("[GenerateOrders] [${status.ticker}] 평단가 매수가 조정: ${"%.2f".format(status.avgPrice)} -> ${"%.2f".format(maxBuyPrice)}")
+                        maxBuyPrice
+                    } else {
+                        status.avgPrice
+                    }
+
+                    val avgBuyQty = (halfAmount / avgBuyPrice).toInt()
                     if (avgBuyQty > 0) {
                         orders.add(OrderRequest(
                             ticker = status.ticker,
                             exchange = status.exchange,
                             side = OrderSide.BUY,
                             type = OrderType.LOC,
-                            price = status.avgPrice,
+                            price = avgBuyPrice,
                             quantity = avgBuyQty
                         ))
                     }
@@ -190,18 +195,26 @@ class GenerateOrdersUseCase(
             else -> Unit
         }
 
-        // 폭락 대비 추가 LOC 매수
-        val crashRates = listOf(0.06, 0.10, 0.12, 0.14, 0.15)
+        val crashRates = listOf(0.05, 0.10, 0.15)
         crashRates.forEach { rate ->
-            val crashPrice = currentPrice * (1.0 - rate)
-            orders.add(OrderRequest(
-                ticker = status.ticker,
-                exchange = status.exchange,
-                side = OrderSide.BUY,
-                type = OrderType.LOC,
-                price = crashPrice,
-                quantity = 1
-            ))
+            val rawCrashPrice = currentPrice * (1.0 - rate)
+            val crashPrice = if (maxBuyPrice != null && rawCrashPrice >= maxBuyPrice) {
+                logger.info("[GenerateOrders] [${status.ticker}] 폭락대비 매수가(-${(rate * 100).toInt()}%) 조정: ${"%.2f".format(rawCrashPrice)} -> ${"%.2f".format(maxBuyPrice)}")
+                maxBuyPrice
+            } else {
+                rawCrashPrice
+            }
+
+            if (crashPrice > 0) {
+                orders.add(OrderRequest(
+                    ticker = status.ticker,
+                    exchange = status.exchange,
+                    side = OrderSide.BUY,
+                    type = OrderType.LOC,
+                    price = crashPrice,
+                    quantity = 1
+                ))
+            }
         }
 
         return orders
