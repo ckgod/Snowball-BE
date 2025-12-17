@@ -32,7 +32,7 @@ data class InvestmentStatus(
                 ticker = ticker,
                 totalInvested = 0.0,
                 initialCapital = initialCapital,
-                oneTimeAmount = oneTimeAmount,
+                oneTimeAmount = oneTimeAmount, // TODO initialCapital에 의해 조절되게 수정
                 division = division,
                 avgPrice = 0.0,
                 targetRate = baseRate,
@@ -71,7 +71,7 @@ data class InvestmentStatus(
 
     val exchange: Exchange get() = when(ticker) {
         "TQQQ" -> Exchange.NASD
-        "SOXL" -> Exchange.AMEX
+        "SOXL", "FNGU" -> Exchange.AMEX
         else -> Exchange.NASD
     }
 
@@ -81,7 +81,7 @@ data class InvestmentStatus(
         dailyProfit: Double
     ): InvestmentStatus {
         val newOneTimeAmount = if (dailyProfit > 0) {
-            oneTimeAmount + (dailyProfit / division.toDouble())
+            oneTimeAmount + (dailyProfit / (division * 2).toDouble())
         } else {
             oneTimeAmount
         }

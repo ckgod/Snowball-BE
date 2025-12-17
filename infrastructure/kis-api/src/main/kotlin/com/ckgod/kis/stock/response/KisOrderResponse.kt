@@ -8,7 +8,7 @@ data class KisOrderResponse(
     @SerialName("rt_cd") val returnCode: String,
     @SerialName("msg_cd") val messageCode: String,
     @SerialName("msg1") val message: String,
-    @SerialName("output1") val output: Output,
+    @SerialName("output") val output: Output,
 ) {
     @Serializable
     data class Output(

@@ -26,9 +26,9 @@ class SchedulerService(
         scheduler = StdSchedulerFactory.getDefaultScheduler()
 
         scheduler.setJobFactory { bundle, _ ->
-            when (bundle.jobDetail.key.name) {
-                "syncJob" -> SyncJob(syncStrategyUseCase)
-                "orderJob" -> OrderJob(generateOrdersUseCase)
+            when {
+                bundle.jobDetail.key.name.startsWith("syncJob") -> SyncJob(syncStrategyUseCase)
+                bundle.jobDetail.key.name.startsWith("orderJob") -> OrderJob(generateOrdersUseCase)
                 else -> throw IllegalArgumentException("Unknown job: ${bundle.jobDetail.key.name}")
             }
         }

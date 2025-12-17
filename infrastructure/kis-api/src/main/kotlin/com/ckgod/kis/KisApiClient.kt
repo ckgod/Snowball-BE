@@ -16,6 +16,7 @@ class KisApiClient(
 ) {
     private val json = Json {
         ignoreUnknownKeys = true
+        encodeDefaults = true
     }
 
     internal suspend inline fun <reified T, reified Body> request(

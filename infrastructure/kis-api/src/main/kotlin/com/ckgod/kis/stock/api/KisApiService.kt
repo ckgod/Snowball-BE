@@ -54,7 +54,7 @@ class KisApiService(private val apiClient: KisApiClient) {
         val spec = KisApiSpec.QuotationPriceDetail
         val exchange = when(stockCode) {
             "TQQQ" -> "NAS"
-            "SOXL" -> "AMS"
+            "SOXL", "FNGU" -> "AMS"
             else -> "NAS"
         }
         val queryParams = spec.buildQuery(

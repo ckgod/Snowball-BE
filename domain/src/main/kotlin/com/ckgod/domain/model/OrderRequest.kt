@@ -10,7 +10,6 @@ data class OrderRequest(
 ) {
     init {
         require(ticker.isNotBlank()) { "ticker must not be blank" }
-        require(price > 0) { "price must be positive" }
         require(quantity > 0) { "quantity must be positive" }
     }
 }

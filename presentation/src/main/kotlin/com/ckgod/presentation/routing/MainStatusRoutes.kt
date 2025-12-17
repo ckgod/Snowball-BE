@@ -50,7 +50,7 @@ fun Route.mainStatusRoute(
             if (allStatuses.isEmpty()) {
                 call.respond(
                     HttpStatusCode.NotFound,
-                    mapOf("error" to "투자 중인 종목이 없습니다. POST /api/v1/init 으로 초기화하세요.")
+                    mapOf("error" to "투자 중인 종목이 없습니다.")
                 )
                 return@get
             }

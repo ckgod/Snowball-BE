@@ -13,7 +13,7 @@ data class KisOrderRequest(
     @SerialName("PDNO") val ticker: String,
     @SerialName("ORD_QTY") val quantity: String,
     @SerialName("OVRS_ORD_UNPR") val price: String,
-    @SerialName("ORD_SVR_DVSN_CD") val severCode: String = "0",
+    @SerialName("ORD_SVR_DVSN_CD") val serverCode: String = "0",
     @SerialName("ORD_DVSN") val oderType: String,
 ) {
     companion object {
@@ -24,7 +24,8 @@ data class KisOrderRequest(
             ticker = orderRequest.ticker,
             quantity = orderRequest.quantity.toString(),
             price = String.format("%.2f", orderRequest.price),
-            oderType = orderRequest.type.code
+            oderType = orderRequest.type.code,
+            serverCode = "0"
         )
     }
 }

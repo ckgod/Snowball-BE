@@ -71,7 +71,10 @@ fun Application.simpleModule() {
             level = LogLevel.BODY
         }
         install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+            json(Json {
+                ignoreUnknownKeys = true
+                encodeDefaults = true
+            })
         }
     }
 
