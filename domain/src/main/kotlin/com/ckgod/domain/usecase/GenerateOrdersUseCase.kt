@@ -4,6 +4,7 @@ import com.ckgod.domain.model.*
 import com.ckgod.domain.repository.AccountRepository
 import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
+import org.slf4j.LoggerFactory
 
 /**
  * 주문 생성 UseCase
@@ -17,7 +18,11 @@ class GenerateOrdersUseCase(
     private val accountRepository: AccountRepository,
     private val investmentStatusRepository: InvestmentStatusRepository
 ) {
+    private val logger = LoggerFactory.getLogger(GenerateOrdersUseCase::class.java)
+
     suspend operator fun invoke(ticker: String? = null): List<OrderResult> {
+        logger.info("[GenerateOrders] 시작 - ticker: ${ticker ?: "전체"}")
+
         val targets = if (ticker != null) {
             val status = investmentStatusRepository.get(ticker)
             if (status != null) listOf(status) else emptyList()
@@ -25,43 +30,87 @@ class GenerateOrdersUseCase(
             investmentStatusRepository.findAll()
         }
 
+        logger.info("[GenerateOrders] 대상 종목: ${targets.size}개")
+
         // 각 종목 주문 생성
         return targets.mapNotNull { status ->
             try {
                 generateSingle(status)
             } catch (e: Exception) {
+                logger.error("[GenerateOrders] [${status.ticker}] 주문 생성 실패", e)
                 null // 실패한 종목은 제외
             }
         }
     }
 
     private suspend fun generateSingle(status: InvestmentStatus): OrderResult? {
-        // 현재 상태 조회
-        val currentStatus = investmentStatusRepository.get(status.ticker) ?: return null
+        val ticker = status.ticker
+        logger.debug("[GenerateOrders] [$ticker] 단일 종목 주문 생성 시작")
 
-        // 현재 보유 정보 조회
-        val holding = accountRepository.getBalance(status.ticker)
+        // 1. 현재 상태 조회
+        logger.debug("[GenerateOrders] [$ticker] Step 1: 현재 상태 조회")
+        val currentStatus = investmentStatusRepository.get(ticker)
+        if (currentStatus == null) {
+            logger.warn("[GenerateOrders] [$ticker] 현재 상태 조회 실패 - DB에 없음")
+            return null
+        }
+        logger.debug("[GenerateOrders] [$ticker] 현재 T값: ${currentStatus.tValue}, Phase: ${currentStatus.phase}")
+
+        val currentPrice = stockRepository.getCurrentPrice(ticker)?.price?.toDoubleOrNull() ?: 0.0
+        // TODO currentPrice 조회 실패시 종료
+        if (currentPrice == 0.0) {
+            logger.warn("[GenerateOrders] [$ticker] 현재가 조회 실패")
+            return null
+        }
+        // 2. 현재 보유 정보 조회
+        logger.debug("[GenerateOrders] [$ticker] Step 2: 현재 보유 정보 조회")
+        val holding = accountRepository.getBalance(ticker)
+        if (holding == null) {
+            logger.warn("[GenerateOrders] [$ticker] 보유 정보 조회 - 보유 주식 없음")
+        }
         val currentQuantity = holding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
-        val currentPrice = holding?.currentPrice?.toDoubleOrNull() ?: 0.0
+        logger.debug("[GenerateOrders] [$ticker] 보유수량: $currentQuantity, 현재가: $currentPrice")
 
-        // 매수 주문 생성
-        val buyOrders = generateBuyOrders(
-            status = currentStatus,
-            currentPrice = currentPrice
-        )
+        // 3. 매수 주문 생성
+        logger.debug("[GenerateOrders] [$ticker] Step 3: 매수 주문 생성")
+        val buyOrders = try {
+            generateBuyOrders(
+                status = currentStatus,
+                currentPrice = currentPrice
+            )
+        } catch (e: Exception) {
+            logger.error("[GenerateOrders] [$ticker] 매수 주문 생성 중 예외 발생", e)
+            throw e
+        }
+        logger.info("[GenerateOrders] [$ticker] 매수 주문 생성 완료: ${buyOrders.size}개")
 
-        // 매도 주문 생성
-        val sellOrders = generateSellOrders(
-            status = currentStatus,
-            currentQuantity = currentQuantity,
-        )
+        // 4. 매도 주문 생성
+        logger.debug("[GenerateOrders] [$ticker] Step 4: 매도 주문 생성")
+        val sellOrders = try {
+            generateSellOrders(
+                status = currentStatus,
+                currentQuantity = currentQuantity,
+            )
+        } catch (e: Exception) {
+            logger.error("[GenerateOrders] [$ticker] 매도 주문 생성 중 예외 발생", e)
+            throw e
+        }
+        logger.info("[GenerateOrders] [$ticker] 매도 주문 생성 완료: ${sellOrders.size}개")
 
-        // 실제 주문 api 전송
-        stockRepository.postOrder(buyOrders, sellOrders)
+        // 5. 실제 주문 API 전송
+        logger.debug("[GenerateOrders] [$ticker] Step 5: 주문 API 전송")
+        try {
+            stockRepository.postOrder(buyOrders, sellOrders)
+            logger.info("[GenerateOrders] [$ticker] 주문 API 전송 완료")
+        } catch (e: Exception) {
+            logger.error("[GenerateOrders] [$ticker] 주문 API 전송 실패", e)
+            throw e
+        }
 
-        // 주문 정보 반환
+        // 6. 주문 정보 반환
+        logger.debug("[GenerateOrders] [$ticker] Step 6: 주문 정보 반환")
         return OrderResult(
-            ticker = status.ticker,
+            ticker = ticker,
             currentPrice = currentPrice,
             buyOrders = buyOrders,
             sellOrders = sellOrders
