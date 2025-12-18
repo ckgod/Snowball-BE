@@ -1,47 +1,72 @@
 # Snowball
 
-## 1. 프로젝트 개요
-**Snowball**은 **Kotlin**과 **Ktor** 프레임워크를 기반으로 구축된 웹 API 서버입니다.
-**한국투자증권(KIS) Open API**와 연동하여 실시간 주식 시장 데이터를 조회하고 관리하는 기능을 제공합니다.
+**무한매수법 자동 거래 시스템**
 
-이 프로젝트는 **클린 아키텍처(Clean Architecture)** 원칙을 따르며, 도메인 로직과 인프라스트럭처의 관심사를 분리하기 위해 멀티 모듈 구조로 설계되었습니다.
+레버리지 ETF(TQQQ, SOXL, FNGU)에 대한 무한매수법 전략을 자동으로 실행하는 Kotlin 기반 백엔드 시스템입니다.
 
-## 2. 아키텍처 및 모듈 구조
-프로젝트는 크게 4개의 Gradle 모듈로 구성되어 있습니다:
+## 주요 기능
 
-*   **`application`**: 웹 서버의 진입점입니다. Ktor 서버 설정, API 라우팅, 의존성 주입을 담당합니다.
-*   **`domain`**: 비즈니스 로직의 핵심 계층입니다. 외부 프레임워크에 의존하지 않는 순수 Kotlin 코드로 구성되며, 도메인 엔티티와 리포지토리 인터페이스를 정의합니다.
-*   **`infrastructure`**: 도메인 계층의 인터페이스를 구현하고 외부 시스템(KIS API, 데이터베이스 등)과의 통신을 담당합니다.
-*   **`common`**: 프로젝트 전반에서 사용되는 공통 설정 및 유틸리티를 포함합니다.
+### 자동화
+- **자동 정산**: 매일 오전 7시 계좌 잔고 동기화 및 전략 상태 업데이트
+- **자동 주문**: 매일 오후 6시 매수/매도 주문 자동 생성 및 전송
+- **수동 실행**: 명령줄로 정산/주문 작업을 즉시 실행 가능
 
-## 3. 주요 기술 스택
-*   **Language**: Kotlin
-*   **Web Framework**: Ktor (Server & Client)
-*   **Build System**: Gradle (Kotlin DSL)
-*   **Database/ORM**: JetBrains Exposed
-*   **Serialization**: kotlinx.serialization
-*   **External API**: 한국투자증권(KIS) Open API
+### REST API
+- **종목 상태 조회**: 투자 전략 상태, T값, 별%, 수익률 등 실시간 조회
+- **계좌 정보**: 보유 종목, 평가 손익, 현재가 등
+- **거래 히스토리**: 과거 매매 내역 조회
+- **병렬 처리**: 여러 종목 동시 조회로 빠른 응답 속도
 
-## 4. 빌드 및 실행
-프로젝트 루트에서 다음 명령어들을 사용하여 빌드 및 실행할 수 있습니다:
+### 투자 전략
+- **무한매수법**: 분할 매수/익절 전략 자동 실행
+- **T값 기반 관리**: 현재 투자 단계(전반전/후반전/쿼터모드) 자동 판단
+- **가격 충돌 방지**: 매수가가 매도가보다 낮게 자동 조정
+- **종목별 설정**: 종목마다 다른 분할 수, 목표 수익률 설정 가능
 
-*   **서버 실행**:
-    ```bash
-    ./gradlew :application:run
-    ```
-*   **프로젝트 빌드**:
-    ```bash
-    ./gradlew build
-    ```
-*   **테스트 실행**:
-    ```bash
-    ./gradlew test
-    ```
+## 기술 스택
 
-## 5. 주요 기능
-*   **주식 시세 조회**: 실시간 주식 현재가를 조회하는 REST API를 제공합니다.
-*   **주식 종목 코드 동기화**: 주식 마스터 파일을 파싱하여 종목 코드를 동기화합니다.
-*   **인증 관리**: 외부 API 사용을 위한 인증 토큰을 관리합니다.
+### Backend
+- **Language**: Kotlin 2.1.0
+- **Framework**: Ktor 3.0.2 (Server + Client)
+- **Database**: H2 (Exposed ORM v1)
+- **Scheduler**: Quartz
+- **Serialization**: kotlinx.serialization
 
-## 6. 개발 상태
-현재 **활발히 개발 진행 중**인 프로젝트입니다. 데이터베이스 저장 로직 등 일부 기능은 구현 중이거나 변경될 수 있습니다.
+### Infrastructure
+- **External API**: 한국투자증권(KIS) Open API
+- **Container**: Docker
+- **CI/CD**: GitHub Actions
+- **Deployment**: AWS EC2
+
+## 아키텍처
+
+멀티모듈 구조:
+
+```
+snowball/
+├── application/          # 서버 진입점, 설정, 스케줄러
+├── domain/              # 비즈니스 로직, UseCase, 엔티티
+├── presentation/        # REST API 라우팅, 응답 모델
+└── infrastructure/
+    ├── database/       # DB 구현 (Exposed + H2)
+    └── kis-api/        # 한투 API 클라이언트
+```
+
+## 데이터베이스
+
+### 테이블 구조
+- **investment_status**: 종목별 투자 전략 상태 (T값, 별%, 평단가 등)
+- **trade_history**: 거래 내역
+- **auth_tokens**: API 인증 토큰
+
+### 자동 마이그레이션
+Exposed ORM의 자동 마이그레이션으로 스키마 변경 자동 적용
+
+## CI/CD
+
+GitHub Actions를 통한 자동 배포:
+1. master 브랜치 push 시 트리거
+2. shadowJar 빌드
+3. Docker 이미지 생성
+4. EC2 인스턴스로 파일 전송
+5. Docker 컨테이너 재시작
