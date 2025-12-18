@@ -7,7 +7,7 @@ import org.quartz.JobExecutionContext
 import org.slf4j.LoggerFactory
 
 /**
- * 정산 Job (오전 10시 실행)
+ * 정산 Job (오전 7시 실행)
  *
  * DB의 모든 종목을 정산
  */
@@ -18,7 +18,7 @@ class SyncJob(
     private val logger = LoggerFactory.getLogger(SyncJob::class.java)
 
     override fun execute(context: JobExecutionContext) {
-        logger.info("=== [오전 10시] 정산 시작 ===")
+        logger.info("=== [오전 7시] 정산 시작 ===")
 
         runBlocking {
             try {
@@ -42,7 +42,7 @@ class SyncJob(
                     """.trimIndent())
                 }
 
-                logger.info("=== [오전 10시] 정산 완료 (${results.size}개 종목) ===")
+                logger.info("=== [오전 7시] 정산 완료 (${results.size}개 종목) ===")
 
             } catch (e: Exception) {
                 logger.error("정산 중 오류 발생", e)

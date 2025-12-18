@@ -35,6 +35,11 @@ object DatabaseFactory {
                     exec(statement)
                 }
                 println("Database migration completed successfully")
+
+                // division 컬럼이 새로 추가된 경우, 특정 종목의 division 값을 수정
+                println("Setting correct division values for specific tickers...")
+                exec("UPDATE investment_status SET division = 20 WHERE ticker = 'FNGU'")
+                println("Division values updated successfully")
             } else {
                 println("No database migration required")
             }
