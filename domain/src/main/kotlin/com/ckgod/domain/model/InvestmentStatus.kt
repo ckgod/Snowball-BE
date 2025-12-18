@@ -5,15 +5,17 @@ import kotlin.math.ceil
 
 data class InvestmentStatus(
     val ticker: String,              // 종목명 (예: TQQQ)
-    val totalInvested: Double,        // 매수 누적액 (T값 분자)
-    val oneTimeAmount: Double,        // 1회 매수금 (T값 분모)
-    val initialCapital: Double,       // 원금
-    val division: Int = 40,           // 분할 수
-    val avgPrice: Double,             // 내 평단가
-    val targetRate: Double,           // 오늘의 별% (목표 수익률)
-    val buyLocPrice: Double,          // 오늘 매수 걸어둘 가격
-    val sellLocPrice: Double,         // 오늘 매도 걸어둘 가격
-    val updatedAt: String             // 마지막 갱신 시간
+    val fullName: String? = null,    // 종목 풀네임
+    val totalInvested: Double,       // 매수 누적액 (T값 분자)
+    val oneTimeAmount: Double,       // 1회 매수금 (T값 분모)
+    val initialCapital: Double,      // 원금
+    val division: Int = 40,          // 분할 수
+    val avgPrice: Double,            // 내 평단가
+    val quantity: Int = 0,           // 보유 수량
+    val targetRate: Double,          // 기준 % (목표 수익률)
+    val buyLocPrice: Double,         // 오늘 매수 걸어둘 가격 (deprecated)
+    val sellLocPrice: Double,        // 오늘 매도 걸어둘 가격 (deprecated)
+    val updatedAt: String            // 마지막 갱신 시간
 ) {
     companion object {
         fun create(
@@ -76,8 +78,10 @@ data class InvestmentStatus(
     }
 
     fun updateFromAccount(
+        name: String,
         totalInvested: Double,
         avgPrice: Double,
+        quantity: Int,
         dailyProfit: Double
     ): InvestmentStatus {
         val newOneTimeAmount = if (dailyProfit > 0) {
@@ -87,9 +91,11 @@ data class InvestmentStatus(
         }
 
         return copy(
+            fullName = name,
             totalInvested = totalInvested,
             oneTimeAmount = newOneTimeAmount,
             avgPrice = avgPrice,
+            quantity = quantity,
             updatedAt = LocalDateTime.now().toString()
         )
     }

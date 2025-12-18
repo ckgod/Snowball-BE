@@ -48,6 +48,7 @@ class SyncStrategyUseCase(
 
         val totalInvested = balance.investedAmount.toDoubleOrNull() ?: 0.0
         val avgPrice = balance.avgPrice.toDoubleOrNull() ?: 0.0
+        val quantity = balance.quantity.toDoubleOrNull()?.toInt() ?: 0
 
         val dailyProfit = try {
             accountRepository.getDailyProfit(ticker)
@@ -58,8 +59,10 @@ class SyncStrategyUseCase(
 
         // 상태 업데이트 및 저장
         val updatedStatus = currentStatus.updateFromAccount(
+            name = balance.name,
             totalInvested = totalInvested,
             avgPrice = avgPrice,
+            quantity = quantity,
             dailyProfit = dailyProfit
         )
 

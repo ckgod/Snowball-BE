@@ -143,6 +143,7 @@ fun Application.simpleModule() {
         getCurrentPriceUseCase = getCurrentPriceUseCase,
         getAccountStatusUseCase = getAccountStatusUseCase,
         investmentStatusRepository = investmentStatusRepository,
-        tradeHistoryRepository = tradeHistoryRepository
+        tradeHistoryRepository = tradeHistoryRepository,
+        stockRepository = stockRepository
     )
 }

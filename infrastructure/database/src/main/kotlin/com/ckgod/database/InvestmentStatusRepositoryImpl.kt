@@ -27,14 +27,17 @@ class InvestmentStatusRepositoryImpl : InvestmentStatusRepository {
     override suspend fun save(status: InvestmentStatus): InvestmentStatus = transaction {
         InvestmentStatusTable.upsert {
             it[ticker] = status.ticker
+            it[fullName] = status.fullName
             it[totalInvested] = status.totalInvested
             it[oneTimeAmount] = status.oneTimeAmount
+            it[initialCapital] = status.initialCapital
+            it[division] = status.division
             it[avgPrice] = status.avgPrice
+            it[quantity] = status.quantity
             it[targetRate] = status.targetRate
             it[buyLocPrice] = status.buyLocPrice
             it[sellLocPrice] = status.sellLocPrice
             it[updatedAt] = status.updatedAt
-            it[initialCapital] = status.initialCapital
         }
         status
     }
@@ -42,14 +45,17 @@ class InvestmentStatusRepositoryImpl : InvestmentStatusRepository {
     private fun org.jetbrains.exposed.v1.core.ResultRow.toInvestmentStatus(): InvestmentStatus {
         return InvestmentStatus(
             ticker = this[InvestmentStatusTable.ticker],
+            fullName = this[InvestmentStatusTable.fullName],
             totalInvested = this[InvestmentStatusTable.totalInvested],
             oneTimeAmount = this[InvestmentStatusTable.oneTimeAmount],
+            initialCapital = this[InvestmentStatusTable.initialCapital],
+            division = this[InvestmentStatusTable.division],
             avgPrice = this[InvestmentStatusTable.avgPrice],
+            quantity = this[InvestmentStatusTable.quantity],
             targetRate = this[InvestmentStatusTable.targetRate],
             buyLocPrice = this[InvestmentStatusTable.buyLocPrice],
             sellLocPrice = this[InvestmentStatusTable.sellLocPrice],
-            updatedAt = this[InvestmentStatusTable.updatedAt],
-            initialCapital = this[InvestmentStatusTable.initialCapital]
+            updatedAt = this[InvestmentStatusTable.updatedAt]
         )
     }
 }
