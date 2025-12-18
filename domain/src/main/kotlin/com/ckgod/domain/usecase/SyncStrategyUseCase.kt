@@ -38,44 +38,34 @@ class SyncStrategyUseCase(
 
     private suspend fun syncSingle(currentStatus: InvestmentStatus): SyncResult? {
         val ticker = currentStatus.ticker
-        logger.debug("[SyncStrategy] [$ticker] 단일 종목 정산 시작")
 
-        // 1. 한투 API - 잔고 조회
-        logger.debug("[SyncStrategy] [$ticker] Step 1: 잔고 조회")
+        // 잔고 조회
         val balance = accountRepository.getBalance(ticker)
         if (balance == null) {
-            logger.warn("[SyncStrategy] [$ticker] 잔고 조회 실패 - 계좌에 보유 종목 없음")
+            logger.warn("[SyncStrategy] [$ticker] 계좌에 보유 종목 없음")
             return null
         }
 
         val totalInvested = balance.investedAmount.toDoubleOrNull() ?: 0.0
         val avgPrice = balance.avgPrice.toDoubleOrNull() ?: 0.0
-        logger.debug("[SyncStrategy] [$ticker] 잔고 정보 - 누적투자: $totalInvested, 평단가: $avgPrice")
 
-        // 2. 한투 API - 기간손익 조회
-        logger.debug("[SyncStrategy] [$ticker] Step 2: 일일 수익 조회")
         val dailyProfit = try {
             accountRepository.getDailyProfit(ticker)
         } catch (e: Exception) {
             logger.error("[SyncStrategy] [$ticker] 일일 수익 조회 실패", e)
             throw e
         }
-        logger.debug("[SyncStrategy] [$ticker] 일일 수익: $dailyProfit")
 
-        // 3. 상태 업데이트
-        logger.debug("[SyncStrategy] [$ticker] Step 3: 상태 업데이트 계산")
+        // 상태 업데이트 및 저장
         val updatedStatus = currentStatus.updateFromAccount(
             totalInvested = totalInvested,
             avgPrice = avgPrice,
             dailyProfit = dailyProfit
         )
-        logger.debug("[SyncStrategy] [$ticker] 업데이트 - T값: ${currentStatus.tValue} → ${updatedStatus.tValue}")
 
-        // 4. DB 저장
-        logger.debug("[SyncStrategy] [$ticker] Step 4: DB 저장")
         try {
             investmentStatusRepository.save(updatedStatus)
-            logger.info("[SyncStrategy] [$ticker] 정산 완료 - T값: ${updatedStatus.tValue}, 별%: ${updatedStatus.starPercent}%")
+            logger.info("[SyncStrategy] [$ticker] 정산 완료 - T값: ${"%.2f".format(updatedStatus.tValue)}, 별%: ${"%.2f".format(updatedStatus.starPercent)}%")
         } catch (e: Exception) {
             logger.error("[SyncStrategy] [$ticker] DB 저장 실패", e)
             throw e
