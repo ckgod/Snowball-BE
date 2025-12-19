@@ -1,25 +1,45 @@
 package com.ckgod.domain.model
 
-/**
- * 거래 히스토리
- *
- * 앱의 상세 내역에 표시될 거래 기록
- */
+import java.time.LocalDateTime
+
 data class TradeHistory(
-    val id: Long,                    // PK
-    val date: String,                 // 거래 일자 (2024-12-15)
-    val type: TradeType,              // BUY / SELL / QUARTER_SELL
-    val price: Double,                // 체결 가격
-    val quantity: Int,                // 체결 수량
-    val profit: Double,               // 실현 수익금 (매수 시 0)
-    val tValueAt: Double              // 당시 T값 (기록용)
-)
+    val id: Long = 0,                           // PK (auto increment)
+    val ticker: String,                         // 종목명
+
+    // 주문 정보
+    val orderNo: String? = null,                // KIS 주문번호
+    val orderSide: OrderSide,                   // BUY, SELL
+    val orderType: OrderType,                   // LIMIT, MOC, LOC
+    val orderPrice: Double,                     // 주문 가격
+    val orderQuantity: Int,                     // 주문 수량
+    val orderTime: String,                      // 주문 시각
+
+    // 체결 정보 (나중에 업데이트)
+    val status: OrderStatus = OrderStatus.PENDING,  // 주문 상태
+    val filledQuantity: Int = 0,                // 체결된 수량
+    val filledPrice: Double = 0.0,              // 체결 평균 가격
+    val filledTime: String? = null,             // 체결 시각
+
+    // 전략 정보
+    val tValue: Double,                         // 주문 당시 T값
+
+    // 메타 정보
+    val createdAt: String = LocalDateTime.now().toString(),
+    val updatedAt: String = LocalDateTime.now().toString()
+) {
+    val isFullyFilled: Boolean
+        get() = status == OrderStatus.FILLED && filledQuantity == orderQuantity
+
+    val isPartiallyFilled: Boolean
+        get() = status == OrderStatus.PARTIAL && filledQuantity > 0 && filledQuantity < orderQuantity
+}
 
 /**
- * 거래 유형
+ * 주문 상태
  */
-enum class TradeType {
-    BUY,           // 일반 매수
-    SELL,          // 익절 매도
-    QUARTER_SELL   // 쿼터 매도
+enum class OrderStatus {
+    PENDING,    // 주문 접수 (체결 대기 중)
+    FILLED,     // 전량 체결
+    PARTIAL,    // 부분 체결
+    CANCELED    // 주문 취소
 }

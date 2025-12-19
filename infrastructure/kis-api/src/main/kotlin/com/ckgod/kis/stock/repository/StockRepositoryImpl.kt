@@ -2,6 +2,7 @@ package com.ckgod.kis.stock.repository
 
 import com.ckgod.domain.model.MarketPrice
 import com.ckgod.domain.model.OrderRequest
+import com.ckgod.domain.model.OrderResponse
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.kis.stock.api.KisApiService
 import kotlinx.coroutines.async
@@ -21,31 +22,41 @@ class StockRepositoryImpl(private val kisApiService: KisApiService) : StockRepos
         return kisData.output?.toDomain()
     }
 
-    override suspend fun postOrder(buyOrders: List<OrderRequest>, sellOrders: List<OrderRequest>) {
-        coroutineScope {
-            val sellJobs = sellOrders.map { order ->
+    override suspend fun postOrder(buyOrders: List<OrderRequest>, sellOrders: List<OrderRequest>): List<OrderResponse> {
+        return coroutineScope {
+            val sellResponses = sellOrders.map { order ->
                 async {
                     try {
-                        kisApiService.postOrder(order)
+                        val response = kisApiService.postOrder(order)
+                        OrderResponse(
+                            request = order,
+                            orderNo = response.output.orderNo,
+                            orderTime = response.output.date
+                        )
                     } catch (e: Exception) {
                         logger.error("[${order.ticker}] 매도 주문 실패: $order", e)
+                        null
                     }
                 }
-            }
+            }.awaitAll().filterNotNull()
 
-            sellJobs.awaitAll()
-
-            val buyJobs = buyOrders.map { order ->
+            val buyResponses = buyOrders.map { order ->
                 async {
                     try {
-                        kisApiService.postOrder(order)
+                        val response = kisApiService.postOrder(order)
+                        OrderResponse(
+                            request = order,
+                            orderNo = response.output.orderNo,
+                            orderTime = response.output.date
+                        )
                     } catch (e: Exception) {
                         logger.error("[${order.ticker}] 매수 주문 실패: $order", e)
+                        null
                     }
                 }
-            }
+            }.awaitAll().filterNotNull()
 
-            buyJobs.awaitAll()
+            sellResponses + buyResponses
         }
     }
 }

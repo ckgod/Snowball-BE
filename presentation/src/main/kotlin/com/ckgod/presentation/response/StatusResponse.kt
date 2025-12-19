@@ -26,7 +26,8 @@ data class StatusResponse(
     val totalInvested: Double,             // 누적 투자 금액
 
     // 환율
-    val exchangeRate: Double?              // 환율
+    val exchangeRate: Double?,              // 환율
+    val capital: Double?                   // 원금
 ) {
     companion object {
         fun from(
@@ -61,7 +62,8 @@ data class StatusResponse(
                 profitAmount = profitAmount,
                 oneTimeAmount = status.oneTimeAmount,
                 totalInvested = status.totalInvested,
-                exchangeRate = exchangeRate
+                exchangeRate = exchangeRate,
+                capital = status.initialCapital
             )
         }
     }

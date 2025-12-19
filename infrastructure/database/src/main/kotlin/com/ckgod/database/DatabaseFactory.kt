@@ -1,6 +1,7 @@
 package com.ckgod.database
 
 import com.ckgod.database.auth.AuthTokens
+import com.ckgod.database.migrations.HistoricalDataMigration
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
@@ -43,6 +44,9 @@ object DatabaseFactory {
             } else {
                 println("No database migration required")
             }
+
+            // 과거 거래 내역 데이터 마이그레이션
+            HistoricalDataMigration.migrate()
         }
 
         initialized = true

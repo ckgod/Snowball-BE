@@ -4,7 +4,11 @@ import com.ckgod.domain.model.*
 import com.ckgod.domain.repository.AccountRepository
 import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
+import com.ckgod.domain.repository.TradeHistoryRepository
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /**
  * 주문 생성 UseCase
@@ -16,7 +20,8 @@ import org.slf4j.LoggerFactory
 class GenerateOrdersUseCase(
     private val stockRepository: StockRepository,
     private val accountRepository: AccountRepository,
-    private val investmentStatusRepository: InvestmentStatusRepository
+    private val investmentStatusRepository: InvestmentStatusRepository,
+    private val tradeHistoryRepository: TradeHistoryRepository
 ) {
     private val logger = LoggerFactory.getLogger(GenerateOrdersUseCase::class.java)
 
@@ -90,13 +95,33 @@ class GenerateOrdersUseCase(
         logger.info("[GenerateOrders] [$ticker] 주문 생성 완료 - 매수: ${buyOrders.size}개, 매도: ${sellOrders.size}개")
 
         // 주문 API 전송
-        try {
+        val orderResponses = try {
             stockRepository.postOrder(buyOrders, sellOrders)
-            logger.info("[GenerateOrders] [$ticker] 주문 전송 완료")
         } catch (e: Exception) {
             logger.error("[GenerateOrders] [$ticker] 주문 전송 실패", e)
             throw e
         }
+        logger.info("[GenerateOrders] [$ticker] 주문 전송 완료 - 성공: ${orderResponses.size}개")
+
+        // 주문 내역 DB 저장
+        orderResponses.forEach { response ->
+            val orderDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+
+            val history = TradeHistory(
+                ticker = ticker,
+                orderNo = response.orderNo,
+                orderSide = response.request.side,
+                orderType = response.request.type,
+                orderPrice = response.request.price,
+                orderQuantity = response.request.quantity,
+                orderTime = orderDateTime,
+                status = OrderStatus.PENDING,
+                tValue = currentStatus.tValue
+            )
+            tradeHistoryRepository.save(history)
+        }
+        logger.info("[GenerateOrders] [$ticker] 주문 내역 DB 저장 완료")
 
         return OrderResult(
             ticker = ticker,
