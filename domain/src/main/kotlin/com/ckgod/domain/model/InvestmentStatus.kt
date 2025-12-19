@@ -78,7 +78,7 @@ data class InvestmentStatus(
     }
 
     fun updateFromAccount(
-        name: String,
+        name: String?,
         totalInvested: Double,
         avgPrice: Double,
         quantity: Int,
@@ -91,7 +91,7 @@ data class InvestmentStatus(
         }
 
         return copy(
-            fullName = name,
+            fullName = name ?: fullName,
             totalInvested = totalInvested,
             oneTimeAmount = newOneTimeAmount,
             avgPrice = avgPrice,

@@ -43,12 +43,11 @@ class SyncStrategyUseCase(
         val balance = accountRepository.getBalance(ticker)
         if (balance == null) {
             logger.warn("[SyncStrategy] [$ticker] 계좌에 보유 종목 없음")
-            return null
         }
 
-        val totalInvested = balance.investedAmount.toDoubleOrNull() ?: 0.0
-        val avgPrice = balance.avgPrice.toDoubleOrNull() ?: 0.0
-        val quantity = balance.quantity.toDoubleOrNull()?.toInt() ?: 0
+        val totalInvested = balance?.investedAmount?.toDoubleOrNull() ?: 0.0
+        val avgPrice = balance?.avgPrice?.toDoubleOrNull() ?: 0.0
+        val quantity = balance?.quantity?.toDoubleOrNull()?.toInt() ?: 0
 
         val dailyProfit = try {
             accountRepository.getDailyProfit(ticker)
@@ -59,7 +58,7 @@ class SyncStrategyUseCase(
 
         // 상태 업데이트 및 저장
         val updatedStatus = currentStatus.updateFromAccount(
-            name = balance.name,
+            name = balance?.name,
             totalInvested = totalInvested,
             avgPrice = avgPrice,
             quantity = quantity,
