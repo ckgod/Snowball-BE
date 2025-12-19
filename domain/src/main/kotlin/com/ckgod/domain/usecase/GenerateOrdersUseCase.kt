@@ -106,7 +106,7 @@ class GenerateOrdersUseCase(
         // 주문 내역 DB 저장
         orderResponses.forEach { response ->
             val orderDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
-                .format(DateTimeFormatter.ofPattern("yyMMdd"))
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
 
             val history = TradeHistory(
                 ticker = ticker,
