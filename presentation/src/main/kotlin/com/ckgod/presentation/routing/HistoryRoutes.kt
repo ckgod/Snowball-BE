@@ -19,9 +19,14 @@ fun Route.historyRoutes(
     tradeHistoryRepository: TradeHistoryRepository
 ) {
     get("/history") {
+        val ticker = call.request.queryParameters["ticker"]
         val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 100
 
-        val histories = tradeHistoryRepository.findAll(limit)
+        val histories = if (ticker != null) {
+            tradeHistoryRepository.findByTicker(ticker, limit)
+        } else {
+            tradeHistoryRepository.findAll(limit)
+        }
 
         call.respond(
             HttpStatusCode.OK,
@@ -30,12 +35,19 @@ fun Route.historyRoutes(
                 histories = histories.map { history ->
                     HistoryItem(
                         id = history.id,
-                        date = history.date,
-                        type = history.type.name,
-                        price = history.price,
-                        quantity = history.quantity,
-                        profit = history.profit,
-                        tValueAt = history.tValueAt
+                        ticker = history.ticker,
+                        orderNo = history.orderNo,
+                        orderSide = history.orderSide.name,
+                        orderType = history.orderType.name,
+                        orderPrice = history.orderPrice,
+                        orderQuantity = history.orderQuantity,
+                        orderTime = history.orderTime,
+                        status = history.status.name,
+                        filledQuantity = history.filledQuantity,
+                        filledPrice = history.filledPrice,
+                        filledTime = history.filledTime,
+                        tValue = history.tValue,
+                        createdAt = history.createdAt
                     )
                 }
             )

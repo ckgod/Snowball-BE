@@ -29,3 +29,9 @@ enum class Exchange(val code: String) {
     AMEX("AMEX"),
     NYSE("NYSE")
 }
+
+data class OrderResponse(
+    val request: OrderRequest,
+    val orderNo: String,
+    val orderTime: String
+)
