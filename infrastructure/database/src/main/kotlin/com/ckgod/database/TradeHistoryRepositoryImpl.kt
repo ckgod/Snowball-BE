@@ -44,7 +44,7 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
         status: OrderStatus,
         filledQuantity: Int,
         filledPrice: Double,
-        filledTime: String
+        filledTime: LocalDateTime
     ) {
         transaction {
             TradeHistoryTable.update({ TradeHistoryTable.orderNo eq orderNo }) {
@@ -52,7 +52,7 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
                 it[TradeHistoryTable.filledQuantity] = filledQuantity
                 it[TradeHistoryTable.filledPrice] = filledPrice
                 it[TradeHistoryTable.filledTime] = filledTime
-                it[updatedAt] = LocalDateTime.now().toString()
+                it[updatedAt] = LocalDateTime.now()
             }
         }
     }

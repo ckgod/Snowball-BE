@@ -2,6 +2,7 @@ package com.ckgod.domain.repository
 
 import com.ckgod.domain.model.OrderStatus
 import com.ckgod.domain.model.TradeHistory
+import java.time.LocalDateTime
 
 /**
  * 주문/거래 히스토리 Repository
@@ -20,7 +21,7 @@ interface TradeHistoryRepository {
         status: OrderStatus,
         filledQuantity: Int,
         filledPrice: Double,
-        filledTime: String
+        filledTime: LocalDateTime
     )
 
     /**

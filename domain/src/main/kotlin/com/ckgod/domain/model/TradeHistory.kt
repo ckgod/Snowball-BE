@@ -12,20 +12,20 @@ data class TradeHistory(
     val orderType: OrderType,                   // LIMIT, MOC, LOC
     val orderPrice: Double,                     // 주문 가격
     val orderQuantity: Int,                     // 주문 수량
-    val orderTime: String,                      // 주문 시각
+    val orderTime: LocalDateTime,               // 주문 시각
 
     // 체결 정보 (나중에 업데이트)
     val status: OrderStatus = OrderStatus.PENDING,  // 주문 상태
     val filledQuantity: Int = 0,                // 체결된 수량
     val filledPrice: Double = 0.0,              // 체결 평균 가격
-    val filledTime: String? = null,             // 체결 시각
+    val filledTime: LocalDateTime? = null,      // 체결 시각
 
     // 전략 정보
     val tValue: Double,                         // 주문 당시 T값
 
     // 메타 정보
-    val createdAt: String = LocalDateTime.now().toString(),
-    val updatedAt: String = LocalDateTime.now().toString()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
     val isFullyFilled: Boolean
         get() = status == OrderStatus.FILLED && filledQuantity == orderQuantity

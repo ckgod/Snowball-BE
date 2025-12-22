@@ -41,13 +41,13 @@ fun Route.historyRoutes(
                         orderType = history.orderType.name,
                         orderPrice = history.orderPrice,
                         orderQuantity = history.orderQuantity,
-                        orderTime = history.orderTime,
+                        orderTime = history.orderTime.toString(),
                         status = history.status.name,
                         filledQuantity = history.filledQuantity,
                         filledPrice = history.filledPrice,
-                        filledTime = history.filledTime,
+                        filledTime = history.filledTime?.toString(),
                         tValue = history.tValue,
-                        createdAt = history.createdAt
+                        createdAt = history.createdAt.toString()
                     )
                 }
             )
