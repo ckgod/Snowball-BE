@@ -4,6 +4,7 @@ ktor = "3.3.2"
 logback = "1.5.13"
 exposed = "1.0.0-rc-4"
 h2 = "2.4.240"
+mariadb = "3.5.1"
 kotlinx-datetime = "0.6.0"
 quartz = "2.3.2"
 
@@ -38,6 +39,9 @@ exposed-migration = { module = "org.jetbrains.exposed:exposed-migration-jdbc", v
 
 # Database - H2
 h2-database = { module = "com.h2database:h2", version.ref = "h2" }
+
+# Database - MariaDB
+mariadb-java-client = { module = "org.mariadb.jdbc:mariadb-java-client", version.ref = "mariadb" }
 
 # DateTime
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
