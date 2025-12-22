@@ -28,7 +28,7 @@
 ### Backend
 - **Language**: Kotlin 2.1.0
 - **Framework**: Ktor 3.0.2 (Server + Client)
-- **Database**: H2 (Exposed ORM v1)
+- **Database**: MariaDB (Exposed ORM v1)
 - **Scheduler**: Quartz
 - **Serialization**: kotlinx.serialization
 
@@ -48,7 +48,7 @@ snowball/
 ├── domain/              # 비즈니스 로직, UseCase, 엔티티
 ├── presentation/        # REST API 라우팅, 응답 모델
 └── infrastructure/
-    ├── database/       # DB 구현 (Exposed + H2)
+    ├── database/       # DB 구현 (Exposed + MariaDB)
     └── kis-api/        # 한투 API 클라이언트
 ```
 
