@@ -28,7 +28,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
-          source: "application/build/libs/*-all.jar, Dockerfile"
+          source: "application/build/libs/*-all.jar, docker-compose.yml, Dockerfile"
           target: "/home/${{ secrets.USERNAME }}/app"
           strip_components: 0
 
@@ -42,17 +42,12 @@ jobs:
             cd ~/app
             mv application/build/libs/*-all.jar app.jar
             
+            sudo docker-compose down || true
             sudo docker stop my-bot || true
             sudo docker rm my-bot || true
             
             sudo docker rmi trading-bot || true
             
-            sudo docker build -t trading-bot .
+            sudo docker-compose up -d --build
             
-            sudo docker run -d \
-              --name my-bot \
-              -p 80:8080 \
-              --env-file .env \
-              -v /home/ec2-user/app/database:/app/database \
-              --restart always \
-              trading-bot
+            sudo docker image prune -f

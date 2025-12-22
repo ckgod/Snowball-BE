@@ -1,7 +1,6 @@
 package com.ckgod.database
 
 import com.ckgod.database.auth.AuthTokens
-import com.ckgod.database.migrations.HistoricalDataMigration
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
@@ -14,6 +13,26 @@ object DatabaseFactory {
         if (initialized) {
             println("Database already initialized, skipping...")
             return
+        }
+
+        val dbUrl = System.getenv("DB_URL")
+        val dbUser = System.getenv("DB_USER")
+        val dbPassword = System.getenv("DB_PASSWORD")
+
+        if (!dbUrl.isNullOrBlank()) {
+            println("[Product] Initializing MariaDB Connection...")
+            Database.connect(
+                url = dbUrl,
+                driver = "org.mariadb.jdbc.Driver",
+                user = dbUser ?: "root",
+                password = dbPassword ?: ""
+            )
+        } else {
+            println("[Local] Initializing H2 Connection...")
+            val dbFile = File("./database/snowball_db")
+            val h2Url = "jdbc:h2:file:${dbFile.absolutePath};DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE"
+
+            Database.connect(h2Url, "org.h2.Driver")
         }
 
         val dbFile = File("./database/snowball_db")
@@ -36,17 +55,9 @@ object DatabaseFactory {
                     exec(statement)
                 }
                 println("Database migration completed successfully")
-
-                // division 컬럼이 새로 추가된 경우, 특정 종목의 division 값을 수정
-                println("Setting correct division values for specific tickers...")
-                exec("UPDATE investment_status SET division = 20 WHERE ticker = 'FNGU'")
-                println("Division values updated successfully")
             } else {
                 println("No database migration required")
             }
-
-            // 과거 거래 내역 데이터 마이그레이션
-            HistoricalDataMigration.migrate()
         }
 
         initialized = true

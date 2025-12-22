@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    image: trading-bot:latest
+    container_name: my-bot
+    restart: always
+    environment:
+      DB_URL: jdbc:mariadb://db:3306/snowball_db
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "80:8080"
+    depends_on:
+      - db
+    networks:
+      - bot-network
+
+  db:
+    image: mariadb:10.11
+    container_name: snowball-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: snowball_db
+      TZ: Asia/Seoul
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb_buffer_pool_size=64M
+      --max_connections=20
+    networks:
+      - bot-network
+
+networks:
+  bot-network:
+    driver: bridge
