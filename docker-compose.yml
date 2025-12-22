@@ -12,8 +12,6 @@ services:
       DB_URL: jdbc:mariadb://db:3306/snowball_db
       DB_USER: root
       DB_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - /home/ec2-user/app/database:/app/database
     ports:
       - "80:8080"
     depends_on:
