@@ -16,12 +16,19 @@ fun Application.configureRouting(
     stockRepository: StockRepository
 ) {
     routing {
-        route("/ckapi/v1") {
-            // TODO api endpoint url 여기서 관리하도록 변경
-            currentPriceRoutes(getCurrentPriceUseCase)
-            accountRoutes(getAccountStatusUseCase)
-            mainStatusRoute(investmentStatusRepository, stockRepository)
-            historyRoutes(tradeHistoryRepository)
+        route("/sb") {
+            get("/home/status") {
+                mainStatusRoute(investmentStatusRepository, stockRepository)
+            }
+            get("/account/status") {
+                accountRoutes(getAccountStatusUseCase)
+            }
+            get("/price") {
+                currentPriceRoutes(getCurrentPriceUseCase)
+            }
+            get("/history") {
+                historyRoutes(tradeHistoryRepository)
+            }
         }
     }
 }

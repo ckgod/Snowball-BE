@@ -17,75 +17,74 @@ import kotlinx.coroutines.coroutineScope
  *
  * 앱 메인 화면용: 현재 T값, 별%, 주문 가격 등
  */
-fun Route.mainStatusRoute(
+suspend fun RoutingContext.mainStatusRoute(
     investmentStatusRepository: InvestmentStatusRepository,
     stockRepository: StockRepository
 ) {
-    get("/main/status") {
-        val ticker = call.request.queryParameters["ticker"]
+    val ticker = call.request.queryParameters["ticker"]
 
-        if (ticker != null) {
-            // 단일 종목 조회
-            val status = investmentStatusRepository.get(ticker)
+    if (ticker != null) {
+        // 단일 종목 조회
+        val status = investmentStatusRepository.get(ticker)
 
-            if (status == null) {
-                call.respond(
-                    HttpStatusCode.NotFound,
-                    mapOf("error" to "$ticker 투자 상태가 없습니다.")
-                )
-                return@get
-            }
-
-            // 현재가 조회
-            val marketPrice = stockRepository.getCurrentPrice(ticker)
-            val currentPrice = marketPrice?.price?.toDoubleOrNull() ?: 0.0
-            val dailyChangeRate = marketPrice?.changeRate?.toDoubleOrNull() ?: 0.0
-
-            val response = StatusResponse.from(
-                status = status,
-                currentPrice = currentPrice,
-                dailyChangeRate = dailyChangeRate,
-                exchangeRate = marketPrice?.exchangeRate?.toDoubleOrNull()
-            )
-
-            call.respond(HttpStatusCode.OK, response)
-        } else {
-            // 전체 종목 조회
-            val allStatuses = investmentStatusRepository.findAll()
-
-            if (allStatuses.isEmpty()) {
-                call.respond(
-                    HttpStatusCode.NotFound,
-                    mapOf("error" to "투자 중인 종목이 없습니다.")
-                )
-                return@get
-            }
-
-            // 모든 종목의 현재가를 병렬로 조회하고 StatusResponse 생성
-            val responses = coroutineScope {
-                allStatuses.map { status ->
-                    async {
-                        val marketPrice = stockRepository.getCurrentPrice(status.ticker)
-                        val currentPrice = marketPrice?.price?.toDoubleOrNull() ?: 0.0
-                        val dailyChangeRate = marketPrice?.changeRate?.toDoubleOrNull() ?: 0.0
-
-                        StatusResponse.from(
-                            status = status,
-                            currentPrice = currentPrice,
-                            dailyChangeRate = dailyChangeRate,
-                            exchangeRate = marketPrice?.exchangeRate?.toDoubleOrNull()
-                        )
-                    }
-                }.awaitAll()
-            }
-
+        if (status == null) {
             call.respond(
-                HttpStatusCode.OK,
-                StatusListResponse(
-                    total = responses.size,
-                    statusList = responses
-                )
+                HttpStatusCode.NotFound,
+                mapOf("error" to "$ticker 투자 상태가 없습니다.")
             )
+            return
         }
+
+        // 현재가 조회
+        val marketPrice = stockRepository.getCurrentPrice(ticker)
+        val currentPrice = marketPrice?.price?.toDoubleOrNull() ?: 0.0
+        val dailyChangeRate = marketPrice?.changeRate?.toDoubleOrNull() ?: 0.0
+
+        val response = StatusResponse.from(
+            status = status,
+            currentPrice = currentPrice,
+            dailyChangeRate = dailyChangeRate,
+            exchangeRate = marketPrice?.exchangeRate?.toDoubleOrNull()
+        )
+
+        call.respond(HttpStatusCode.OK, response)
+    } else {
+        // 전체 종목 조회
+        val allStatuses = investmentStatusRepository.findAll()
+
+        if (allStatuses.isEmpty()) {
+            call.respond(
+                HttpStatusCode.NotFound,
+                mapOf("error" to "투자 중인 종목이 없습니다.")
+            )
+            return
+        }
+
+        // 모든 종목의 현재가를 병렬로 조회하고 StatusResponse 생성
+        val responses = coroutineScope {
+            allStatuses.map { status ->
+                async {
+                    val marketPrice = stockRepository.getCurrentPrice(status.ticker)
+                    val currentPrice = marketPrice?.price?.toDoubleOrNull() ?: 0.0
+                    val dailyChangeRate = marketPrice?.changeRate?.toDoubleOrNull() ?: 0.0
+
+                    StatusResponse.from(
+                        status = status,
+                        currentPrice = currentPrice,
+                        dailyChangeRate = dailyChangeRate,
+                        exchangeRate = marketPrice?.exchangeRate?.toDoubleOrNull()
+                    )
+                }
+            }.awaitAll()
+        }
+
+        call.respond(
+            HttpStatusCode.OK,
+            StatusListResponse(
+                total = responses.size,
+                statusList = responses
+            )
+        )
     }
+
 }
