@@ -23,6 +23,8 @@ services:
     image: mariadb:10.11
     container_name: snowball-db
     restart: always
+    ports:
+      - "127.0.0.1:3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: snowball_db
