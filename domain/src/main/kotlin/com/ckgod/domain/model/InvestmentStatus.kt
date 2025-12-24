@@ -86,6 +86,7 @@ data class InvestmentStatus(
             oneTimeAmount = newOneTimeAmount,
             avgPrice = avgPrice,
             quantity = quantity,
+            realizedTotalProfit = realizedTotalProfit + dailyProfit,
             updatedAt = LocalDateTime.now().toString()
         )
     }
