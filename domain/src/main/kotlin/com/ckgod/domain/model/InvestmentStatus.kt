@@ -14,6 +14,7 @@ data class InvestmentStatus(
     val avgPrice: Double,            // 내 평단가
     val quantity: Int = 0,           // 보유 수량
     val targetRate: Double,          // 기준 % (목표 수익률)
+    val realizedTotalProfit: Double, // 총 실현 손익
     val updatedAt: String,           // 마지막 갱신 시간
 ) {
 

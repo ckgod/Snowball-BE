@@ -36,6 +36,7 @@ class InvestmentStatusRepositoryImpl : InvestmentStatusRepository {
             it[quantity] = status.quantity
             it[targetRate] = status.targetRate
             it[updatedAt] = status.updatedAt
+            it[realizedTotalProfit] = status.realizedTotalProfit
         }
         status
     }
@@ -52,6 +53,7 @@ class InvestmentStatusRepositoryImpl : InvestmentStatusRepository {
             quantity = this[InvestmentStatusTable.quantity],
             targetRate = this[InvestmentStatusTable.targetRate],
             updatedAt = this[InvestmentStatusTable.updatedAt],
+            realizedTotalProfit = this[InvestmentStatusTable.realizedTotalProfit],
         )
     }
 }

@@ -24,6 +24,7 @@ data class StatusResponse(
     val profitAmount: Double,              // 평가 손익 금액
     val oneTimeAmount: Double,             // 1회 매수액
     val totalInvested: Double,             // 누적 투자 금액
+    val realizedProfit: Double,            // 총 실현 손익
 
     // 환율
     val exchangeRate: Double?,              // 환율
@@ -68,7 +69,8 @@ data class StatusResponse(
                 capital = status.initialCapital,
                 nextSellStarPrice = status.starSellPrice,
                 nextSellTargetPrice = status.targetSellPrice,
-                nextBuyStarPrice = status.getBuyPrice(currentPrice)
+                nextBuyStarPrice = status.getBuyPrice(currentPrice),
+                realizedProfit = status.realizedTotalProfit
             )
         }
     }
