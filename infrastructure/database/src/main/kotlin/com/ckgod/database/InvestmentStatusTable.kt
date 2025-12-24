@@ -17,8 +17,6 @@ object InvestmentStatusTable : Table("investment_status") {
     val avgPrice = double("avg_price")                   // 평단가
     val quantity = integer("quantity").default(0)        // 보유 수량
     val targetRate = double("target_rate")               // 기준 %
-    val buyLocPrice = double("buy_loc_price")            // 매수 주문 가격 (deprecated)
-    val sellLocPrice = double("sell_loc_price")          // 매도 주문 가격 (deprecated)
     val updatedAt = varchar("updated_at", 50)            // 갱신 시간
 
     override val primaryKey = PrimaryKey(ticker)

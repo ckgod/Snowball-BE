@@ -1,5 +1,6 @@
 package com.ckgod.domain.model
 
+import com.ckgod.domain.utils.roundTo2Decimal
 import java.time.LocalDateTime
 import kotlin.math.ceil
 
@@ -13,37 +14,8 @@ data class InvestmentStatus(
     val avgPrice: Double,            // 내 평단가
     val quantity: Int = 0,           // 보유 수량
     val targetRate: Double,          // 기준 % (목표 수익률)
-    val buyLocPrice: Double,         // 오늘 매수 걸어둘 가격 (deprecated)
-    val sellLocPrice: Double,        // 오늘 매도 걸어둘 가격 (deprecated)
-    val updatedAt: String            // 마지막 갱신 시간
+    val updatedAt: String,           // 마지막 갱신 시간
 ) {
-    companion object {
-        fun create(
-            ticker: String,
-            initialCapital: Double,
-            division: Int = 40,
-            targetRate: Double = 15.0
-        ): InvestmentStatus {
-            val oneTimeAmount = initialCapital / division
-            val baseRate = when(ticker) {
-                "TQQQ" -> 15.0
-                "SOXL" -> 20.0
-                else -> targetRate
-            }
-            return InvestmentStatus(
-                ticker = ticker,
-                totalInvested = 0.0,
-                initialCapital = initialCapital,
-                oneTimeAmount = oneTimeAmount, // TODO initialCapital에 의해 조절되게 수정
-                division = division,
-                avgPrice = 0.0,
-                targetRate = baseRate,
-                buyLocPrice = 0.0,
-                sellLocPrice = 0.0,
-                updatedAt = LocalDateTime.now().toString()
-            )
-        }
-    }
 
     /**
      * T 값
@@ -77,6 +49,23 @@ data class InvestmentStatus(
         else -> Exchange.NASD
     }
 
+    val starSellPrice: Double
+        get() = (avgPrice * (1.0 + starPercent / 100.0)).roundTo2Decimal()
+
+    val targetSellPrice: Double
+        get() = (avgPrice * (1.0 + targetRate / 100.0)).roundTo2Decimal()
+
+    val starBuyPrice: Double
+        get() = (avgPrice * (1.0 + starPercent / 100.0)).roundTo2Decimal()
+
+    fun getBuyPrice(currentPrice: Double): Double {
+        return if (avgPrice == 0.0) {
+            (currentPrice * (1.0 + starPercent / 100.0)).roundTo2Decimal()
+        } else {
+            starBuyPrice
+        }
+    }
+
     fun updateFromAccount(
         name: String?,
         totalInvested: Double,
@@ -96,19 +85,6 @@ data class InvestmentStatus(
             oneTimeAmount = newOneTimeAmount,
             avgPrice = avgPrice,
             quantity = quantity,
-            updatedAt = LocalDateTime.now().toString()
-        )
-    }
-
-    fun updateOrderPrices(
-        currentPrice: Double
-    ): InvestmentStatus {
-        val buyPrice = currentPrice * (1.0 + targetRate / 100.0)
-        val sellPrice = avgPrice * (1.0 + targetRate / 100.0)
-
-        return copy(
-            buyLocPrice = buyPrice,
-            sellLocPrice = sellPrice,
             updatedAt = LocalDateTime.now().toString()
         )
     }

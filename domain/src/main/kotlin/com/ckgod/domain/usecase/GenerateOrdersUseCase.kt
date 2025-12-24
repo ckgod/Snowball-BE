@@ -5,10 +5,10 @@ import com.ckgod.domain.repository.AccountRepository
 import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
+import com.ckgod.domain.utils.roundTo2Decimal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.ZoneId
-import kotlin.math.round
 
 /**
  * 주문 생성 UseCase
@@ -153,17 +153,13 @@ class GenerateOrdersUseCase(
         val orders = mutableListOf<OrderRequest>()
 
         // 별% LOC 매수 가격
-        val rawStarBuyPrice = if (status.avgPrice == 0.0) {
-            currentPrice * (1.0 + status.starPercent / 100.0)
-        } else {
-            status.avgPrice * (1.0 + status.starPercent / 100.0)
-        }
+        val rawStarBuyPrice = status.getBuyPrice(currentPrice)
+
         val starBuyPrice = if (maxBuyPrice != null && rawStarBuyPrice >= maxBuyPrice) {
-            logger.info("[GenerateOrders] [${status.ticker}] 별% 매수가 조정: ${"%.2f".format(rawStarBuyPrice)} -> ${"%.2f".format(maxBuyPrice)}")
             maxBuyPrice
         } else {
             rawStarBuyPrice
-        }.roundTo2Decimal()
+        }
 
         when (status.phase) {
             TradePhase.FRONT_HALF -> {
@@ -192,7 +188,6 @@ class GenerateOrdersUseCase(
 
                     // 2. 평단가(0%) LOC 매수 (절반)
                     val avgBuyPrice = if (maxBuyPrice != null && status.avgPrice >= maxBuyPrice) {
-                        logger.info("[GenerateOrders] [${status.ticker}] 평단가 매수가 조정: ${"%.2f".format(status.avgPrice)} -> ${"%.2f".format(maxBuyPrice)}")
                         maxBuyPrice
                     } else {
                         status.avgPrice
@@ -291,11 +286,6 @@ class GenerateOrdersUseCase(
 
         val orders = mutableListOf<OrderRequest>()
 
-        // 별% 매도 가격
-        val starSellPrice = status.avgPrice * (1.0 + status.starPercent / 100.0)
-        // 목표 지정가 매도 가격
-        val targetPrice = status.avgPrice * (1.0 + status.targetRate / 100.0)
-
         // 수량 계산
         val quarterQty = (currentQuantity / 4.0).toInt()
         val threeQuarterQty = currentQuantity - quarterQty
@@ -311,7 +301,7 @@ class GenerateOrdersUseCase(
                         exchange = status.exchange,
                         side = OrderSide.SELL,
                         type = OrderType.LOC,
-                        price = starSellPrice,
+                        price = status.starSellPrice,
                         quantity = quarterQty
                     ))
                 }
@@ -323,7 +313,7 @@ class GenerateOrdersUseCase(
                         exchange = status.exchange,
                         side = OrderSide.SELL,
                         type = OrderType.LIMIT,
-                        price = targetPrice,
+                        price = status.targetSellPrice,
                         quantity = threeQuarterQty
                     ))
                 }
@@ -348,7 +338,7 @@ class GenerateOrdersUseCase(
                         exchange = status.exchange,
                         side = OrderSide.SELL,
                         type = OrderType.LIMIT,
-                        price = targetPrice,
+                        price = status.targetSellPrice,
                         quantity = threeQuarterQty
                     ))
                 }
@@ -368,8 +358,4 @@ class GenerateOrdersUseCase(
         val buyOrders: List<OrderRequest>,
         val sellOrders: List<OrderRequest>
     )
-
-    fun Double.roundTo2Decimal(): Double {
-        return round(this * 100.0) / 100.0
-    }
 }

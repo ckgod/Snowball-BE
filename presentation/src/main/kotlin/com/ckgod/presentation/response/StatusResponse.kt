@@ -1,8 +1,8 @@
 package com.ckgod.presentation.response
 
 import com.ckgod.domain.model.InvestmentStatus
+import com.ckgod.domain.utils.roundTo2Decimal
 import kotlinx.serialization.Serializable
-import kotlin.math.floor
 
 @Serializable
 data class StatusResponse(
@@ -45,13 +45,9 @@ data class StatusResponse(
                 0.0
             }
 
-            val starSellPrice = floor(status.avgPrice * (1.0 + status.starPercent / 100.0) * 100) / 100.0
-            val targetSellPrice = floor(status.avgPrice * (1.0 + status.targetRate / 100.0) * 100) / 100.0
-            val starBuyPrice = floor(currentPrice * (1.0 + status.starPercent / 100.0) * 100) / 100.0
-
-            val profitRate = floor(rawProfitRate * 100) / 100.0
-            val starPercent = floor(status.starPercent * 100) / 100.0
-            val profitAmount = floor(status.quantity * (currentPrice - status.avgPrice) * 100) / 100.0
+            val profitRate = rawProfitRate.roundTo2Decimal()
+            val starPercent = status.starPercent.roundTo2Decimal()
+            val profitAmount = (status.quantity * (currentPrice - status.avgPrice)).roundTo2Decimal()
 
             return StatusResponse(
                 ticker = status.ticker,
@@ -70,9 +66,9 @@ data class StatusResponse(
                 totalInvested = status.totalInvested,
                 exchangeRate = exchangeRate,
                 capital = status.initialCapital,
-                nextSellStarPrice = starSellPrice,
-                nextSellTargetPrice = targetSellPrice,
-                nextBuyStarPrice = starBuyPrice
+                nextSellStarPrice = status.starSellPrice,
+                nextSellTargetPrice = status.targetSellPrice,
+                nextBuyStarPrice = status.getBuyPrice(currentPrice)
             )
         }
     }
