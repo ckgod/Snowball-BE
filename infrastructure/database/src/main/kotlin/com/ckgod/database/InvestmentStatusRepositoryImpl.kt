@@ -2,6 +2,7 @@ package com.ckgod.database
 
 import com.ckgod.domain.model.InvestmentStatus
 import com.ckgod.domain.repository.InvestmentStatusRepository
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -41,7 +42,7 @@ class InvestmentStatusRepositoryImpl : InvestmentStatusRepository {
         status
     }
 
-    private fun org.jetbrains.exposed.v1.core.ResultRow.toInvestmentStatus(): InvestmentStatus {
+    private fun ResultRow.toInvestmentStatus(): InvestmentStatus {
         return InvestmentStatus(
             ticker = this[InvestmentStatusTable.ticker],
             fullName = this[InvestmentStatusTable.fullName],
