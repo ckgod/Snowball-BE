@@ -28,10 +28,10 @@ data class StatusResponse(
 
     // 환율
     val exchangeRate: Double?,              // 환율
-    val capital: Double?,                   // 원금
-    val nextSellStarPrice: Double?,         // 다음 별% 매도 가격
-    val nextSellTargetPrice: Double?,       // 다음 지정가% 매도 가격
-    val nextBuyStarPrice: Double?,          // 다음 별% 매수 가격
+    val capital: Double,                    // 원금
+    val nextSellStarPrice: Double,         // 다음 별% 매도 가격
+    val nextSellTargetPrice: Double,       // 다음 지정가% 매도 가격
+    val nextBuyStarPrice: Double,          // 다음 별% 매수 가격
 ) {
     companion object {
         fun from(

@@ -1,4 +1,4 @@
-package com.ckgod.kis.stock.response
+package com.ckgod.kis.response
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

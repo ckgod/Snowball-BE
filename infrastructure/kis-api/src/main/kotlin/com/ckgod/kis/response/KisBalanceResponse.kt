@@ -1,4 +1,4 @@
-package com.ckgod.kis.stock.response
+package com.ckgod.kis.response
 
 import com.ckgod.domain.model.AccountStatus
 import com.ckgod.domain.model.StockHolding

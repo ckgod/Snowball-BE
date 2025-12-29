@@ -96,4 +96,23 @@ class KisAuthService(
             LocalDateTime.now().plusDays(1)
         }
     }
+
+    /**
+     * 접속키의 유효기간은 24시간이지만, 접속키는 세션 연결 시 초기 1회만 사용하기 때문에
+     * 접속키 인증 후에는 세션종료되지 않는 이상 신규 발급받지 않아도 됨.
+     */
+    suspend fun getApprovalKey(): String {
+        val response = client.post("${config.baseUrl}/oauth2/Approval") {
+            contentType(ContentType.Application.Json)
+            setBody(mapOf(
+                "grant_type" to "client_credentials",
+                "appkey" to config.appKey,
+                "secretkey" to config.appSecret
+            ))
+        }
+        val approvalKey = Json.parseToJsonElement(response.bodyAsText()).jsonObject["approval_key"]?.jsonPrimitive?.content
+            ?: throw IllegalStateException("approval_key missing")
+
+        return approvalKey
+    }
 }

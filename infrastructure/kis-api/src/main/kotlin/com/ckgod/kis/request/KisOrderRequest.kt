@@ -1,4 +1,4 @@
-package com.ckgod.kis.stock.request
+package com.ckgod.kis.request
 
 import com.ckgod.domain.model.OrderRequest
 import com.ckgod.kis.config.KisConfig
