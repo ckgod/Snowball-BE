@@ -2,8 +2,8 @@ package com.ckgod.presentation.routing
 
 import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
-import com.ckgod.presentation.response.StatusListResponse
-import com.ckgod.presentation.response.StatusResponse
+import com.ckgod.presentation.mapper.InvestmentStatusMapper
+import com.ckgod.snowball.model.HomeUiModel
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -34,7 +34,7 @@ suspend fun RoutingContext.mainStatusRoute(
         val currentPrice = marketPrice?.price?.toDoubleOrNull() ?: 0.0
         val dailyChangeRate = marketPrice?.changeRate?.toDoubleOrNull() ?: 0.0
 
-        val response = StatusResponse.from(
+        val response = InvestmentStatusMapper.toUiModel(
             status = status,
             currentPrice = currentPrice,
             dailyChangeRate = dailyChangeRate,
@@ -62,7 +62,7 @@ suspend fun RoutingContext.mainStatusRoute(
                     val currentPrice = marketPrice?.price?.toDoubleOrNull() ?: 0.0
                     val dailyChangeRate = marketPrice?.changeRate?.toDoubleOrNull() ?: 0.0
 
-                    StatusResponse.from(
+                    InvestmentStatusMapper.toUiModel(
                         status = status,
                         currentPrice = currentPrice,
                         dailyChangeRate = dailyChangeRate,
@@ -74,8 +74,7 @@ suspend fun RoutingContext.mainStatusRoute(
 
         call.respond(
             HttpStatusCode.OK,
-            StatusListResponse(
-                total = responses.size,
+            HomeUiModel(
                 statusList = responses
             )
         )
