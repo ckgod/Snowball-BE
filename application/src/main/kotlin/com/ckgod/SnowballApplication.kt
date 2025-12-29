@@ -7,9 +7,9 @@ import com.ckgod.kis.KisApiClient
 import com.ckgod.kis.auth.KisAuthService
 import com.ckgod.kis.config.KisConfig
 import com.ckgod.kis.config.KisMode
-import com.ckgod.kis.stock.api.KisApiService
-import com.ckgod.kis.stock.repository.AccountRepositoryImpl
-import com.ckgod.kis.stock.repository.StockRepositoryImpl
+import com.ckgod.kis.api.KisApiService
+import com.ckgod.kis.repository.AccountRepositoryImpl
+import com.ckgod.kis.repository.StockRepositoryImpl
 import com.ckgod.presentation.config.configureAuthPlugin
 import com.ckgod.presentation.config.configureRateLimiter
 import com.ckgod.presentation.config.configureSerialization

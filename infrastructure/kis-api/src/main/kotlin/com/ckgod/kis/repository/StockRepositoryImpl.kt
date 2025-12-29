@@ -1,10 +1,10 @@
-package com.ckgod.kis.stock.repository
+package com.ckgod.kis.repository
 
 import com.ckgod.domain.model.MarketPrice
 import com.ckgod.domain.model.OrderRequest
 import com.ckgod.domain.model.OrderResponse
 import com.ckgod.domain.repository.StockRepository
-import com.ckgod.kis.stock.api.KisApiService
+import com.ckgod.kis.api.KisApiService
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope

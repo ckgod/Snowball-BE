@@ -1,8 +1,8 @@
-package com.ckgod.kis.stock.repository
+package com.ckgod.kis.repository
 
 import com.ckgod.domain.model.AccountStatus
 import com.ckgod.domain.repository.AccountRepository
-import com.ckgod.kis.stock.api.KisApiService
+import com.ckgod.kis.api.KisApiService
 
 class AccountRepositoryImpl(
     private val kisApiService: KisApiService,
