@@ -15,6 +15,7 @@ ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negoti
 ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
 ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+ktor-server-websokets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
 
 # Ktor Client
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -60,6 +61,7 @@ ktor-server = [
     "ktor-server-content-negotiation",
     "ktor-server-call-logging",
     "ktor-server-config-yaml",
+    "ktor-server-websokets",
 ]
 
 ktor-client = [

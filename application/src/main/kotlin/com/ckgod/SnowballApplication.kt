@@ -28,9 +28,15 @@ import com.ckgod.domain.usecase.GenerateOrdersUseCase
 import com.ckgod.domain.usecase.GetAccountStatusUseCase
 import com.ckgod.domain.usecase.GetCurrentPriceUseCase
 import com.ckgod.domain.usecase.SyncStrategyUseCase
+import com.ckgod.kis.websokets.KisWebSocketsService
 import com.ckgod.presentation.routing.configureRouting
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.pingInterval
+import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
+import kotlin.time.Duration.Companion.seconds
 
 lateinit var simpleScheduler: SchedulerService
+lateinit var webSocketsService: KisWebSocketsService
 
 /**
  * 간단한 무한매수법 서버
@@ -47,6 +53,9 @@ fun main() {
         println("서버 종료 중...")
         if (::simpleScheduler.isInitialized) {
             simpleScheduler.stop()
+        }
+        if (::webSocketsService.isInitialized) {
+            webSocketsService.stop()
         }
     })
 
@@ -66,15 +75,20 @@ fun Application.simpleModule() {
 
     // ========== HTTP Client ==========
     val httpClient = HttpClient(CIO) {
+        val json = Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+        }
         install(Logging) {
             logger = Logger.SIMPLE
             level = LogLevel.BODY
         }
         install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                encodeDefaults = true
-            })
+            json(json)
+        }
+        install(WebSockets) {
+            pingInterval = 20.seconds
+            contentConverter = KotlinxWebsocketSerializationConverter(json)
         }
     }
 
@@ -147,4 +161,13 @@ fun Application.simpleModule() {
         tradeHistoryRepository = tradeHistoryRepository,
         stockRepository = stockRepository
     )
+
+    // ========== WebSockets Connection =========
+    webSocketsService = KisWebSocketsService(
+        config = realConfig,
+        authService = authService,
+        httpClient = httpClient,
+        tradeHistoryRepository = tradeHistoryRepository,
+    )
+    webSocketsService.start()
 }
