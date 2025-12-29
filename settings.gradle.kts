@@ -6,6 +6,7 @@ dependencyResolutionManagement {
     }
 }
 
+include(":snowball-models")
 include(":domain")
 include(":infrastructure:database")
 include(":infrastructure:kis-api")
