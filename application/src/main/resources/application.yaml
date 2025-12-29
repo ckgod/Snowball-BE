@@ -1,3 +1,6 @@
+app:
+  environment: ${APP_ENV:production}  # local, production
+
 ktor:
   application:
     modules:

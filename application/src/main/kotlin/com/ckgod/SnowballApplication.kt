@@ -107,6 +107,15 @@ fun Application.simpleModule() {
         accountCode = config.property("kis.real.accountCode").getString().trim(),
         userId = config.property("kis.userId").getString().trim()
     )
+    val mockConfig = KisConfig(
+        mode = KisMode.MOCK,
+        baseUrl = config.property("kis.mock.baseUrl").getString().trim(),
+        appKey = config.property("kis.mock.appKey").getString().trim(),
+        appSecret = config.property("kis.mock.appSecret").getString().trim(),
+        accountNo = config.property("kis.mock.accountNo").getString().trim(),
+        accountCode = config.property("kis.mock.accountCode").getString().trim(),
+        userId = config.property("kis.userId").getString().trim()
+    )
 
     // ========== Repositories ==========
     val authTokenRepository = AuthTokenRepository()
@@ -163,11 +172,22 @@ fun Application.simpleModule() {
     )
 
     // ========== WebSockets Connection =========
-    webSocketsService = KisWebSocketsService(
-        config = realConfig,
-        authService = authService,
-        httpClient = httpClient,
-        tradeHistoryRepository = tradeHistoryRepository,
-    )
-    webSocketsService.start()
+    if (config.property("app.environment").getString().trim() == "production") {
+        webSocketsService = KisWebSocketsService(
+            config = realConfig,
+            authService = authService,
+            httpClient = httpClient,
+            tradeHistoryRepository = tradeHistoryRepository,
+        )
+        webSocketsService.start()
+    } else {
+        val mockAuthService = KisAuthService(mockConfig, httpClient, authTokenRepository)
+        webSocketsService = KisWebSocketsService(
+            config = mockConfig,
+            authService = mockAuthService,
+            httpClient = httpClient,
+            tradeHistoryRepository = tradeHistoryRepository
+        )
+        webSocketsService.start()
+    }
 }
