@@ -3,6 +3,7 @@ package com.ckgod.kis.websokets
 import com.ckgod.domain.repository.TradeHistoryRepository
 import com.ckgod.kis.auth.KisAuthService
 import com.ckgod.kis.config.KisConfig
+import com.ckgod.kis.config.KisMode
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.http.HttpMethod
@@ -32,7 +33,7 @@ class KisWebSocketsService(
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val wsHost = "ops.koreainvestment.com"
-    private val wsPort = 21000
+    private val wsPort = if (config.mode == KisMode.REAL) 21000 else 31000
 
     private val jsonConverter = Json {
         ignoreUnknownKeys = true
@@ -78,7 +79,10 @@ class KisWebSocketsService(
             logger.info("웹소켓 연결 성공. 구독 요청 전송 중...")
             val request = KisWsRequest(
                 header = KisWsRequest.Header(approval_key = approvalKey),
-                body = KisWsRequest.Body(tr_key = config.userId),
+                body = KisWsRequest.Body(
+                    tr_id = if (config.mode == KisMode.REAL) "H0GSCNI0" else "H0GSCNI9",
+                    tr_key = config.userId
+                ),
             )
             send(jsonConverter.encodeToString(request))
 

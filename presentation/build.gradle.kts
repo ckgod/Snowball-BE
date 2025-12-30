@@ -4,6 +4,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":snowball-models"))
     implementation(project(":domain"))
 
     implementation(libs.bundles.ktor.server)

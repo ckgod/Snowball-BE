@@ -21,7 +21,7 @@ data class KisWsRequest(
     data class Body(
         val input: Input
     ) {
-        constructor(tr_key: String) : this(Input(tr_key = tr_key))
+        constructor(tr_id: String, tr_key: String) : this(Input(tr_id = tr_id, tr_key = tr_key))
     }
 
     @Serializable

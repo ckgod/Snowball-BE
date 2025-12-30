@@ -1,0 +1,3 @@
+[submodule "snowball-models"]
+	path = snowball-models
+	url = git@github.com:ckgod/snowball-models.git

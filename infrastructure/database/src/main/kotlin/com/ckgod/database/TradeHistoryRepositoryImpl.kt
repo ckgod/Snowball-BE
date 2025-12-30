@@ -5,6 +5,7 @@ import com.ckgod.domain.model.OrderStatus
 import com.ckgod.domain.model.OrderType
 import com.ckgod.domain.model.TradeHistory
 import com.ckgod.domain.repository.TradeHistoryRepository
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -86,7 +87,7 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
             .map { it.toTradeHistory() }
     }
 
-    private fun org.jetbrains.exposed.v1.core.ResultRow.toTradeHistory(): TradeHistory {
+    private fun ResultRow.toTradeHistory(): TradeHistory {
         return TradeHistory(
             id = this[TradeHistoryTable.id],
             ticker = this[TradeHistoryTable.ticker],
