@@ -6,7 +6,8 @@ data class OrderRequest(
     val side: OrderSide,
     val type: OrderType,
     val price: Double,
-    val quantity: Int
+    val quantity: Int,
+    val crashRate: Double? = null
 ) {
     init {
         require(ticker.isNotBlank()) { "ticker must not be blank" }

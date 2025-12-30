@@ -28,6 +28,7 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
             it[orderPrice] = history.orderPrice
             it[orderQuantity] = history.orderQuantity
             it[orderTime] = history.orderTime
+            it[crashRate] = history.crashRate
             it[status] = history.status.name
             it[filledQuantity] = history.filledQuantity
             it[filledPrice] = history.filledPrice
@@ -102,6 +103,7 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
             filledPrice = this[TradeHistoryTable.filledPrice],
             filledTime = this[TradeHistoryTable.filledTime],
             tValue = this[TradeHistoryTable.tValue],
+            crashRate = this[TradeHistoryTable.crashRate],
             createdAt = this[TradeHistoryTable.createdAt],
             updatedAt = this[TradeHistoryTable.updatedAt]
         )
