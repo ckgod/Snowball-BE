@@ -1,16 +1,18 @@
 package com.ckgod.presentation.mapper
 
 import com.ckgod.domain.model.InvestmentStatus
+import com.ckgod.domain.model.TradePhase as DomainPhase
+import com.ckgod.snowball.model.TradePhase as PresentationPhase
 import com.ckgod.domain.utils.roundTo2Decimal
-import com.ckgod.snowball.model.InvestmentStatusUiModel
+import com.ckgod.snowball.model.InvestmentStatusResponse
 
 object InvestmentStatusMapper {
-    fun toUiModel(
+    fun toResponse(
         status: InvestmentStatus,
         currentPrice: Double,
         dailyChangeRate: Double,
         exchangeRate: Double?
-    ): InvestmentStatusUiModel {
+    ): InvestmentStatusResponse {
         val rawProfitRate = if (status.avgPrice > 0) {
             ((currentPrice - status.avgPrice) / status.avgPrice) * 100.0
         } else {
@@ -21,7 +23,14 @@ object InvestmentStatusMapper {
         val starPercent = status.starPercent.roundTo2Decimal()
         val profitAmount = (status.quantity * (currentPrice - status.avgPrice)).roundTo2Decimal()
 
-        return InvestmentStatusUiModel(
+        val tradePhase = when(status.phase) {
+            DomainPhase.FRONT_HALF -> PresentationPhase.FIRST_HALF
+            DomainPhase.BACK_HALF -> PresentationPhase.BACK_HALF
+            DomainPhase.QUARTER_MODE -> PresentationPhase.QUARTER_MODE
+            DomainPhase.EXHAUSTED -> PresentationPhase.EXHAUSTED
+        }
+
+        return InvestmentStatusResponse(
             ticker = status.ticker,
             fullName = status.fullName,
             currentPrice = currentPrice,
@@ -29,7 +38,7 @@ object InvestmentStatusMapper {
             tValue = status.tValue,
             totalDivision = status.division,
             starPercent = starPercent,
-            phase = status.phase.description,
+            phase = tradePhase,
             avgPrice = status.avgPrice,
             quantity = status.quantity,
             profitRate = profitRate,

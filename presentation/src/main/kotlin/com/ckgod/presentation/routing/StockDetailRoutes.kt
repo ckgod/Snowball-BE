@@ -4,8 +4,8 @@ import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
 import com.ckgod.presentation.mapper.InvestmentStatusMapper
-import com.ckgod.snowball.model.TradeHistoryUiModel
-import com.ckgod.snowball.model.StockDetailUiModel
+import com.ckgod.presentation.mapper.TradeHistoryMapper
+import com.ckgod.snowball.model.StockDetailResponse
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.RoutingContext
@@ -32,7 +32,7 @@ suspend fun RoutingContext.stockDetailRoutes(
         val currentPrice = marketPrice?.price?.toDoubleOrNull() ?: 0.0
         val dailyChangeRate = marketPrice?.changeRate?.toDoubleOrNull() ?: 0.0
 
-        InvestmentStatusMapper.toUiModel(
+        InvestmentStatusMapper.toResponse(
             status = it,
             currentPrice = currentPrice,
             dailyChangeRate = dailyChangeRate,
@@ -42,25 +42,10 @@ suspend fun RoutingContext.stockDetailRoutes(
 
     call.respond(
         HttpStatusCode.OK,
-        StockDetailUiModel(
+        StockDetailResponse(
             status = status,
             histories = histories.map { history ->
-                TradeHistoryUiModel(
-                    id = history.id,
-                    ticker = history.ticker,
-                    orderNo = history.orderNo,
-                    orderSide = history.orderSide.name,
-                    orderType = history.orderType.name,
-                    orderPrice = history.orderPrice,
-                    orderQuantity = history.orderQuantity,
-                    orderTime = history.orderTime.toString(),
-                    status = history.status.name,
-                    filledQuantity = history.filledQuantity,
-                    filledPrice = history.filledPrice,
-                    filledTime = history.filledTime?.toString(),
-                    tValue = history.tValue,
-                    createdAt = history.createdAt.toString()
-                )
+                TradeHistoryMapper.toResponse(history)
             }
         )
     )

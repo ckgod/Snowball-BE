@@ -7,7 +7,7 @@ data class TradeHistory(
     val ticker: String,                         // 종목명
 
     // 주문 정보
-    val orderNo: String? = null,                // KIS 주문번호
+    val orderNo: String,                        // KIS 주문번호
     val orderSide: OrderSide,                   // BUY, SELL
     val orderType: OrderType,                   // LIMIT, MOC, LOC
     val orderPrice: Double,                     // 주문 가격

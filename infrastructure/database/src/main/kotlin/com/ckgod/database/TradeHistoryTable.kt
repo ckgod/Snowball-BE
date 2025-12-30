@@ -11,7 +11,7 @@ object TradeHistoryTable : Table("trade_history") {
     val ticker = varchar("ticker", 20)                      // 종목명
 
     // 주문 정보
-    val orderNo = varchar("order_no", 50).nullable()        // KIS 주문번호
+    val orderNo = varchar("order_no", 50)            // KIS 주문번호
     val orderSide = varchar("order_side", 20)               // BUY, SELL
     val orderType = varchar("order_type", 20)               // LIMIT, MOC, LOC
     val orderPrice = double("order_price")                  // 주문 가격
