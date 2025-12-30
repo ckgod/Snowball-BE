@@ -7,6 +7,7 @@ mariadb = "3.5.1"
 kotlinx-datetime = "0.6.0"
 kotlinx-serialization = "1.9.0"
 quartz = "2.3.2"
+koin = "4.1.1"
 
 [libraries]
 # Ktor Server
@@ -47,6 +48,11 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 
 # Quartz
 quartz = { module = "org.quartz-scheduler:quartz", version.ref = "quartz" }
+
+# Koin
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
+koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
 
 # Testing
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
