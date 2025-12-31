@@ -1,6 +1,7 @@
 package com.ckgod.di
 
 import com.ckgod.kis.config.KisMode
+import com.ckgod.kis.websokets.ExecutionNotificationProcessor
 import com.ckgod.kis.websokets.KisWebSocketsService
 import com.ckgod.scheduler.SchedulerService
 import org.koin.core.qualifier.named
@@ -20,7 +21,7 @@ val serviceModule = module {
             config = get(named(KisMode.REAL)),
             authService = get(named(KisMode.REAL)),
             httpClient = get(),
-            tradeHistoryRepository = get()
+            processor = get()
         )
     }
 
@@ -29,7 +30,9 @@ val serviceModule = module {
             config = get(named(KisMode.MOCK)),
             authService = get(named(KisMode.MOCK)),
             httpClient = get(),
-            tradeHistoryRepository = get()
+            processor = get()
         )
     }
+
+    single { ExecutionNotificationProcessor(get()) }
 }

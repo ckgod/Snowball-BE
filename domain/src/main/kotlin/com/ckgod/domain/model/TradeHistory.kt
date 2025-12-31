@@ -13,6 +13,7 @@ data class TradeHistory(
     val orderPrice: Double,                     // 주문 가격
     val orderQuantity: Int,                     // 주문 수량
     val orderTime: LocalDateTime,               // 주문 시각
+    val crashRate: Double? = null,              // 폭락 비율 %
 
     // 체결 정보 (나중에 업데이트)
     val status: OrderStatus = OrderStatus.PENDING,  // 주문 상태

@@ -116,7 +116,8 @@ class GenerateOrdersUseCase(
                 orderQuantity = response.request.quantity,
                 orderTime = orderDateTime,
                 status = OrderStatus.PENDING,
-                tValue = currentStatus.tValue
+                tValue = currentStatus.tValue,
+                crashRate = response.request.crashRate
             )
             tradeHistoryRepository.save(history)
         }
@@ -239,7 +240,7 @@ class GenerateOrdersUseCase(
         }
 
         if (status.phase != TradePhase.QUARTER_MODE) {
-            val crashRates = listOf(0.05, 0.10, 0.15)
+            val crashRates = listOf(0.07, 0.10, 0.13, 0.15)
             crashRates.forEach { rate ->
                 val rawCrashPrice = currentPrice * (1.0 - rate)
                 val crashPrice = if (maxBuyPrice != null && rawCrashPrice >= maxBuyPrice) {
@@ -256,7 +257,8 @@ class GenerateOrdersUseCase(
                         side = OrderSide.BUY,
                         type = OrderType.LOC,
                         price = crashPrice,
-                        quantity = 1
+                        quantity = 1,
+                        crashRate = rate
                     ))
                 }
             }

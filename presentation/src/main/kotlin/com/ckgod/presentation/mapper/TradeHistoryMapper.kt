@@ -41,7 +41,8 @@ object TradeHistoryMapper {
             filledPrice = history.filledPrice,
             filledTime = history.filledTime?.toString(),
             tValue = history.tValue,
-            createdAt = history.createdAt.toString()
+            createdAt = history.createdAt.toString(),
+            crashRate = history.crashRate
         )
     }
 }
