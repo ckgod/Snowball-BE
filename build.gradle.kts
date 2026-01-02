@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.ckgod"
-version = "0.1.3"
+version = "0.1.4"
 
 subprojects {
     group = rootProject.group
