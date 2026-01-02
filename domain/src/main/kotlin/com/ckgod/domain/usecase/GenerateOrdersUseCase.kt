@@ -157,7 +157,7 @@ class GenerateOrdersUseCase(
         val rawStarBuyPrice = status.getBuyPrice(currentPrice)
 
         val starBuyPrice = if (maxBuyPrice != null && rawStarBuyPrice >= maxBuyPrice) {
-            maxBuyPrice
+            maxBuyPrice.roundTo2Decimal()
         } else {
             rawStarBuyPrice
         }

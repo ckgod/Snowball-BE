@@ -33,6 +33,7 @@ class ExecutionNotificationProcessor(
     }
 
     suspend fun process(notification: RealtimeExecutionNotification) {
+        logger.info("process notification: $notification")
         // 주문 접소 통보는 필터링 (orderQuantity가 빈 값)
         val hasOrderQuantity = notification.orderQuantity.trim().isNotEmpty()
 
