@@ -11,6 +11,7 @@ import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.pingInterval
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 import kotlin.time.Duration.Companion.seconds
@@ -24,10 +25,6 @@ val httpClientModule = module {
         }
 
         HttpClient(CIO) {
-            install(Logging) {
-                logger = Logger.SIMPLE
-                level = LogLevel.BODY
-            }
             install(ContentNegotiation) {
                 json(jsonConfig)
             }
