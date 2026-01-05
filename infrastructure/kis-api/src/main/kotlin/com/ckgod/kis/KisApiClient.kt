@@ -45,6 +45,36 @@ class KisApiClient(
         return json.decodeFromString<T>(response.bodyAsText())
     }
 
+    internal suspend inline fun <reified T, reified Body> requestWithHeaders(
+        spec: KisApiSpec,
+        queryParams: Map<String, String> = emptyMap(),
+        bodyParams: Body? = null,
+        additionalHeaders: Map<String, String>? = null
+    ): KisResponseWithHeaders<T> {
+        val token = authService.getAccessToken()
+        val url = "${config.baseUrl}${spec.path}"
+        val trId = spec.getTrId(config.mode)
+
+        val response = when (spec.method) {
+            HttpMethod.Get -> client.get(url) {
+                headers { applyKisHeaders(token, trId, additionalHeaders) }
+                url { queryParams.forEach { (key, value) -> parameters.append(key, value) } }
+            }
+            HttpMethod.Post -> client.post(url) {
+                headers { applyKisHeaders(token, trId, additionalHeaders) }
+                contentType(ContentType.Application.Json)
+                setBody(bodyParams)
+            }
+            else -> throw KisApiException("Unsupported HTTP method: ${spec.method}")
+        }
+
+        val body = json.decodeFromString<T>(response.bodyAsText())
+        val headers = response.headers.entries()
+            .associate { (key, values) -> key to values.firstOrNull().orEmpty() }
+
+        return KisResponseWithHeaders(body, headers)
+    }
+
     private fun HeadersBuilder.applyKisHeaders(token: String, trId: String, additionalHeaders: Map<String, String>? = null) {
         append("content-type", "application/json; charset=utf-8")
         append("authorization", "Bearer $token")
@@ -59,3 +89,8 @@ class KisApiClient(
 }
 
 class KisApiException(message: String) : RuntimeException(message)
+
+data class KisResponseWithHeaders<T>(
+    val body: T,
+    val headers: Map<String, String>
+)
