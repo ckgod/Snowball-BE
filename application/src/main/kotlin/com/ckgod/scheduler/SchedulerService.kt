@@ -33,7 +33,7 @@ class SchedulerService(
             }
         }
 
-        // 1. 정산 Job (오전 7시)
+        // 1. 정산 Job (오전 6시 20분)
         scheduleSyncJob()
 
         // 2. 주문 Job (오후 6시)
@@ -41,7 +41,7 @@ class SchedulerService(
 
         scheduler.start()
         logger.info("스케줄러 시작 완료")
-        logger.info("  - 정산: 매일 오전 7시 (Asia/Seoul)")
+        logger.info("  - 정산: 매일 오전 6시 20분 (Asia/Seoul)")
         logger.info("  - 주문: 매일 오후 6시 5분 (Asia/Seoul)")
     }
 
@@ -53,7 +53,7 @@ class SchedulerService(
         val trigger = TriggerBuilder.newTrigger()
             .withIdentity("syncTrigger", "trading")
             .withSchedule(
-                CronScheduleBuilder.dailyAtHourAndMinute(7, 0)
+                CronScheduleBuilder.dailyAtHourAndMinute(6, 20)
                     .inTimeZone(java.util.TimeZone.getTimeZone("Asia/Seoul"))
             )
             .build()
