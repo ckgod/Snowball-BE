@@ -54,9 +54,10 @@ suspend fun RoutingContext.mainStatusRoute(
             return
         }
 
-        // 모든 종목의 현재가를 병렬로 조회하고 StatusResponse 생성
+        var totalProfit = 0.0
         val responses = coroutineScope {
             allStatuses.map { status ->
+                totalProfit += status.realizedTotalProfit
                 async {
                     val marketPrice = stockRepository.getCurrentPrice(status.ticker)
                     val currentPrice = marketPrice?.price?.toDoubleOrNull() ?: 0.0
@@ -75,6 +76,7 @@ suspend fun RoutingContext.mainStatusRoute(
         call.respond(
             HttpStatusCode.OK,
             HomeTabResponse(
+                totalProfit = totalProfit,
                 statusList = responses
             )
         )

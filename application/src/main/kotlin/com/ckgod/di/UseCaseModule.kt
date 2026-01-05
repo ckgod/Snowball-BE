@@ -11,7 +11,7 @@ val useCaseModule = module {
 
     single<GetCurrentPriceUseCase> { GetCurrentPriceUseCase(get()) }
 
-    single<SyncStrategyUseCase> { SyncStrategyUseCase(get(), get()) }
+    single<SyncStrategyUseCase> { SyncStrategyUseCase(get(), get(), get(), get()) }
 
     single<GenerateOrdersUseCase> { GenerateOrdersUseCase(get(), get(), get(), get()) }
 }

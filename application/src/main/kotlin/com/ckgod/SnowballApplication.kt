@@ -7,8 +7,6 @@ import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
 import com.ckgod.domain.usecase.GetAccountStatusUseCase
 import com.ckgod.domain.usecase.GetCurrentPriceUseCase
-import com.ckgod.kis.config.KisMode
-import com.ckgod.kis.websokets.KisWebSocketsService
 import com.ckgod.presentation.config.configureAuthPlugin
 import com.ckgod.presentation.config.configureRateLimiter
 import com.ckgod.presentation.config.configureSerialization
@@ -17,12 +15,10 @@ import com.ckgod.scheduler.SchedulerService
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import org.koin.core.qualifier.named
 import org.koin.ktor.ext.get
 import org.koin.ktor.ext.inject
 
 lateinit var simpleScheduler: SchedulerService
-lateinit var webSocketsService: KisWebSocketsService
 
 fun main() {
     val server = embeddedServer(Netty, port = 8080, module = Application::mainModule)
@@ -31,9 +27,6 @@ fun main() {
         println("서버 종료 중...")
         if (::simpleScheduler.isInitialized) {
             simpleScheduler.stop()
-        }
-        if (::webSocketsService.isInitialized) {
-            webSocketsService.stop()
         }
     })
 
@@ -68,14 +61,6 @@ fun Application.mainModule() {
     // ========== Scheduler ==========
     simpleScheduler = get()
     simpleScheduler.start()
-
-    // ========== WebSockets Connection =========
-    webSocketsService = if (config.property("app.environment").getString().trim() == "production") {
-        get(named(KisMode.REAL))
-    } else {
-        get(named(KisMode.MOCK))
-    }
-    webSocketsService.start()
 
     // ========== API Routing ==========
     configureRouting(

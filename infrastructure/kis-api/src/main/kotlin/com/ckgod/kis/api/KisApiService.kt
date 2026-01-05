@@ -3,10 +3,12 @@ package com.ckgod.kis.api
 import com.ckgod.domain.model.OrderRequest
 import com.ckgod.domain.model.OrderSide
 import com.ckgod.kis.KisApiClient
+import com.ckgod.kis.KisResponseWithHeaders
 import com.ckgod.kis.spec.KisApiSpec
 import com.ckgod.kis.request.KisOrderRequest
 import com.ckgod.kis.response.KisBalanceResponse
 import com.ckgod.kis.response.KisDateProfitResponse
+import com.ckgod.kis.response.KisExecutionResponse
 import com.ckgod.kis.response.KisOrderResponse
 import com.ckgod.kis.response.KisPriceResponse
 import java.time.LocalDate
@@ -27,13 +29,6 @@ class KisApiService(private val apiClient: KisApiClient) {
 
     suspend fun getRecentDayProfit(): KisDateProfitResponse {
         val spec = KisApiSpec.InquirePeriodProfit
-
-        fun yesterday(): String {
-            val kstZone = ZoneId.of("Asia/Seoul")
-            val yesterday = LocalDate.now(kstZone).minusDays(1)
-            val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-            return yesterday.format(formatter)
-        }
 
         val queryParams = spec.buildQuery(
             accountNo = apiClient.config.accountNo,
@@ -80,5 +75,30 @@ class KisApiService(private val apiClient: KisApiClient) {
             spec = spec,
             queryParams = queryParams
         )
+    }
+
+    suspend fun getExecution(trCont: String = "", fKey: String = "", nKey: String = ""): KisResponseWithHeaders<KisExecutionResponse> {
+        val spec = KisApiSpec.InquireCCnl()
+        val queryParams = spec.buildQuery(
+            accountNo = apiClient.config.accountNo,
+            accountCode = apiClient.config.accountCode,
+            startDate = yesterday(),
+            endDate = yesterday(),
+            nKey = nKey,
+            fKey = fKey
+        )
+
+        return apiClient.requestWithHeaders<KisExecutionResponse, Unit>(
+            spec = spec,
+            queryParams = queryParams,
+            additionalHeaders = mapOf("tr_cont" to trCont)
+        )
+    }
+
+    private fun yesterday(): String {
+        val kstZone = ZoneId.of("Asia/Seoul")
+        val yesterday = LocalDate.now(kstZone).minusDays(1)
+        val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+        return yesterday.format(formatter)
     }
 }

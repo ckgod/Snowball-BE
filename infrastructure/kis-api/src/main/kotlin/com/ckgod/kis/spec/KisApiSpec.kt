@@ -102,4 +102,36 @@ sealed class KisApiSpec(
         description = "해외주식 매도 주문"
     )
 
+    data class InquireCCnl(val trCont: String = "") : KisApiSpec(
+        method = HttpMethod.Get,
+        path = "/uapi/overseas-stock/v1/trading/inquire-ccnl",
+        realTrId = "TTTS3035R",
+        mockTrId = "VTTS3035R",
+        description = "해외주식 주문 체결 내역"
+    ) {
+        fun buildQuery(
+            accountNo: String,
+            accountCode: String,
+            startDate: String,
+            endDate: String,
+            fKey: String,
+            nKey: String
+        ): Map<String, String> = mapOf(
+            "CANO" to accountNo,
+            "ACNT_PRDT_CD" to accountCode,
+            "PDNO" to "%",
+            "ORD_STRT_DT" to startDate,
+            "ORD_END_DT" to endDate,
+            "SLL_BUY_DVSN" to "00",
+            "CCLD_NCCS_DVSN" to "00",
+            "OVRS_EXCG_CD" to "%",
+            "SORT_SQN" to "AS",
+            "ORD_DT" to "",
+            "ORD_GNO_BRNO" to "",
+            "ODNO" to "",
+            "CTX_AREA_NK200" to nKey,
+            "CTX_AREA_FK200" to fKey
+        )
+    }
+
 }
