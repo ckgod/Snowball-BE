@@ -1,21 +1,28 @@
 package com.ckgod.domain.usecase
 
 import com.ckgod.domain.model.InvestmentStatus
+import com.ckgod.domain.model.OrderStatus
 import com.ckgod.domain.repository.AccountRepository
+import com.ckgod.domain.repository.ExecutionRepository
 import com.ckgod.domain.repository.InvestmentStatusRepository
+import com.ckgod.domain.repository.TradeHistoryRepository
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 /**
  * 종목 정산 UseCase
  */
 class SyncStrategyUseCase(
     private val accountRepository: AccountRepository,
-    private val investmentStatusRepository: InvestmentStatusRepository
+    private val investmentStatusRepository: InvestmentStatusRepository,
+    private val executionRepository: ExecutionRepository,
+    private val historyRepository: TradeHistoryRepository
 ) {
     private val logger = LoggerFactory.getLogger(SyncStrategyUseCase::class.java)
 
     suspend operator fun invoke(ticker: String? = null): List<SyncResult> {
         logger.info("[SyncStrategy] 시작 - ticker: ${ticker ?: "전체"}")
+        syncOrderExecution()
 
         val targets = if (ticker != null) {
             val status = investmentStatusRepository.get(ticker)
@@ -33,6 +40,24 @@ class SyncStrategyUseCase(
                 logger.error("[SyncStrategy] [${status.ticker}] 정산 실패", e)
                 null // 실패한 종목은 제외
             }
+        }
+    }
+
+    private suspend fun syncOrderExecution() {
+        val executionList = executionRepository.getExecutionList()
+        executionList.forEach { execution ->
+            val status = when {
+                execution.isFullyFilled -> OrderStatus.FILLED
+                execution.isPartiallyFilled -> OrderStatus.PARTIAL
+                else -> OrderStatus.CANCELED
+            }
+            historyRepository.updateOrderStatus(
+                execution.orderNo,
+                status = status,
+                filledQuantity = execution.filledQuantity.toInt(),
+                filledPrice = execution.filledPrice,
+                filledTime = LocalDateTime.now(),
+            )
         }
     }
 

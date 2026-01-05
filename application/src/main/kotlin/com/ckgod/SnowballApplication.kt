@@ -87,9 +87,4 @@ fun Application.mainModule() {
         tradeHistoryRepository = tradeHistoryRepository,
         stockRepository = stockRepository
     )
-
-    val executionRepository by inject<ExecutionRepository>()
-    runBlocking {
-        executionRepository.getExecutionList()
-    }
 }

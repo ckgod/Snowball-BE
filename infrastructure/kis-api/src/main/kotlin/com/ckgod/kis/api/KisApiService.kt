@@ -82,8 +82,8 @@ class KisApiService(private val apiClient: KisApiClient) {
         val queryParams = spec.buildQuery(
             accountNo = apiClient.config.accountNo,
             accountCode = apiClient.config.accountCode,
-            startDate = beforeDay(6),
-            endDate = today(),
+            startDate = yesterday(),
+            endDate = yesterday(),
             nKey = nKey,
             fKey = fKey
         )
@@ -98,20 +98,6 @@ class KisApiService(private val apiClient: KisApiClient) {
     private fun yesterday(): String {
         val kstZone = ZoneId.of("Asia/Seoul")
         val yesterday = LocalDate.now(kstZone).minusDays(1)
-        val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-        return yesterday.format(formatter)
-    }
-
-    private fun beforeDay(day: Long): String {
-        val kstZone = ZoneId.of("Asia/Seoul")
-        val yesterday = LocalDate.now(kstZone).minusDays(day)
-        val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-        return yesterday.format(formatter)
-    }
-
-    private fun today(): String {
-        val kstZone = ZoneId.of("Asia/Seoul")
-        val yesterday = LocalDate.now(kstZone)
         val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
         return yesterday.format(formatter)
     }
