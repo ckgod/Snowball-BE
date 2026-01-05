@@ -22,7 +22,8 @@ class KisApiClient(
     internal suspend inline fun <reified T, reified Body> request(
         spec: KisApiSpec,
         queryParams: Map<String, String> = emptyMap(),
-        bodyParams: Body? = null
+        bodyParams: Body? = null,
+        additionalHeaders: Map<String, String>? = null
     ): T {
         val token = authService.getAccessToken()
         val url = "${config.baseUrl}${spec.path}"
@@ -30,11 +31,11 @@ class KisApiClient(
 
         val response = when (spec.method) {
             HttpMethod.Get -> client.get(url) {
-                headers { applyKisHeaders(token, trId) }
+                headers { applyKisHeaders(token, trId, additionalHeaders) }
                 url { queryParams.forEach { (key, value) -> parameters.append(key, value) } }
             }
             HttpMethod.Post -> client.post(url) {
-                headers { applyKisHeaders(token, trId) }
+                headers { applyKisHeaders(token, trId, additionalHeaders) }
                 contentType(ContentType.Application.Json)
                 setBody(bodyParams)
             }
@@ -44,13 +45,16 @@ class KisApiClient(
         return json.decodeFromString<T>(response.bodyAsText())
     }
 
-    private fun HeadersBuilder.applyKisHeaders(token: String, trId: String) {
+    private fun HeadersBuilder.applyKisHeaders(token: String, trId: String, additionalHeaders: Map<String, String>? = null) {
         append("content-type", "application/json; charset=utf-8")
         append("authorization", "Bearer $token")
         append("appkey", config.appKey)
         append("appsecret", config.appSecret)
         append("custtype", "P")
         append("tr_id", trId)
+        additionalHeaders?.forEach { key, value ->
+            append(key, value)
+        }
     }
 }
 

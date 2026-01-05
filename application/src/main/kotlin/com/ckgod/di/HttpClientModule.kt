@@ -11,6 +11,7 @@ import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.pingInterval
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
@@ -25,6 +26,13 @@ val httpClientModule = module {
         }
 
         HttpClient(CIO) {
+            val config = get<Application>().environment.config
+            if (config.property("app.environment").getString() == "local") {
+                install(Logging) {
+                    logger = Logger.SIMPLE
+                    level = LogLevel.ALL
+                }
+            }
             install(ContentNegotiation) {
                 json(jsonConfig)
             }

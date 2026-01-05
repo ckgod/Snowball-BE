@@ -2,6 +2,7 @@ package com.ckgod
 
 import com.ckgod.database.DatabaseFactory
 import com.ckgod.di.configureKoin
+import com.ckgod.domain.repository.ExecutionRepository
 import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
@@ -17,6 +18,7 @@ import com.ckgod.scheduler.SchedulerService
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import kotlinx.coroutines.runBlocking
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.get
 import org.koin.ktor.ext.inject
@@ -85,4 +87,9 @@ fun Application.mainModule() {
         tradeHistoryRepository = tradeHistoryRepository,
         stockRepository = stockRepository
     )
+
+    val executionRepository by inject<ExecutionRepository>()
+    runBlocking {
+        executionRepository.getExecutionList()
+    }
 }

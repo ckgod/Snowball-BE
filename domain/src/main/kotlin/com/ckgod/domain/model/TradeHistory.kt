@@ -28,11 +28,6 @@ data class TradeHistory(
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
-    val isFullyFilled: Boolean
-        get() = status == OrderStatus.FILLED && filledQuantity == orderQuantity
-
-    val isPartiallyFilled: Boolean
-        get() = status == OrderStatus.PARTIAL && filledQuantity > 0 && filledQuantity < orderQuantity
 }
 
 /**
