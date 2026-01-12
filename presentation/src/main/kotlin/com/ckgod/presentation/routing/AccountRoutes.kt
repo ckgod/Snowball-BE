@@ -1,19 +1,19 @@
 package com.ckgod.presentation.routing
 
 import com.ckgod.domain.usecase.GetAccountStatusUseCase
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.RoutingContext
-import io.ktor.server.routing.get
+import com.ckgod.presentation.mapper.AccountStatusMapper
+import io.ktor.http.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 suspend fun RoutingContext.accountRoutes(
     getAccountStatusUseCase: GetAccountStatusUseCase,
 ) {
     try {
         val accountStatus = getAccountStatusUseCase(true)
-        call.respond(accountStatus)
+        call.respond(AccountStatusMapper.toResponse(accountStatus))
     } catch (e: IllegalArgumentException) {
+        e.printStackTrace()
         call.respond(
             HttpStatusCode.BadRequest,
             mapOf("error" to "잘못된 요청입니다")

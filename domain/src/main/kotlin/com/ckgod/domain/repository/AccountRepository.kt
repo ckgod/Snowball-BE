@@ -1,15 +1,18 @@
 package com.ckgod.domain.repository
 
 import com.ckgod.domain.model.AccountStatus
-import com.ckgod.domain.model.StockHolding
+import com.ckgod.domain.model.HoldingStock
+import com.ckgod.domain.model.PresentAccountStatus
 
 interface AccountRepository {
     suspend fun getAccountBalance(): AccountStatus
 
+    suspend fun getPresentAccountBalance(): PresentAccountStatus
+
     /**
      * 특정 티커의 보유 정보 조회
      */
-    suspend fun getBalance(ticker: String): StockHolding? {
+    suspend fun getBalance(ticker: String): HoldingStock? {
         val account = getAccountBalance()
         return account.holdings.find { it.ticker == ticker }
     }
