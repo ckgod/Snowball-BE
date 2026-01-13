@@ -21,7 +21,7 @@ data class KisPresentBalanceResponse(
             HoldingStock(
                 ticker = item.productNumber,
                 name = item.productName,
-                quantity = item.balanceQuantity.ifEmpty { "0" },
+                quantity = item.executedQuantityTotal.ifEmpty { "0" },
                 avgPrice = item.averageUnitPrice.ifEmpty { "0.0" },
                 investedAmount = item.foreignPurchaseAmount.ifEmpty { "0.0" },
                 currentPrice = item.overseasCurrentPrice.ifEmpty { "0.0" },
