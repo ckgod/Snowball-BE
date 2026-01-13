@@ -1,5 +1,6 @@
 package com.ckgod.presentation.routing
 
+import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.usecase.GetAccountStatusUseCase
 import com.ckgod.presentation.mapper.AccountStatusMapper
 import io.ktor.http.*
@@ -8,10 +9,14 @@ import io.ktor.server.routing.*
 
 suspend fun RoutingContext.accountRoutes(
     getAccountStatusUseCase: GetAccountStatusUseCase,
+    investmentStatusRepository: InvestmentStatusRepository,
 ) {
     try {
         val accountStatus = getAccountStatusUseCase(true)
-        call.respond(AccountStatusMapper.toResponse(accountStatus))
+        val capitalList = investmentStatusRepository.findAll().map { status ->
+            status.ticker to status.initialCapital
+        }
+        call.respond(AccountStatusMapper.toResponse(accountStatus, capitalList))
     } catch (e: IllegalArgumentException) {
         e.printStackTrace()
         call.respond(
