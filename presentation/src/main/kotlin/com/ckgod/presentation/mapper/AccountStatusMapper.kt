@@ -8,7 +8,8 @@ import com.ckgod.snowball.model.HoldingStockResponse
 
 object AccountStatusMapper {
     fun toResponse(
-        accountStatus: PresentAccountStatus
+        accountStatus: PresentAccountStatus,
+        capitalList: List<Pair<String, Double>>
     ): AccountStatusResponse {
         return AccountStatusResponse(
             totalAssetValueUsd = accountStatus.totalAssetValueUsd,
@@ -19,14 +20,18 @@ object AccountStatusMapper {
             totalCashUsd = accountStatus.totalCashUsd,
             orderableCashUsd = accountStatus.orderableCashUsd,
             lockedCashUsd = accountStatus.lockedCashUsd,
-            holdingStocks = accountStatus.holdings.map { HoldingStockMapper.toResponse(it) }
+            holdingStocks = accountStatus.holdings.map { stock ->
+                val capital = capitalList.find { it.first == stock.ticker }?.second ?: 0.0
+                HoldingStockMapper.toResponse(stock, capital)
+            }
         )
     }
 }
 
 object HoldingStockMapper {
     fun toResponse(
-        stock: HoldingStock
+        stock: HoldingStock,
+        capital: Double
     ) : HoldingStockResponse {
         return HoldingStockResponse(
             ticker = stock.ticker,
@@ -36,6 +41,7 @@ object HoldingStockMapper {
             currentPrice = stock.currentPrice.toDouble().roundTo2Decimal(),
             profitRate = stock.profitRate.toDouble().roundTo2Decimal(),
             investedAmount = stock.investedAmount.toDouble().roundTo2Decimal(),
+            capital = capital
         )
     }
 }

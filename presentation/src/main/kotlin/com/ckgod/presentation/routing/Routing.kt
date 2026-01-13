@@ -21,7 +21,7 @@ fun Application.configureRouting(
                 mainStatusRoute(investmentStatusRepository, stockRepository)
             }
             get("/account/status") {
-                accountRoutes(getAccountStatusUseCase)
+                accountRoutes(getAccountStatusUseCase, investmentStatusRepository)
             }
             get("/stock/price") {
                 stockPriceRoutes(getCurrentPriceUseCase)
