@@ -58,6 +58,26 @@ sealed class KisApiSpec(
         )
     }
 
+    data object InquirePresentBalance : KisApiSpec(
+        method = HttpMethod.Get,
+        path = "/uapi/overseas-stock/v1/trading/inquire-present-balance",
+        realTrId = "CTRP6504R",
+        mockTrId = "VTRP6504R",
+        description = "해외주식 체결 기준 현재 잔고 조회"
+    ) {
+        fun buildQuery(
+            accountNo: String,
+            accountCode: String
+        ): Map<String, String> = mapOf(
+            "CANO" to accountNo,
+            "ACNT_PRDT_CD" to accountCode,
+            "WCRC_FRCR_DVSN_CD" to "02",
+            "NATN_CD" to "000",
+            "TR_MKET_CD" to "00",
+            "INQR_DVSN_CD" to "00"
+        )
+    }
+
     data object InquirePeriodProfit : KisApiSpec(
         method = HttpMethod.Get,
         path = "/uapi/overseas-stock/v1/trading/inquire-period-profit",

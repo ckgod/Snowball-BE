@@ -1,7 +1,7 @@
 package com.ckgod.kis.response
 
 import com.ckgod.domain.model.AccountStatus
-import com.ckgod.domain.model.StockHolding
+import com.ckgod.domain.model.HoldingStock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -15,7 +15,7 @@ data class KisBalanceResponse(
 ) {
     fun toDomain(): AccountStatus {
         val holdingList = this.holdings?.map { item ->
-            StockHolding(
+            HoldingStock(
                 ticker = item.ticker,
                 name = item.itemName,
                 quantity = item.quantity.ifEmpty { "0" },

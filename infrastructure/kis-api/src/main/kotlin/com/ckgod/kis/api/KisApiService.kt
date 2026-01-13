@@ -10,6 +10,7 @@ import com.ckgod.kis.response.KisBalanceResponse
 import com.ckgod.kis.response.KisDateProfitResponse
 import com.ckgod.kis.response.KisExecutionResponse
 import com.ckgod.kis.response.KisOrderResponse
+import com.ckgod.kis.response.KisPresentBalanceResponse
 import com.ckgod.kis.response.KisPriceResponse
 import java.time.LocalDate
 import java.time.ZoneId
@@ -74,6 +75,19 @@ class KisApiService(private val apiClient: KisApiClient) {
         return apiClient.request<KisBalanceResponse, Unit>(
             spec = spec,
             queryParams = queryParams
+        )
+    }
+
+    suspend fun getPresentAccountBalance() : KisPresentBalanceResponse {
+        val spec = KisApiSpec.InquirePresentBalance
+        val params = spec.buildQuery(
+            accountNo = apiClient.config.accountNo,
+            accountCode = apiClient.config.accountCode
+        )
+
+        return apiClient.request<KisPresentBalanceResponse, Unit>(
+            spec = spec,
+            queryParams = params
         )
     }
 
