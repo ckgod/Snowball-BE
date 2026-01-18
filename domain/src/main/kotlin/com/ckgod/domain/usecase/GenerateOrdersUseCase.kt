@@ -242,7 +242,7 @@ class GenerateOrdersUseCase(
         }
 
         if (status.phase != TradePhase.QUARTER_MODE) {
-            val crashRates = listOf(0.07, 0.10, 0.13, 0.15)
+            val crashRates = listOf(0.05, 0.07, 0.09, 0.12)
             crashRates.forEach { rate ->
                 val rawCrashPrice = currentPrice * (1.0 - rate)
                 val crashPrice = if (maxBuyPrice != null && rawCrashPrice >= maxBuyPrice) {
