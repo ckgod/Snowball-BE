@@ -65,6 +65,7 @@ class GenerateOrdersUseCase(
 
         val holding = accountRepository.getBalance(ticker)
         val currentQuantity = holding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
+        val currentAvgPrice = holding?.avgPrice?.toDoubleOrNull() ?: 0.0
 
         // 매도 주문 생성
         val sellOrders = try {
@@ -117,7 +118,8 @@ class GenerateOrdersUseCase(
                 orderTime = orderDateTime,
                 status = OrderStatus.PENDING,
                 tValue = currentStatus.tValue,
-                crashRate = response.request.crashRate
+                crashRate = response.request.crashRate,
+                avgPrice = if (response.request.side == OrderSide.SELL) currentAvgPrice else 0.0 // 매도 주문의 경우만 평단가 입력
             )
             tradeHistoryRepository.save(history)
         }

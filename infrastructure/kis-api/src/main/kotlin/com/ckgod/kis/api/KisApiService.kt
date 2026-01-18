@@ -2,6 +2,8 @@ package com.ckgod.kis.api
 
 import com.ckgod.domain.model.OrderRequest
 import com.ckgod.domain.model.OrderSide
+import com.ckgod.domain.utils.beforeDay
+import com.ckgod.domain.utils.yesterday
 import com.ckgod.kis.KisApiClient
 import com.ckgod.kis.KisResponseWithHeaders
 import com.ckgod.kis.spec.KisApiSpec
@@ -12,9 +14,6 @@ import com.ckgod.kis.response.KisExecutionResponse
 import com.ckgod.kis.response.KisOrderResponse
 import com.ckgod.kis.response.KisPresentBalanceResponse
 import com.ckgod.kis.response.KisPriceResponse
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 class KisApiService(private val apiClient: KisApiClient) {
 
@@ -34,7 +33,7 @@ class KisApiService(private val apiClient: KisApiClient) {
         val queryParams = spec.buildQuery(
             accountNo = apiClient.config.accountNo,
             accountCode = apiClient.config.accountCode,
-            startDate = yesterday(),
+            startDate = beforeDay(3),
             endDate = yesterday()
         )
 
@@ -107,12 +106,5 @@ class KisApiService(private val apiClient: KisApiClient) {
             queryParams = queryParams,
             additionalHeaders = mapOf("tr_cont" to trCont)
         )
-    }
-
-    private fun yesterday(): String {
-        val kstZone = ZoneId.of("Asia/Seoul")
-        val yesterday = LocalDate.now(kstZone).minusDays(1)
-        val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-        return yesterday.format(formatter)
     }
 }

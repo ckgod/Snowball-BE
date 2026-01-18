@@ -20,6 +20,8 @@ data class TradeHistory(
     val filledQuantity: Int = 0,                // 체결된 수량
     val filledPrice: Double = 0.0,              // 체결 평균 가격
     val filledTime: LocalDateTime? = null,      // 체결 시각
+    val avgPrice: Double = 0.0,                 // 체결 당시 평단가
+    val realizedProfitAmount: Double = 0.0,     // 매도 체결 시 손익
 
     // 전략 정보
     val tValue: Double,                         // 주문 당시 T값

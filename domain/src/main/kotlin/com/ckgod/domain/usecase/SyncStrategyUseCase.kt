@@ -1,6 +1,7 @@
 package com.ckgod.domain.usecase
 
 import com.ckgod.domain.model.InvestmentStatus
+import com.ckgod.domain.model.OrderSide
 import com.ckgod.domain.model.OrderStatus
 import com.ckgod.domain.repository.AccountRepository
 import com.ckgod.domain.repository.ExecutionRepository
@@ -51,12 +52,20 @@ class SyncStrategyUseCase(
                 execution.isPartiallyFilled -> OrderStatus.PARTIAL
                 else -> OrderStatus.CANCELED
             }
+            val realizedAmount = historyRepository.findByOrderNo(execution.orderNo)?.let { history ->
+                if (history.orderSide == OrderSide.SELL && status != OrderStatus.CANCELED) {
+                    val originPrice = history.avgPrice * execution.filledQuantity
+                    val totalPrice = history.filledPrice * execution.filledQuantity
+                    (totalPrice - originPrice)
+                } else null
+            }
             historyRepository.updateOrderStatus(
                 execution.orderNo,
                 status = status,
                 filledQuantity = execution.filledQuantity.toInt(),
                 filledPrice = execution.filledPrice,
                 filledTime = LocalDateTime.now(),
+                realizedProfitAmount = realizedAmount
             )
         }
     }
@@ -75,11 +84,12 @@ class SyncStrategyUseCase(
         val quantity = balance?.quantity?.toDoubleOrNull()?.toInt() ?: 0
 
         val dailyProfit = try {
-            accountRepository.getDailyProfit(ticker)
+            accountRepository.getDailyProfit(ticker).sum()
         } catch (e: Exception) {
             logger.error("[SyncStrategy] [$ticker] 일일 수익 조회 실패", e)
             throw e
         }
+        logger.info("[SyncStrategy] [$ticker] 일일 수익: $dailyProfit")
 
         // 상태 업데이트 및 저장
         val updatedStatus = currentStatus.updateFromAccount(

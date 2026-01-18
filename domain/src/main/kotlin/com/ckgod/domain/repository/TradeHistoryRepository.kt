@@ -21,7 +21,8 @@ interface TradeHistoryRepository {
         status: OrderStatus,
         filledQuantity: Int,
         filledPrice: Double,
-        filledTime: LocalDateTime
+        filledTime: LocalDateTime,
+        realizedProfitAmount: Double? = null,
     )
 
     /**

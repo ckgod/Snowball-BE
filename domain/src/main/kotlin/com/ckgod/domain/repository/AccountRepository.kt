@@ -20,5 +20,5 @@ interface AccountRepository {
     /**
      * 일일 수익 조회
      */
-    suspend fun getDailyProfit(ticker: String): Double
+    suspend fun getDailyProfit(ticker: String): List<Double>
 }
