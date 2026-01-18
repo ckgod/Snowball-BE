@@ -36,6 +36,8 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
             it[tValue] = history.tValue
             it[createdAt] = history.createdAt
             it[updatedAt] = history.updatedAt
+            it[avgPrice] = history.avgPrice
+            it[realizedPropitAmount] = history.realizedProfitAmount
         } get TradeHistoryTable.id
 
         history.copy(id = id)
@@ -46,7 +48,8 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
         status: OrderStatus,
         filledQuantity: Int,
         filledPrice: Double,
-        filledTime: LocalDateTime
+        filledTime: LocalDateTime,
+        realizedProfitAmount: Double?,
     ) {
         transaction {
             TradeHistoryTable.update({ TradeHistoryTable.orderNo eq orderNo }) {
@@ -55,6 +58,7 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
                 it[TradeHistoryTable.filledPrice] = filledPrice
                 it[TradeHistoryTable.filledTime] = filledTime
                 it[updatedAt] = LocalDateTime.now()
+                realizedProfitAmount?.let { amount -> it[realizedPropitAmount] = amount }
             }
         }
     }
@@ -105,7 +109,9 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
             tValue = this[TradeHistoryTable.tValue],
             crashRate = this[TradeHistoryTable.crashRate],
             createdAt = this[TradeHistoryTable.createdAt],
-            updatedAt = this[TradeHistoryTable.updatedAt]
+            updatedAt = this[TradeHistoryTable.updatedAt],
+            avgPrice = this[TradeHistoryTable.avgPrice],
+            realizedProfitAmount = this[TradeHistoryTable.realizedPropitAmount]
         )
     }
 }

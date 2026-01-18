@@ -23,6 +23,8 @@ object TradeHistoryTable : Table("trade_history") {
     val filledTime = datetime("filled_time").nullable()                        // 체결 시각
     val tValue = double("t_value")                                             // 주문 당시 T값
     val crashRate = double("crash_rate").nullable().default(null)  // 폭락 매수 비율
+    val avgPrice = double("avg_price").default(0.0)                // 주문 당시 평단
+    val realizedPropitAmount = double("realized_propit_amount").default(0.0) // 매도 체결 시 손익
 
     val createdAt = datetime("created_at")                  // 생성 시각
     val updatedAt = datetime("updated_at")                  // 업데이트 시각
