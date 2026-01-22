@@ -7,11 +7,15 @@ import com.ckgod.domain.model.TradeHistory
 import com.ckgod.domain.repository.TradeHistoryRepository
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
@@ -88,6 +92,21 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
     override suspend fun findPendingOrders(): List<TradeHistory> = transaction {
         TradeHistoryTable.selectAll()
             .where { TradeHistoryTable.status eq OrderStatus.PENDING.name }
+            .orderBy(TradeHistoryTable.orderTime to SortOrder.DESC)
+            .map { it.toTradeHistory() }
+    }
+
+    override suspend fun findByYesterdayOrderTime(ticker: String): List<TradeHistory> = transaction {
+        val yesterday = LocalDate.now().minusDays(1)
+        val yesterdayStart = yesterday.atStartOfDay()
+        val yesterdayEnd = yesterday.plusDays(1).atStartOfDay()
+
+        TradeHistoryTable.selectAll()
+            .where {
+                (TradeHistoryTable.ticker eq ticker) and
+                (TradeHistoryTable.orderTime greaterEq yesterdayStart) and
+                (TradeHistoryTable.orderTime less yesterdayEnd)
+            }
             .orderBy(TradeHistoryTable.orderTime to SortOrder.DESC)
             .map { it.toTradeHistory() }
     }
