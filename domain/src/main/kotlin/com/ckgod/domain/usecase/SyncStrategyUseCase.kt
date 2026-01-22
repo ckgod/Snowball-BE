@@ -83,11 +83,15 @@ class SyncStrategyUseCase(
         val avgPrice = balance?.avgPrice?.toDoubleOrNull() ?: 0.0
         val quantity = balance?.quantity?.toDoubleOrNull()?.toInt() ?: 0
 
-        val dailyProfit = try {
-            accountRepository.getDailyProfit(ticker).sum()
-        } catch (e: Exception) {
-            logger.error("[SyncStrategy] [$ticker] 일일 수익 조회 실패", e)
-            throw e
+//        val dailyProfit = try {
+//            accountRepository.getDailyProfit(ticker).sum()
+//        } catch (e: Exception) {
+//            logger.error("[SyncStrategy] [$ticker] 일일 수익 조회 실패", e)
+//            throw e
+//        }
+
+        val dailyProfit = historyRepository.findByYesterdayOrderTime(ticker).sumOf { history ->
+            history.realizedProfitAmount
         }
         logger.info("[SyncStrategy] [$ticker] 일일 수익: $dailyProfit")
 

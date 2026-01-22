@@ -44,4 +44,9 @@ interface TradeHistoryRepository {
      * PENDING 상태인 주문 조회 (체결 확인용)
      */
     suspend fun findPendingOrders(): List<TradeHistory>
+
+    /**
+     * 어제 날짜에 주문된 내역 조회
+     */
+    suspend fun findByYesterdayOrderTime(ticker: String): List<TradeHistory>
 }
