@@ -14,6 +14,7 @@ import com.ckgod.kis.response.KisExecutionResponse
 import com.ckgod.kis.response.KisOrderResponse
 import com.ckgod.kis.response.KisPresentBalanceResponse
 import com.ckgod.kis.response.KisPriceResponse
+import com.ckgod.kis.response.KisTotalAssetResponse
 
 class KisApiService(private val apiClient: KisApiClient) {
 
@@ -105,6 +106,19 @@ class KisApiService(private val apiClient: KisApiClient) {
             spec = spec,
             queryParams = queryParams,
             additionalHeaders = mapOf("tr_cont" to trCont)
+        )
+    }
+
+    suspend fun getTotalAsset(): KisTotalAssetResponse {
+        val spec = KisApiSpec.TotalAsset
+        val queryParams = spec.buildQuery(
+            accountNo = apiClient.config.accountNo,
+            accountCode = apiClient.config.accountCode,
+        )
+
+        return apiClient.request<KisTotalAssetResponse, Unit>(
+            spec = spec,
+            queryParams = queryParams
         )
     }
 }

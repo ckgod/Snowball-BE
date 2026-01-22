@@ -22,6 +22,10 @@ class StockRepositoryImpl(private val kisApiService: KisApiService) : StockRepos
         return kisData.output?.toDomain()
     }
 
+    override suspend fun getExchangeRate(): Double {
+        return kisApiService.getMarketCurrentPrice("TQQQ").output?.exchangeRate?.toDoubleOrNull() ?: 1450.0
+    }
+
     override suspend fun postOrder(buyOrders: List<OrderRequest>, sellOrders: List<OrderRequest>): List<OrderResponse> {
         return coroutineScope {
             val sellResponses = sellOrders.map { order ->

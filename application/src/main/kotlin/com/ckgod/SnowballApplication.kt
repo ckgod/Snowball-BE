@@ -2,10 +2,10 @@ package com.ckgod
 
 import com.ckgod.database.DatabaseFactory
 import com.ckgod.di.configureKoin
+import com.ckgod.domain.repository.AccountRepository
 import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
-import com.ckgod.domain.usecase.GetAccountStatusUseCase
 import com.ckgod.domain.usecase.GetCurrentPriceUseCase
 import com.ckgod.presentation.config.configureAuthPlugin
 import com.ckgod.presentation.config.configureRateLimiter
@@ -53,10 +53,10 @@ fun Application.mainModule() {
 
     // ========== Use Case ===========
     val getCurrentPriceUseCase: GetCurrentPriceUseCase by inject()
-    val getAccountStatusUseCase: GetAccountStatusUseCase by inject()
     val investmentStatusRepository by inject<InvestmentStatusRepository>()
     val tradeHistoryRepository by inject<TradeHistoryRepository>()
     val stockRepository by inject<StockRepository>()
+    val accountRepository by inject<AccountRepository>()
 
     // ========== Scheduler ==========
     simpleScheduler = get()
@@ -65,9 +65,9 @@ fun Application.mainModule() {
     // ========== API Routing ==========
     configureRouting(
         getCurrentPriceUseCase = getCurrentPriceUseCase,
-        getAccountStatusUseCase = getAccountStatusUseCase,
         investmentStatusRepository = investmentStatusRepository,
         tradeHistoryRepository = tradeHistoryRepository,
-        stockRepository = stockRepository
+        stockRepository = stockRepository,
+        accountRepository = accountRepository
     )
 }

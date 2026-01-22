@@ -7,6 +7,8 @@ import com.ckgod.domain.model.OrderResponse
 interface StockRepository {
     suspend fun getCurrentPrice(stockCode: String): MarketPrice?
 
+    suspend fun getExchangeRate(): Double
+
     suspend fun postOrder(
         buyOrders: List<OrderRequest> = emptyList(),
         sellOrders: List<OrderRequest> = emptyList()

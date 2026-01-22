@@ -154,4 +154,22 @@ sealed class KisApiSpec(
         )
     }
 
+    data object TotalAsset : KisApiSpec(
+        method = HttpMethod.Get,
+        path = "/uapi/domestic-stock/v1/trading/inquire-account-balance",
+        realTrId = "CTRP6548R",
+        mockTrId = "미지원",
+        description = "투자계좌자산현황조회"
+    ) {
+        fun buildQuery(
+            accountNo: String,
+            accountCode: String
+        ): Map<String, String> = mapOf(
+            "CANO" to accountNo,
+            "ACNT_PRDT_CD" to accountCode,
+            "INQR_DVSN_1" to "",
+            "BSPR_BF_DT_APLY_YN" to ""
+        )
+    }
+
 }

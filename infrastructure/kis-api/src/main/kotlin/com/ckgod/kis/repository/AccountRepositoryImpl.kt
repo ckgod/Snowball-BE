@@ -2,6 +2,7 @@ package com.ckgod.kis.repository
 
 import com.ckgod.domain.model.AccountStatus
 import com.ckgod.domain.model.PresentAccountStatus
+import com.ckgod.domain.model.TotalAsset
 import com.ckgod.domain.repository.AccountRepository
 import com.ckgod.domain.utils.yesterday
 import com.ckgod.kis.api.KisApiService
@@ -26,5 +27,9 @@ class AccountRepositoryImpl(
         }?.map {
             it.realizedProfitAmount.toDouble()
         } ?: listOf()
+    }
+
+    override suspend fun getTotalAsset(): TotalAsset {
+        return kisApiService.getTotalAsset().toDomain()
     }
 }
