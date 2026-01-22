@@ -55,7 +55,7 @@ class SyncStrategyUseCase(
             val realizedAmount = historyRepository.findByOrderNo(execution.orderNo)?.let { history ->
                 if (history.orderSide == OrderSide.SELL && status != OrderStatus.CANCELED) {
                     val originPrice = history.avgPrice * execution.filledQuantity
-                    val totalPrice = history.filledPrice * execution.filledQuantity
+                    val totalPrice = execution.filledPrice * execution.filledQuantity
                     (totalPrice - originPrice)
                 } else null
             }
