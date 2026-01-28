@@ -19,6 +19,7 @@ object InvestmentStatusTable : Table("investment_status") {
     val targetRate = double("target_rate")                           // 기준 %
     val updatedAt = varchar("updated_at", 50)                 // 갱신 시간
     val realizedTotalProfit = double("realized_total_profit")        // 총 실현 손익
+    val starMode = varchar("star_mode", 10).default("P2_3")          // 별 모드
 
     override val primaryKey = PrimaryKey(ticker)
 }

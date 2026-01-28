@@ -1,6 +1,7 @@
 package com.ckgod.database
 
 import com.ckgod.domain.model.InvestmentStatus
+import com.ckgod.domain.model.StarMode
 import com.ckgod.domain.repository.InvestmentStatusRepository
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
@@ -38,6 +39,7 @@ class InvestmentStatusRepositoryImpl : InvestmentStatusRepository {
             it[targetRate] = status.targetRate
             it[updatedAt] = status.updatedAt
             it[realizedTotalProfit] = status.realizedTotalProfit
+            it[starMode] = status.starMode.name
         }
         status
     }
@@ -55,6 +57,7 @@ class InvestmentStatusRepositoryImpl : InvestmentStatusRepository {
             targetRate = this[InvestmentStatusTable.targetRate],
             updatedAt = this[InvestmentStatusTable.updatedAt],
             realizedTotalProfit = this[InvestmentStatusTable.realizedTotalProfit],
+            starMode = StarMode.valueOf(this[InvestmentStatusTable.starMode]),
         )
     }
 }
