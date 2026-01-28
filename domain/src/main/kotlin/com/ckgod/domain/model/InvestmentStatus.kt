@@ -16,6 +16,7 @@ data class InvestmentStatus(
     val targetRate: Double,          // 기준 % (목표 수익률)
     val realizedTotalProfit: Double, // 총 실현 손익
     val updatedAt: String,           // 마지막 갱신 시간
+    val starMode: StarMode = StarMode.P2_3
 ) {
 
     /**
@@ -32,9 +33,17 @@ data class InvestmentStatus(
     /**
      * 별% 계산: targetRate × (1 - 2T / division)
      * T = division / 2일 때 0%가 됨
+     * T = division / 2/3일 때 0%가 됨
      */
     val starPercent: Double
-        get() = targetRate * (1.0 - (2.0 * tValue / division))
+        get() = when (starMode) {
+            StarMode.P1_2 -> {
+                targetRate * (1.0 - (2.0 * tValue / division))
+            }
+            StarMode.P2_3 -> {
+                targetRate * (1.0 - (1.5 * tValue / division))
+            }
+        }
 
     val phase: TradePhase
         get() = when {
@@ -97,4 +106,9 @@ enum class TradePhase(val description: String) {
     BACK_HALF("후반전"),
     QUARTER_MODE("쿼터모드"),
     EXHAUSTED("자금소진")
+}
+
+enum class StarMode {
+    P1_2,
+    P2_3
 }
