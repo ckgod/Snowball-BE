@@ -1,11 +1,13 @@
 package com.ckgod.di
 
 import com.ckgod.database.InvestmentStatusRepositoryImpl
+import com.ckgod.database.StockPriceHistoryRepositoryImpl
 import com.ckgod.database.TradeHistoryRepositoryImpl
 import com.ckgod.database.auth.AuthTokenRepository
 import com.ckgod.domain.repository.AccountRepository
 import com.ckgod.domain.repository.ExecutionRepository
 import com.ckgod.domain.repository.InvestmentStatusRepository
+import com.ckgod.domain.repository.StockPriceHistoryRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
 import com.ckgod.kis.config.KisMode
@@ -19,6 +21,8 @@ val repositoryModule = module {
     single<InvestmentStatusRepository> { InvestmentStatusRepositoryImpl() }
 
     single<TradeHistoryRepository> { TradeHistoryRepositoryImpl() }
+
+    single<StockPriceHistoryRepository> { StockPriceHistoryRepositoryImpl() }
 
     single { AuthTokenRepository() }
 
