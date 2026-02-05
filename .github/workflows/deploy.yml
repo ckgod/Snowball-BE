@@ -44,13 +44,19 @@ jobs:
           script: |
             cd ~/app
             mv application/build/libs/*-all.jar app.jar
-            
-            sudo docker-compose down || true
-            sudo docker stop my-bot || true
-            sudo docker rm my-bot || true
-            
-            sudo docker rmi trading-bot || true
-            
+
+            if [ ! -d "mysql_data" ]; then
+              echo "Warning: mysql_data directory not found"
+            else
+              echo "DB volume exists: $(du -sh mysql_data | cut -f1)"
+            fi
+
+            sudo docker-compose down
+
+            sudo docker rmi trading-bot:latest || true
+
             sudo docker-compose up -d --build
-            
+
             sudo docker image prune -f
+            sudo docker container prune -f
+            sudo docker builder prune -f --keep-storage 500MB
