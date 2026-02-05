@@ -46,12 +46,25 @@ data class InvestmentStatus(
         }
 
     val phase: TradePhase
-        get() = when {
-            tValue <= (division / 2).toDouble() -> TradePhase.FRONT_HALF
-            tValue < (division - 1).toDouble() -> TradePhase.BACK_HALF
-            tValue < division.toDouble() -> TradePhase.QUARTER_MODE
-            else -> TradePhase.EXHAUSTED
-        }
+        get() =
+            when (starMode) {
+                StarMode.P1_2 -> {
+                    when {
+                        tValue <= (division / 2).toDouble() -> TradePhase.FRONT_HALF
+                        tValue < (division - 1).toDouble() -> TradePhase.BACK_HALF
+                        tValue < division.toDouble() -> TradePhase.QUARTER_MODE
+                        else -> TradePhase.EXHAUSTED
+                    }
+                }
+                StarMode.P2_3 -> {
+                    when {
+                        tValue <= (division * 2 / 3).toDouble() -> TradePhase.FRONT_HALF
+                        tValue < (division - 1).toDouble() -> TradePhase.BACK_HALF
+                        tValue < division.toDouble() -> TradePhase.QUARTER_MODE
+                        else -> TradePhase.EXHAUSTED
+                    }
+                }
+            }
 
     val exchange: Exchange get() = when(ticker) {
         "TQQQ" -> Exchange.NASD
