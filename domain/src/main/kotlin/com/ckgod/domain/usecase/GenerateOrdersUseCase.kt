@@ -9,6 +9,7 @@ import com.ckgod.domain.utils.roundTo2Decimal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.ZoneId
+import kotlin.math.abs
 
 /**
  * 주문 생성 UseCase
@@ -244,24 +245,29 @@ class GenerateOrdersUseCase(
         if (status.phase != TradePhase.QUARTER_MODE) {
             val crashRates = listOf(0.05, 0.07, 0.09, 0.12)
             crashRates.forEach { rate ->
-                val rawCrashPrice = currentPrice * (1.0 - rate)
-                val crashPrice = if (maxBuyPrice != null && rawCrashPrice >= maxBuyPrice) {
-                    logger.info("[GenerateOrders] [${status.ticker}] 폭락대비 매수가(-${(rate * 100).toInt()}%) 조정: ${"%.2f".format(rawCrashPrice)} -> ${"%.2f".format(maxBuyPrice)}")
-                    maxBuyPrice
-                } else {
-                    rawCrashPrice
-                }.roundTo2Decimal()
+                /**
+                 * 별%가 음수이고, 별% 보다 더 많이 떨어져야 구매함
+                 */
+                if (status.starPercent < 0 && (rate * 100).toInt() > abs(status.starPercent.toInt())) {
+                    val rawCrashPrice = currentPrice * (1.0 - rate)
+                    val crashPrice = if (maxBuyPrice != null && rawCrashPrice >= maxBuyPrice) {
+                        logger.info("[GenerateOrders] [${status.ticker}] 폭락대비 매수가(-${(rate * 100).toInt()}%) 조정: ${"%.2f".format(rawCrashPrice)} -> ${"%.2f".format(maxBuyPrice)}")
+                        maxBuyPrice
+                    } else {
+                        rawCrashPrice
+                    }.roundTo2Decimal()
 
-                if (crashPrice > 0) {
-                    orders.add(OrderRequest(
-                        ticker = status.ticker,
-                        exchange = status.exchange,
-                        side = OrderSide.BUY,
-                        type = OrderType.LOC,
-                        price = crashPrice,
-                        quantity = 1,
-                        crashRate = rate
-                    ))
+                    if (crashPrice > 0) {
+                        orders.add(OrderRequest(
+                            ticker = status.ticker,
+                            exchange = status.exchange,
+                            side = OrderSide.BUY,
+                            type = OrderType.LOC,
+                            price = crashPrice,
+                            quantity = 1,
+                            crashRate = rate
+                        ))
+                    }
                 }
             }
         }
