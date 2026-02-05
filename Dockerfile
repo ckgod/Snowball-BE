@@ -8,15 +8,24 @@ WORKDIR /app
 ENV TZ=Asia/Seoul
 
 # 4. Python3 설치 (Yahoo Finance 데이터 수집용)
-RUN yum update -y && \
-    yum install -y python3 python3-pip && \
-    yum clean all
+# Amazon Linux 2023 대응: dnf 또는 yum 자동 선택
+RUN if command -v dnf &> /dev/null; then \
+        dnf install -y python3 python3-pip gcc python3-devel && dnf clean all; \
+    else \
+        yum install -y python3 python3-pip gcc python3-devel && yum clean all; \
+    fi
 
-# 5. Python 스크립트 및 의존성 복사
+# 5. pip 업그레이드 및 Python 패키지 설치
+RUN python3 -m pip install --upgrade pip setuptools wheel && \
+    python3 -m pip install --no-cache-dir \
+        yfinance>=0.2.40 \
+        mysql-connector-python>=8.0.33 \
+        python-dotenv>=1.0.0 \
+        pandas>=2.2.0 \
+        numpy>=1.26.0
+
+# 6. Python 스크립트 복사
 COPY scripts/ /app/scripts/
-
-# 6. Python 패키지 설치
-RUN pip3 install --no-cache-dir -r /app/scripts/requirements.txt
 
 # 7. 빌드된 Jar 파일 복사 (이름을 app.jar로 통일)
 COPY app.jar app.jar
