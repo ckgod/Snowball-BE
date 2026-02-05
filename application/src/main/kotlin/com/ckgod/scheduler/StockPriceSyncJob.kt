@@ -21,32 +21,29 @@ class StockPriceSyncJob : Job {
         logger.info("=== [오전 5시] 주식 가격 동기화 시작 ===")
 
         try {
-            // Python 스크립트 경로 (환경변수 또는 기본 경로)
-            // Gradle 서브모듈에서 실행될 수 있으므로 프로젝트 루트를 찾아야 함
-            val projectRoot = System.getenv("PROJECT_ROOT")
+            val scriptPath = System.getenv("STOCK_PRICE_SYNC_SCRIPT")
                 ?: run {
                     val currentDir = System.getProperty("user.dir")
-                    // application 디렉토리에서 실행되는 경우 상위로 이동
-                    if (currentDir.endsWith("/application") || currentDir.endsWith("\\application")) {
-                        java.io.File(currentDir).parent
+                    val scriptFile = java.io.File(currentDir, "scripts/sync_stock_prices.py")
+
+                    if (scriptFile.exists()) {
+                        scriptFile.absolutePath
                     } else {
-                        currentDir
+                        val parentScript = java.io.File(currentDir).parentFile?.let {
+                            java.io.File(it, "scripts/sync_stock_prices.py")
+                        }
+                        parentScript?.absolutePath ?: scriptFile.absolutePath
                     }
                 }
 
-            val scriptPath = System.getenv("STOCK_PRICE_SYNC_SCRIPT")
-                ?: "$projectRoot/scripts/sync_stock_prices.py"
-
-            logger.info("프로젝트 루트: $projectRoot")
+            logger.info("작업 디렉토리: ${System.getProperty("user.dir")}")
             logger.info("Python 스크립트 경로: $scriptPath")
 
-            // Python 스크립트 실행 (daily 모드)
             val process = ProcessBuilder(
                 "python3",
                 scriptPath,
-                "daily"  // 최근 5일만 업데이트
+                "daily"
             ).apply {
-                // 환경변수 전달
                 environment().putAll(
                     mapOf(
                         "DB_HOST" to (System.getenv("DB_HOST") ?: "localhost"),
@@ -56,7 +53,7 @@ class StockPriceSyncJob : Job {
                         "DB_NAME" to (System.getenv("DB_NAME") ?: "snowball")
                     )
                 )
-                redirectErrorStream(true)  // stderr를 stdout으로 합침
+                redirectErrorStream(true)
             }.start()
 
             // 스크립트 실행 로그 실시간 출력
