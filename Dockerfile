@@ -16,13 +16,16 @@ RUN if command -v dnf &> /dev/null; then \
     fi
 
 # 5. pip 업그레이드 및 Python 패키지 설치
+# Python 3.7 + OpenSSL 1.0.2k 호환 버전 사용
 RUN python3 -m pip install --upgrade pip setuptools wheel && \
     python3 -m pip install --no-cache-dir \
-        yfinance>=0.2.40 \
-        mysql-connector-python>=8.0.33 \
-        python-dotenv>=1.0.0 \
-        pandas>=2.2.0 \
-        numpy>=1.26.0
+        'urllib3<2.0' \
+        'requests<2.29.0' \
+        yfinance==0.2.28 \
+        mysql-connector-python==8.0.33 \
+        python-dotenv==1.0.0 \
+        'pandas<2.0.0' \
+        'numpy<1.24.0'
 
 # 6. Python 스크립트 복사
 COPY scripts/ /app/scripts/
