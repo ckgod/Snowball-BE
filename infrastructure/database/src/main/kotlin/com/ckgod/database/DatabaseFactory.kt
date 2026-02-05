@@ -30,7 +30,8 @@ object DatabaseFactory {
             val allTables = arrayOf(
                 AuthTokens,
                 InvestmentStatusTable,
-                TradeHistoryTable
+                TradeHistoryTable,
+                StockPriceHistoryTable
             )
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(*allTables)
             if (statements.isNotEmpty()) {

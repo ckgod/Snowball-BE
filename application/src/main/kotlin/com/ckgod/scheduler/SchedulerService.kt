@@ -29,18 +29,23 @@ class SchedulerService(
             when {
                 bundle.jobDetail.key.name.startsWith("syncJob") -> SyncJob(syncStrategyUseCase)
                 bundle.jobDetail.key.name.startsWith("orderJob") -> OrderJob(generateOrdersUseCase)
+                bundle.jobDetail.key.name.startsWith("stockPriceSyncJob") -> StockPriceSyncJob()
                 else -> throw IllegalArgumentException("Unknown job: ${bundle.jobDetail.key.name}")
             }
         }
 
-        // 1. 정산 Job (오전 6시 20분)
+        // 1. 주식 가격 동기화 Job (오전 5시 - 미국 동부 시간)
+        scheduleStockPriceSyncJob()
+
+        // 2. 정산 Job (오전 6시 20분)
         scheduleSyncJob()
 
-        // 2. 주문 Job (오후 6시)
+        // 3. 주문 Job (오후 6시)
         scheduleOrderJob()
 
         scheduler.start()
         logger.info("스케줄러 시작 완료")
+        logger.info("  - 주식 가격 동기화: 매일 오전 5시 (America/New_York)")
         logger.info("  - 정산: 매일 오전 6시 20분 (Asia/Seoul)")
         logger.info("  - 주문: 매일 오후 6시 5분 (Asia/Seoul)")
     }
@@ -71,6 +76,22 @@ class SchedulerService(
             .withSchedule(
                 CronScheduleBuilder.cronSchedule("0 5 18 ? * MON-FRI")
                     .inTimeZone(java.util.TimeZone.getTimeZone("Asia/Seoul"))
+            )
+            .build()
+
+        scheduler.scheduleJob(jobDetail, trigger)
+    }
+
+    private fun scheduleStockPriceSyncJob() {
+        val jobDetail = JobBuilder.newJob(StockPriceSyncJob::class.java)
+            .withIdentity("stockPriceSyncJob", "data")
+            .build()
+
+        val trigger = TriggerBuilder.newTrigger()
+            .withIdentity("stockPriceSyncTrigger", "data")
+            .withSchedule(
+                CronScheduleBuilder.dailyAtHourAndMinute(5, 0)
+                    .inTimeZone(java.util.TimeZone.getTimeZone("America/New_York"))
             )
             .build()
 

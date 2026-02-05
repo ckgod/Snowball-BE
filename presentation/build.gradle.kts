@@ -8,5 +8,6 @@ dependencies {
     implementation(project(":domain"))
 
     implementation(libs.bundles.ktor.server)
+    implementation(libs.kotlinx.datetime)
     implementation(libs.ktor.serialization.kotlinx.json)
 }

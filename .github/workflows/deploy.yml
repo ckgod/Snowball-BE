@@ -31,7 +31,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
-          source: "application/build/libs/*-all.jar, docker-compose.yml, Dockerfile"
+          source: "application/build/libs/*-all.jar, docker-compose.yml, Dockerfile, scripts/"
           target: "/home/${{ secrets.USERNAME }}/app"
           strip_components: 0
 

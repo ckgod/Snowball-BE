@@ -5,11 +5,13 @@ import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
 import com.ckgod.domain.usecase.GetCurrentPriceUseCase
+import com.ckgod.domain.usecase.GetStockPriceHistoryUseCase
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 
 fun Application.configureRouting(
     getCurrentPriceUseCase: GetCurrentPriceUseCase,
+    getStockPriceHistoryUseCase: GetStockPriceHistoryUseCase,
     investmentStatusRepository: InvestmentStatusRepository,
     tradeHistoryRepository: TradeHistoryRepository,
     stockRepository: StockRepository,
@@ -25,6 +27,9 @@ fun Application.configureRouting(
             }
             get("/stock/price") {
                 stockPriceRoutes(getCurrentPriceUseCase)
+            }
+            get("/stock/history") {
+                stockPriceHistoryRoutes(getStockPriceHistoryUseCase)
             }
             get("/stock/detail") {
                 stockDetailRoutes(
