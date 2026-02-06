@@ -25,6 +25,12 @@ jobs:
           chmod +x gradlew
           ./gradlew :application:shadowJar -x test
 
+      - name: Validate Docker build
+        run: |
+          cp application/build/libs/*-all.jar app.jar
+          docker build -t trading-bot:test .
+          echo "Docker 빌드 성공 - 배포 진행"
+
       - name: Copy files to EC2
         uses: appleboy/scp-action@master
         with:

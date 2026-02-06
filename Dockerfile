@@ -13,19 +13,19 @@ RUN if command -v dnf &> /dev/null; then \
         dnf install -y python3 python3-pip gcc python3-devel && dnf clean all; \
     else \
         yum install -y python3 python3-pip gcc python3-devel && yum clean all; \
-    fi
+    fi && \
+    python3 --version
 
 # 5. pip 업그레이드 및 Python 패키지 설치
-# Python 3.7 + OpenSSL 1.0.2k 호환 버전 사용
 RUN python3 -m pip install --upgrade pip setuptools wheel && \
     python3 -m pip install --no-cache-dir \
         'urllib3<2.0' \
         'requests<2.29.0' \
         yfinance==0.2.28 \
         mysql-connector-python==8.0.33 \
-        python-dotenv==1.0.0 \
-        'pandas<2.0.0' \
-        'numpy<1.24.0'
+        python-dotenv==0.21.1 \
+        pandas==1.3.5 \
+        numpy==1.21.6
 
 # 6. Python 스크립트 복사
 COPY scripts/ /app/scripts/
