@@ -17,10 +17,11 @@ RUN if command -v dnf &> /dev/null; then \
     python3 --version
 
 # 5. pip 업그레이드 및 Python 패키지 설치
+# urllib3<2.0: OpenSSL 1.0.2k 호환성 (urllib3 v2.0+는 OpenSSL 1.1.1+ 필요)
+# requests는 버전 제약 없음 (urllib3<2.0이 OpenSSL 호환성 보장)
 RUN python3 -m pip install --upgrade pip setuptools wheel && \
     python3 -m pip install --no-cache-dir \
         'urllib3<2.0' \
-        'requests<2.29.0' \
         yfinance==0.2.28 \
         mysql-connector-python==8.0.33 \
         python-dotenv==0.21.1 \
