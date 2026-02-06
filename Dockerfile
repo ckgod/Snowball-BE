@@ -10,7 +10,7 @@ ENV TZ=Asia/Seoul
 # 4. Python 3.9 소스 컴파일 설치 (디스크 용량 최적화)
 # Python 3.9+ 필요 (multitasking의 type[Thread] 문법)
 # OpenSSL 1.1.1 설치 후 Python 컴파일하여 SSL 모듈 포함
-RUN yum install -y gcc make wget tar gzip zlib-devel libffi-devel && \
+RUN yum install -y gcc make wget tar gzip zlib-devel libffi-devel perl && \
     # OpenSSL 1.1.1 컴파일 및 설치
     cd /tmp && \
     wget -q https://www.openssl.org/source/openssl-1.1.1w.tar.gz && \
@@ -30,7 +30,7 @@ RUN yum install -y gcc make wget tar gzip zlib-devel libffi-devel && \
     ln -sf /usr/local/bin/python3.9 /usr/bin/python3 && \
     ln -sf /usr/local/bin/pip3.9 /usr/bin/pip3 && \
     # 빌드 도구 제거 (용량 절약)
-    yum remove -y gcc make wget zlib-devel libffi-devel && \
+    yum remove -y gcc make wget zlib-devel libffi-devel perl && \
     yum clean all && \
     rm -rf /var/cache/yum && \
     python3 --version
