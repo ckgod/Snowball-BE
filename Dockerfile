@@ -7,22 +7,21 @@ WORKDIR /app
 # 3. 시간대 설정 (KST) - 로그 시간이 한국 시간으로 찍히게 함
 ENV TZ=Asia/Seoul
 
-# 4. Python 3.8+ 설치 (Yahoo Finance 데이터 수집용)
-# Amazon Linux 2: amazon-linux-extras로 Python 3.8 설치
-# Amazon Linux 2023: dnf로 Python 3.9+ 설치
-RUN if command -v amazon-linux-extras &> /dev/null; then \
-        amazon-linux-extras install python3.8 -y && \
-        yum install -y gcc python38-devel && \
-        yum clean all && \
-        alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1; \
-    elif command -v dnf &> /dev/null; then \
-        dnf install -y python3.11 python3.11-pip gcc python3.11-devel && \
-        dnf clean all && \
-        alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1; \
-    else \
-        yum install -y python3 python3-pip gcc python3-devel && \
-        yum clean all; \
-    fi && \
+# 4. Python 3.10 설치 (Yahoo Finance 데이터 수집용)
+# Python 3.9+ 필요 (multitasking 패키지의 type[T] 문법 요구)
+# Amazon Linux 2: Python 3.10.8 컴파일 설치 (로컬 테스트 완료)
+RUN yum install -y gcc openssl-devel bzip2-devel libffi-devel wget make && \
+    cd /tmp && \
+    wget https://www.python.org/ftp/python/3.10.8/Python-3.10.8.tgz && \
+    tar xzf Python-3.10.8.tgz && \
+    cd Python-3.10.8 && \
+    ./configure --enable-optimizations && \
+    make altinstall && \
+    cd / && \
+    rm -rf /tmp/Python-3.10.8* && \
+    ln -sf /usr/local/bin/python3.10 /usr/bin/python3 && \
+    ln -sf /usr/local/bin/pip3.10 /usr/bin/pip3 && \
+    yum clean all && \
     python3 --version
 
 # 5. pip 업그레이드 및 Python 패키지 설치
