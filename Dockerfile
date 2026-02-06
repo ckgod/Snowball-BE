@@ -7,26 +7,35 @@ WORKDIR /app
 # 3. 시간대 설정 (KST) - 로그 시간이 한국 시간으로 찍히게 함
 ENV TZ=Asia/Seoul
 
-# 4. Python3 설치 (Yahoo Finance 데이터 수집용)
-# Amazon Linux 2023 대응: dnf 또는 yum 자동 선택
-RUN if command -v dnf &> /dev/null; then \
-        dnf install -y python3 python3-pip gcc python3-devel && dnf clean all; \
+# 4. Python 3.8+ 설치 (Yahoo Finance 데이터 수집용)
+# Amazon Linux 2: amazon-linux-extras로 Python 3.8 설치
+# Amazon Linux 2023: dnf로 Python 3.9+ 설치
+RUN if command -v amazon-linux-extras &> /dev/null; then \
+        amazon-linux-extras install python3.8 -y && \
+        yum install -y gcc python38-devel && \
+        yum clean all && \
+        alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1; \
+    elif command -v dnf &> /dev/null; then \
+        dnf install -y python3.11 python3.11-pip gcc python3.11-devel && \
+        dnf clean all && \
+        alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1; \
     else \
-        yum install -y python3 python3-pip gcc python3-devel && yum clean all; \
+        yum install -y python3 python3-pip gcc python3-devel && \
+        yum clean all; \
     fi && \
     python3 --version
 
 # 5. pip 업그레이드 및 Python 패키지 설치
-# urllib3<2.0: OpenSSL 1.0.2k 호환성 (urllib3 v2.0+는 OpenSSL 1.1.1+ 필요)
-# requests는 버전 제약 없음 (urllib3<2.0이 OpenSSL 호환성 보장)
+# urllib3<2.0: OpenSSL 1.0.2k 호환성 유지 (urllib3 v2.0+는 OpenSSL 1.1.1+ 필요)
+# Python 3.8+에서는 대부분의 패키지 최신 버전 사용 가능
 RUN python3 -m pip install --upgrade pip setuptools wheel && \
     python3 -m pip install --no-cache-dir \
         'urllib3<2.0' \
-        yfinance==0.2.28 \
-        mysql-connector-python==8.0.33 \
-        python-dotenv==0.21.1 \
-        pandas==1.3.5 \
-        numpy==1.21.6
+        yfinance \
+        mysql-connector-python \
+        python-dotenv \
+        pandas \
+        numpy
 
 # 6. Python 스크립트 복사
 COPY scripts/ /app/scripts/
