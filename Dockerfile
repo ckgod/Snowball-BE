@@ -10,7 +10,7 @@ ENV TZ=Asia/Seoul
 # 4. Python 3.10 설치 (Yahoo Finance 데이터 수집용)
 # Python 3.9+ 필요 (multitasking 패키지의 type[T] 문법 요구)
 # Amazon Linux 2: Python 3.10.8 컴파일 설치 (로컬 테스트 완료)
-RUN yum install -y gcc openssl-devel bzip2-devel libffi-devel wget make && \
+RUN yum install -y gcc openssl-devel bzip2-devel libffi-devel wget make tar && \
     cd /tmp && \
     wget https://www.python.org/ftp/python/3.10.8/Python-3.10.8.tgz && \
     tar xzf Python-3.10.8.tgz && \
