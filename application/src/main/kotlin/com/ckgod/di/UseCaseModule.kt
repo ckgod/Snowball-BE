@@ -1,5 +1,6 @@
 package com.ckgod.di
 
+import com.ckgod.domain.usecase.BacktestUseCase
 import com.ckgod.domain.usecase.GenerateOrdersUseCase
 import com.ckgod.domain.usecase.GetCurrentPriceUseCase
 import com.ckgod.domain.usecase.GetStockPriceHistoryUseCase
@@ -14,4 +15,6 @@ val useCaseModule = module {
     single<GenerateOrdersUseCase> { GenerateOrdersUseCase(get(), get(), get(), get()) }
 
     single<GetStockPriceHistoryUseCase> { GetStockPriceHistoryUseCase(get()) }
+
+    single<BacktestUseCase> { BacktestUseCase(get()) }
 }
