@@ -1,7 +1,8 @@
 package com.ckgod.presentation.routing
 
-import com.ckgod.domain.model.BacktestRequest
 import com.ckgod.domain.usecase.BacktestUseCase
+import com.ckgod.presentation.mapper.BacktestMapper
+import com.ckgod.snowball.model.BacktestRequest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -27,8 +28,10 @@ suspend fun RoutingContext.backtestRoutes(
             )
         }
 
-        val result = backtestUseCase.run(request)
-        call.respond(result)
+        val domainRequest = BacktestMapper.toDomain(request)
+        val result = backtestUseCase.run(domainRequest)
+        val response = BacktestMapper.toResponse(result)
+        call.respond(response)
 
     } catch (e: IllegalStateException) {
         call.respond(
