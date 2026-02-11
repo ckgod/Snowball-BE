@@ -6,6 +6,7 @@ import com.ckgod.domain.repository.AccountRepository
 import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
+import com.ckgod.domain.usecase.BacktestUseCase
 import com.ckgod.domain.usecase.GetCurrentPriceUseCase
 import com.ckgod.domain.usecase.GetStockPriceHistoryUseCase
 import com.ckgod.presentation.config.configureAuthPlugin
@@ -55,6 +56,7 @@ fun Application.mainModule() {
     // ========== Use Case ===========
     val getCurrentPriceUseCase: GetCurrentPriceUseCase by inject()
     val getStockPriceHistoryUseCase: GetStockPriceHistoryUseCase by inject()
+    val backtestUseCase: BacktestUseCase by inject()
     val investmentStatusRepository by inject<InvestmentStatusRepository>()
     val tradeHistoryRepository by inject<TradeHistoryRepository>()
     val stockRepository by inject<StockRepository>()
@@ -71,6 +73,7 @@ fun Application.mainModule() {
         investmentStatusRepository = investmentStatusRepository,
         tradeHistoryRepository = tradeHistoryRepository,
         stockRepository = stockRepository,
-        accountRepository = accountRepository
+        accountRepository = accountRepository,
+        backtestUseCase = backtestUseCase
     )
 }
