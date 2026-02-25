@@ -1,0 +1,228 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 674" font-family="'Segoe UI', Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#475569"/>
+    </marker>
+    <marker id="arrBlue" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#38bdf8"/>
+    </marker>
+    <marker id="arrAmber" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#fbbf24"/>
+    </marker>
+    <filter id="sh">
+      <feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="674" fill="url(#bg)"/>
+
+  <!-- ── Header ── -->
+  <rect x="0" y="0" width="1000" height="56" fill="#6366f1" fill-opacity="0.9"/>
+  <text x="28" y="22" font-size="10" fill="#c7d2fe" font-weight="600" letter-spacing="3">SNOWBALL</text>
+  <text x="28" y="44" font-size="18" fill="white" font-weight="700">레버리지 ETF 자동매매 · 아키텍처 개요</text>
+  <text x="972" y="30" font-size="10" fill="#e0e7ff" text-anchor="end">Kotlin 2.1 · Ktor 3.0 · Clean Architecture</text>
+  <text x="972" y="46" font-size="10" fill="#e0e7ff" text-anchor="end">v0.2.5</text>
+
+  <!-- ════════════════════════════════════════════
+       ROW 1 — Client  +  Presentation  +  Application
+  ════════════════════════════════════════════ -->
+
+  <!-- Client -->
+  <rect x="28" y="82" width="110" height="56" rx="8" fill="#1e293b" stroke="#475569" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="83" y="104" font-size="10" fill="#94a3b8" text-anchor="middle">Client</text>
+  <text x="83" y="122" font-size="12" fill="#e2e8f0" text-anchor="middle" font-weight="600">Mobile / Web</text>
+
+  <!-- arrow: Client → Presentation -->
+  <line x1="138" y1="110" x2="176" y2="110" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+  <text x="157" y="105" font-size="8" fill="#64748b" text-anchor="middle">API Key</text>
+
+  <!-- Presentation module -->
+  <rect x="177" y="70" width="200" height="80" rx="8" fill="#0c2340" stroke="#38bdf8" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="177" y="70" width="200" height="22" rx="8" fill="#0ea5e9" fill-opacity="0.6"/>
+  <rect x="177" y="82" width="200" height="10" fill="#0ea5e9" fill-opacity="0.6"/>
+  <text x="277" y="86" font-size="10" fill="white" text-anchor="middle" font-weight="700" letter-spacing="1">presentation</text>
+  <text x="277" y="108" font-size="9" fill="#7dd3fc" text-anchor="middle">REST Routing</text>
+  <text x="277" y="122" font-size="9" fill="#94a3b8" text-anchor="middle">Response Mapper · Rate Limiting</text>
+  <text x="277" y="140" font-size="8" fill="#64748b" text-anchor="middle">GET /sb/home · /sb/account · /sb/stock · POST /sb/backtest</text>
+
+  <!-- Application module -->
+  <rect x="177" y="162" width="200" height="115" rx="8" fill="#0c2340" stroke="#818cf8" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="177" y="162" width="200" height="22" rx="8" fill="#6366f1" fill-opacity="0.6"/>
+  <rect x="177" y="174" width="200" height="10" fill="#6366f1" fill-opacity="0.6"/>
+  <text x="277" y="178" font-size="10" fill="white" text-anchor="middle" font-weight="700" letter-spacing="1">application</text>
+  <text x="277" y="200" font-size="9" fill="#a5b4fc" text-anchor="middle">Ktor Server · Koin DI</text>
+  <text x="277" y="216" font-size="9" fill="#94a3b8" text-anchor="middle" font-weight="600">⏰ Quartz Scheduler</text>
+  <text x="277" y="231" font-size="8" fill="#64748b" text-anchor="middle">StockPriceSyncJob  05:00 NY</text>
+  <text x="277" y="244" font-size="8" fill="#64748b" text-anchor="middle">SyncJob  06:20 KST · OrderJob  18:05 KST</text>
+  <text x="277" y="268" font-size="8" fill="#64748b" text-anchor="middle">(weekdays only)</text>
+
+  <!-- ════════════════════════════════════════════
+       DOMAIN (center, no deps)
+  ════════════════════════════════════════════ -->
+  <rect x="390" y="70" width="220" height="290" rx="10" fill="#052e16" stroke="#10b981" stroke-width="2" filter="url(#sh)"/>
+  <rect x="390" y="70" width="220" height="24" rx="10" fill="#059669" fill-opacity="0.7"/>
+  <rect x="390" y="84" width="220" height="10" fill="#059669" fill-opacity="0.7"/>
+  <text x="500" y="88" font-size="10" fill="white" text-anchor="middle" font-weight="700" letter-spacing="2">domain</text>
+  <text x="500" y="120" font-size="9" fill="#34d399" text-anchor="middle" font-weight="600">Use Cases</text>
+  <rect x="404" y="142" width="192" height="18" rx="4" fill="#064e3b"/>
+  <text x="500" y="155" font-size="8" fill="#86efac" text-anchor="middle">SyncStrategyUseCase</text>
+  <rect x="404" y="164" width="192" height="18" rx="4" fill="#064e3b"/>
+  <text x="500" y="177" font-size="8" fill="#86efac" text-anchor="middle">GenerateOrdersUseCase</text>
+  <rect x="404" y="186" width="192" height="18" rx="4" fill="#064e3b"/>
+  <text x="500" y="199" font-size="8" fill="#86efac" text-anchor="middle">BacktestUseCase</text>
+  <rect x="404" y="208" width="92" height="18" rx="4" fill="#064e3b"/>
+  <text x="450" y="221" font-size="8" fill="#86efac" text-anchor="middle">GetCurrentPrice</text>
+  <rect x="502" y="208" width="94" height="18" rx="4" fill="#064e3b"/>
+  <text x="549" y="221" font-size="8" fill="#86efac" text-anchor="middle">GetStockHistory</text>
+
+  <line x1="404" y1="234" x2="596" y2="234" stroke="#065f46" stroke-width="1"/>
+
+  <text x="500" y="250" font-size="9" fill="#34d399" text-anchor="middle" font-weight="600">Domain Models</text>
+  <text x="500" y="265" font-size="8" fill="#94a3b8" text-anchor="middle">InvestmentStatus · TradeHistory</text>
+  <text x="500" y="279" font-size="8" fill="#94a3b8" text-anchor="middle">AccountStatus · StockPriceHistory</text>
+
+  <line x1="404" y1="291" x2="596" y2="291" stroke="#065f46" stroke-width="1"/>
+
+  <text x="500" y="307" font-size="9" fill="#34d399" text-anchor="middle" font-weight="600">Repository Interfaces (Port)</text>
+  <text x="500" y="321" font-size="8" fill="#94a3b8" text-anchor="middle">StockRepo · AccountRepo</text>
+  <text x="500" y="335" font-size="8" fill="#94a3b8" text-anchor="middle">InvestmentStatusRepo · TradeHistoryRepo</text>
+  <text x="500" y="349" font-size="8" fill="#94a3b8" text-anchor="middle">ExecutionRepo</text>
+
+  <!-- snowball-models note -->
+  <rect x="390" y="370" width="220" height="26" rx="6" fill="#1e1b4b" stroke="#818cf8" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="500" y="387" font-size="8" fill="#a5b4fc" text-anchor="middle">📦 snowball-models · KMP Shared Models</text>
+
+  <!-- ════════════════════════════════════════════
+       INFRASTRUCTURE
+  ════════════════════════════════════════════ -->
+
+  <!-- infra/database -->
+  <rect x="634" y="70" width="175" height="180" rx="8" fill="#1c0a00" stroke="#f59e0b" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="634" y="70" width="175" height="22" rx="8" fill="#d97706" fill-opacity="0.6"/>
+  <rect x="634" y="82" width="175" height="10" fill="#d97706" fill-opacity="0.6"/>
+  <text x="721" y="86" font-size="10" fill="white" text-anchor="middle" font-weight="700" letter-spacing="1">infra / database</text>
+  <text x="721" y="108" font-size="9" fill="#fcd34d" text-anchor="middle">Exposed ORM</text>
+  <text x="721" y="123" font-size="8" fill="#94a3b8" text-anchor="middle">Repository 구현체</text>
+  <text x="721" y="138" font-size="8" fill="#94a3b8" text-anchor="middle">Table DSL · DatabaseFactory</text>
+  <line x1="648" y1="150" x2="794" y2="150" stroke="#78350f" stroke-width="1"/>
+  <text x="721" y="167" font-size="9" fill="#fcd34d" text-anchor="middle">MariaDB 10.11</text>
+  <text x="721" y="181" font-size="8" fill="#94a3b8" text-anchor="middle">Docker · Port 3306</text>
+  <text x="721" y="196" font-size="8" fill="#94a3b8" text-anchor="middle">investment / trade / price / exec</text>
+  <line x1="648" y1="208" x2="794" y2="208" stroke="#78350f" stroke-width="1"/>
+  <text x="721" y="222" font-size="9" fill="#c4b5fd" text-anchor="middle">🐍 scripts/</text>
+  <text x="721" y="236" font-size="8" fill="#94a3b8" text-anchor="middle">Python · yfinance</text>
+
+  <!-- infra/kis-api -->
+  <rect x="634" y="262" width="175" height="140" rx="8" fill="#1c0a00" stroke="#f59e0b" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="634" y="262" width="175" height="22" rx="8" fill="#d97706" fill-opacity="0.6"/>
+  <rect x="634" y="274" width="175" height="10" fill="#d97706" fill-opacity="0.6"/>
+  <text x="721" y="278" font-size="10" fill="white" text-anchor="middle" font-weight="700" letter-spacing="1">infra / kis-api</text>
+  <text x="721" y="300" font-size="9" fill="#fcd34d" text-anchor="middle">KIS Open API 클라이언트</text>
+  <text x="721" y="315" font-size="8" fill="#94a3b8" text-anchor="middle">Ktor HTTP Client · OAuth2 Token</text>
+  <text x="721" y="330" font-size="8" fill="#94a3b8" text-anchor="middle">Repository 구현체</text>
+  <line x1="648" y1="342" x2="794" y2="342" stroke="#78350f" stroke-width="1"/>
+  <text x="721" y="358" font-size="9" fill="#fcd34d" text-anchor="middle">한국투자증권 Open API</text>
+  <text x="721" y="373" font-size="8" fill="#94a3b8" text-anchor="middle">현재가 · 계좌잔고 · 주문 · 체결</text>
+  <text x="721" y="387" font-size="8" fill="#94a3b8" text-anchor="middle">Real / Mock 환경</text>
+
+  <!-- ════════════════════════════════════════════
+       DEPENDENCY ARROWS
+       Rule: Presentation → Domain, Infrastructure → Domain
+             (arrows point toward dependency)
+  ════════════════════════════════════════════ -->
+
+  <!-- presentation → domain -->
+  <line x1="377" y1="115" x2="392" y2="175" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arrBlue)" stroke-dasharray="5,3"/>
+
+  <!-- application → domain -->
+  <line x1="377" y1="222" x2="392" y2="260" stroke="#818cf8" stroke-width="1.5" marker-end="url(#arrBlue)" stroke-dasharray="5,3"/>
+
+  <!-- infra/database → domain -->
+  <line x1="634" y1="155" x2="612" y2="240" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrAmber)" stroke-dasharray="5,3"/>
+
+  <!-- infra/kis-api → domain -->
+  <line x1="634" y1="340" x2="612" y2="310" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrAmber)" stroke-dasharray="5,3"/>
+
+  <!-- ════════════════════════════════════════════
+       DEPLOYMENT (bottom)
+  ════════════════════════════════════════════ -->
+  <rect x="28" y="430" width="940" height="86" rx="10" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="498" y="450" font-size="9" fill="#64748b" text-anchor="middle" font-weight="600" letter-spacing="2">DEPLOYMENT</text>
+
+  <!-- Docker -->
+  <rect x="168" y="460" width="220" height="44" rx="7" fill="#1e293b" stroke="#0891b2" stroke-width="1.5"/>
+  <text x="278" y="478" font-size="10" fill="#67e8f9" text-anchor="middle" font-weight="600">🐳 Docker Compose</text>
+  <text x="278" y="494" font-size="8" fill="#94a3b8" text-anchor="middle">app (8080) · db (3306) · Java 17 JRE + Python 3</text>
+
+  <!-- AWS -->
+  <rect x="414" y="460" width="220" height="44" rx="7" fill="#1e293b" stroke="#0891b2" stroke-width="1.5"/>
+  <text x="524" y="478" font-size="10" fill="#67e8f9" text-anchor="middle" font-weight="600">☁ AWS EC2</text>
+  <text x="524" y="494" font-size="8" fill="#94a3b8" text-anchor="middle">Port 80 → 8080 · GitHub Actions CI/CD</text>
+
+  <!-- GitHub Actions -->
+  <rect x="660" y="460" width="220" height="44" rx="7" fill="#1e293b" stroke="#0891b2" stroke-width="1.5"/>
+  <text x="770" y="478" font-size="10" fill="#67e8f9" text-anchor="middle" font-weight="600">🔁 GitHub Actions</text>
+  <text x="770" y="494" font-size="8" fill="#94a3b8" text-anchor="middle">Build · Test · Deploy 자동화</text>
+
+  <!-- ════════════════════════════════════════════
+       TECH STACK BADGES
+  ════════════════════════════════════════════ -->
+  <rect x="28" y="532" width="940" height="130" rx="10" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="498" y="552" font-size="9" fill="#64748b" text-anchor="middle" font-weight="600" letter-spacing="2">TECH STACK</text>
+
+  <!-- Row 1 -->
+  <rect x="48" y="560" width="110" height="44" rx="6" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="103" y="578" font-size="8" fill="#a5b4fc" text-anchor="middle">Language</text>
+  <text x="103" y="594" font-size="10" fill="white" text-anchor="middle" font-weight="700">Kotlin 2.1.0</text>
+
+  <rect x="170" y="560" width="110" height="44" rx="6" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/>
+  <text x="225" y="578" font-size="8" fill="#7dd3fc" text-anchor="middle">Framework</text>
+  <text x="225" y="594" font-size="10" fill="white" text-anchor="middle" font-weight="700">Ktor 3.0.2</text>
+
+  <rect x="292" y="560" width="110" height="44" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+  <text x="347" y="578" font-size="8" fill="#6ee7b7" text-anchor="middle">DI</text>
+  <text x="347" y="594" font-size="10" fill="white" text-anchor="middle" font-weight="700">Koin</text>
+
+  <rect x="414" y="560" width="110" height="44" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="469" y="578" font-size="8" fill="#fcd34d" text-anchor="middle">ORM</text>
+  <text x="469" y="594" font-size="10" fill="white" text-anchor="middle" font-weight="700">Exposed v1</text>
+
+  <rect x="536" y="560" width="110" height="44" rx="6" fill="#1e293b" stroke="#ec4899" stroke-width="1.5"/>
+  <text x="591" y="578" font-size="8" fill="#f9a8d4" text-anchor="middle">Scheduler</text>
+  <text x="591" y="594" font-size="10" fill="white" text-anchor="middle" font-weight="700">Quartz</text>
+
+  <rect x="658" y="560" width="110" height="44" rx="6" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="713" y="578" font-size="8" fill="#c4b5fd" text-anchor="middle">Serialization</text>
+  <text x="713" y="594" font-size="10" fill="white" text-anchor="middle" font-weight="700">kotlinx</text>
+
+  <rect x="780" y="560" width="110" height="44" rx="6" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="835" y="578" font-size="8" fill="#5eead4" text-anchor="middle">Runtime</text>
+  <text x="835" y="594" font-size="10" fill="white" text-anchor="middle" font-weight="700">Netty · JVM 17</text>
+
+  <!-- Row 2 -->
+  <rect x="48" y="614" width="110" height="36" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="103" y="637" font-size="9" fill="#94a3b8" text-anchor="middle">MariaDB 10.11</text>
+
+  <rect x="170" y="614" width="110" height="36" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="225" y="637" font-size="9" fill="#94a3b8" text-anchor="middle">yfinance (Python)</text>
+
+  <rect x="292" y="614" width="110" height="36" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="347" y="637" font-size="9" fill="#94a3b8" text-anchor="middle">KIS Open API</text>
+
+  <rect x="414" y="614" width="110" height="36" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="469" y="637" font-size="9" fill="#94a3b8" text-anchor="middle">Gradle KTS Multi</text>
+
+  <rect x="536" y="614" width="110" height="36" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="591" y="637" font-size="9" fill="#94a3b8" text-anchor="middle">GitHub Actions</text>
+
+  <rect x="658" y="614" width="110" height="36" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="713" y="637" font-size="9" fill="#94a3b8" text-anchor="middle">AWS EC2</text>
+
+  <rect x="780" y="614" width="110" height="36" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="835" y="637" font-size="9" fill="#94a3b8" text-anchor="middle">Clean Architecture</text>
+</svg>
