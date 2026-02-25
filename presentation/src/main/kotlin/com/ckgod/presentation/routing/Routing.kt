@@ -4,6 +4,7 @@ import com.ckgod.domain.repository.AccountRepository
 import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
+import com.ckgod.domain.usecase.BacktestUseCase
 import com.ckgod.domain.usecase.GetCurrentPriceUseCase
 import com.ckgod.domain.usecase.GetStockPriceHistoryUseCase
 import io.ktor.server.application.*
@@ -15,7 +16,8 @@ fun Application.configureRouting(
     investmentStatusRepository: InvestmentStatusRepository,
     tradeHistoryRepository: TradeHistoryRepository,
     stockRepository: StockRepository,
-    accountRepository: AccountRepository
+    accountRepository: AccountRepository,
+    backtestUseCase: BacktestUseCase
 ) {
     routing {
         route("/sb") {
@@ -37,6 +39,9 @@ fun Application.configureRouting(
                     investmentStatusRepository,
                     stockRepository
                 )
+            }
+            post("/backtest") {
+                backtestRoutes(backtestUseCase)
             }
         }
     }
