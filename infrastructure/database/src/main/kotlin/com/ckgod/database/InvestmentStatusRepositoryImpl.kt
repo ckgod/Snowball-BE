@@ -4,6 +4,7 @@ import com.ckgod.domain.model.InvestmentStatus
 import com.ckgod.domain.model.StarMode
 import com.ckgod.domain.repository.InvestmentStatusRepository
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -16,6 +17,7 @@ class InvestmentStatusRepositoryImpl : InvestmentStatusRepository {
 
     override suspend fun findAll(): List<InvestmentStatus> = transaction {
         InvestmentStatusTable.selectAll()
+            .orderBy(InvestmentStatusTable.totalInvested to SortOrder.DESC)
             .map { it.toInvestmentStatus() }
     }
 
