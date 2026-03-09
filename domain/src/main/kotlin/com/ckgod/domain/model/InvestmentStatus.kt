@@ -68,7 +68,7 @@ data class InvestmentStatus(
 
     val exchange: Exchange get() = when(ticker) {
         "TQQQ" -> Exchange.NASD
-        "SOXL", "FNGU" -> Exchange.AMEX
+        "SOXL", "FNGU", "SOXS" -> Exchange.AMEX
         else -> Exchange.NASD
     }
 
