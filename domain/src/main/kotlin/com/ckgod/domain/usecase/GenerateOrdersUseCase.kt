@@ -243,7 +243,7 @@ class GenerateOrdersUseCase(
         }
 
         if (status.phase != TradePhase.QUARTER_MODE && status.oneTimeAmount > 0) {
-            val crashRates = listOf(0.05, 0.07, 0.09, 0.12)
+            val crashRates = listOf(0.05, 0.07, 0.09, 0.12, 0.15, 0.17)
             crashRates.forEach { rate ->
                 if (status.starPercent < 0 && (rate * 100).toInt() < abs(status.starPercent.toInt())) {
                     return@forEach
@@ -264,7 +264,7 @@ class GenerateOrdersUseCase(
                         side = OrderSide.BUY,
                         type = OrderType.LOC,
                         price = crashPrice,
-                        quantity = 1,
+                        quantity = if (rate >= 0.12) 2 else 1,
                         crashRate = rate
                     ))
                 }
