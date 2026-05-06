@@ -41,3 +41,4 @@ out/
 /.claude/
 /scripts/venv/
 /scripts/README.md
+/snowball-seoul.pem
