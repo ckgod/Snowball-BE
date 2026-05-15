@@ -138,12 +138,22 @@ class GenerateOrdersUseCase(
      * 매수 주문 생성
      *
      * 현재 T값에 따라 매수 분배가 다름
-     * 1. 전반전 (0 <= T < division / 2)
-     * - 1회 매수액의 절반을 별% LOC로 매수 시도
-     * - 1회 매수액의 절반을 평단가(0%) LOC로 매수 시도
      *
-     * 2. 후반전 (division / 2 <= T <= division -1)
-     * - 1회 매수액 전체를 별% LOC로 매수 시도
+     * 1. 전반전 (StarMode에 따라 T <= division/2 또는 T <= division*2/3)
+     *    표준: 1회 매수액의 절반(halfAmount)은 별% LOC, 나머지 절반은 평단가(0%) LOC
+     *
+     *    [고가 종목 보완 — SOXL/TQQQ/FNGU 등 1주 단가가 halfAmount를 초과하는 케이스]
+     *    표준 로직대로 `starBuyQty = (halfAmount / starBuyPrice).toInt()` 만 쓰면
+     *    별% 매수가 1주가 halfAmount보다 비쌀 때 starBuyQty=0이 되어 별% LOC 주문이 누락된다.
+     *    매수 누락은 T값 정체 → starPercent 회복 지연 → 사이클 종료 불가의 악순환을 만들어
+     *    평가손실을 시간에 비례해 고착화시키므로, 1회 매수금 한도 내에서 다음 우선순위로 보완한다.
+     *    - Case A: 별% 1주 ≤ halfAmount       → halfAmount / starBuyPrice (표준)
+     *    - Case B: halfAmount < 별% 1주 ≤ oneTimeAmount → 별% 1주 강제 매수 (누락 방지)
+     *    - Case C: 별% 1주 > oneTimeAmount    → 별% 포기, 1회 매수금 전체를 평단가에 할당
+     *    어떤 경우든 평단가 LOC는 (1회 매수금 - 별% 사용액)을 남김없이 소진해 매수 기회를 최대화한다.
+     *
+     * 2. 후반전 (전반전 종료 후 ~ T < division - 1)
+     *    1회 매수액 전체를 별% LOC로 매수 시도
      *
      * 전후반 공통으로 크게 하락하는 경우를 대비해, 1회 정액 매수를 맞추기 위해 아래로 LOC 매수를 추가 시도한다.
      *
@@ -170,13 +180,26 @@ class GenerateOrdersUseCase(
                 // 첫 진입이 아닐 경우 기본 로직
                 if (status.avgPrice > 0) {
 
-                    // 1. 별% LOC 매수 (절반)
+                    // 1. 별% LOC 매수
+                    //
+                    // halfAmount(1회 매수금의 절반)을 기준으로 별% 수량을 결정하되,
+                    // 고가 종목에서 1주조차 못 사 매수가 누락되는 사태를 피하기 위해
+                    // 3단계 우선순위로 fallback 한다. (함수 KDoc의 Case A/B/C 참조)
+                    //   - Case A: 별% 1주 ≤ halfAmount       → 표준: halfAmount / starBuyPrice
+                    //   - Case B: halfAmount < 별% 1주 ≤ oneTimeAmount → 별% 1주 강제
+                    //   - Case C: 별% 1주 > oneTimeAmount    → 별% 포기 (평단가에 전액)
                     val halfAmount = status.oneTimeAmount / 2.0
-                    val starBuyQty = (halfAmount / starBuyPrice).toInt()
-
+                    val starBuyQty = when {
+                        starBuyPrice <= halfAmount -> (halfAmount / starBuyPrice).toInt()
+                        starBuyPrice <= status.oneTimeAmount -> 1
+                        else -> 0
+                    }
                     val usedAmountForStar = starBuyQty * starBuyPrice
 
                     if (starBuyQty > 0) {
+                        if (starBuyPrice > halfAmount) {
+                            logger.info("[GenerateOrders] [${status.ticker}] 별% 1주 단가(${"%.2f".format(starBuyPrice)})가 halfAmount(${"%.2f".format(halfAmount)}) 초과 - 매수 누락 방지를 위해 1주 강제 매수")
+                        }
                         orders.add(OrderRequest(
                             ticker = status.ticker,
                             exchange = status.exchange,
@@ -185,12 +208,16 @@ class GenerateOrdersUseCase(
                             price = starBuyPrice,
                             quantity = starBuyQty,
                         ))
+                    } else {
+                        logger.info("[GenerateOrders] [${status.ticker}] 별% 1주 단가(${"%.2f".format(starBuyPrice)})가 1회 매수금(${"%.2f".format(status.oneTimeAmount)}) 초과 - 별% 매수 포기, 평단가에 전액 할당")
                     }
 
-                    // 1회 매수금을 전부 사용하기 위함
+                    // 2. 평단가(0%) LOC 매수
+                    //
+                    // 1회 매수금에서 별% 사용액을 뺀 금액을 평단가 LOC에 모두 할당해
+                    // 매수 기회를 최대화한다. Case C에서는 1회 매수금 전체가 평단가로 들어간다.
                     val remainAmount = status.oneTimeAmount - usedAmountForStar
 
-                    // 2. 평단가(0%) LOC 매수 (절반)
                     val avgBuyPrice = if (maxBuyPrice != null && status.avgPrice >= maxBuyPrice) {
                         maxBuyPrice
                     } else {
