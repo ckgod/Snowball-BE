@@ -12,7 +12,7 @@ class BacktestStockRepository(
     var currentDate: LocalDate = LocalDate(2024, 1, 1)
     private val orderSequence = AtomicLong(1)
 
-    override suspend fun getCurrentPrice(stockCode: String): MarketPrice? {
+    override suspend fun getCurrentPrice(stockCode: String, includeDayMarket: Boolean): MarketPrice? {
         val history = priceDataMap[currentDate] ?: return null
         return MarketPrice(
             ticker = stockCode,

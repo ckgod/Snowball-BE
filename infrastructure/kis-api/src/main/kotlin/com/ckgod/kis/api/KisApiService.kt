@@ -44,18 +44,36 @@ class KisApiService(private val apiClient: KisApiClient) {
         )
     }
 
+    /**
+     * 해외주식 현재가 조회.
+     *
+     * @param includeDayMarket true면 주간거래(데이마켓) 세션 중에는 주간 EXCD로 먼저 조회하고,
+     *   응답이 비어 있으면 정규장 EXCD로 폴백한다. 대시보드 조회용. (기본 false)
+     *
+     * 주의: 주문 생성(LOC/MOC는 정규장 종가 체결)·환율 조회는 반드시 정규장 기준이어야 하므로
+     *   기본값 false를 유지하고 includeDayMarket을 넘기지 않는다.
+     */
     suspend fun getMarketCurrentPrice(
-        stockCode: String
+        stockCode: String,
+        includeDayMarket: Boolean = false
     ): KisPriceResponse {
-        val spec = KisApiSpec.QuotationPriceDetail
-        val exchange = when(stockCode) {
-            "TQQQ" -> "NAS"
-            "SOXL", "FNGU", "SOXS" -> "AMS"
-            else -> "NAS"
+        val exchange = UsExchange.of(stockCode)
+
+        if (includeDayMarket && UsDayMarketSession.isLikelyOpen()) {
+            val dayResponse = requestPrice(stockCode, exchange.day)
+            if (!dayResponse.output?.currentPrice.isNullOrBlank()) {
+                return dayResponse
+            }
         }
+
+        return requestPrice(stockCode, exchange.regular)
+    }
+
+    private suspend fun requestPrice(stockCode: String, excd: String): KisPriceResponse {
+        val spec = KisApiSpec.QuotationPriceDetail
         val queryParams = spec.buildQuery(
             userId = apiClient.config.userId,
-            exchange = exchange,
+            exchange = excd,
             stockCode = stockCode
         )
 
