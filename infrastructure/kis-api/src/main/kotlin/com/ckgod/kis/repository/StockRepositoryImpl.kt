@@ -14,12 +14,13 @@ class StockRepositoryImpl(private val kisApiService: KisApiService) : StockRepos
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    override suspend fun getCurrentPrice(stockCode: String): MarketPrice? {
+    override suspend fun getCurrentPrice(stockCode: String, includeDayMarket: Boolean): MarketPrice? {
         val kisData = kisApiService.getMarketCurrentPrice(
-            stockCode= stockCode
+            stockCode = stockCode,
+            includeDayMarket = includeDayMarket
         )
 
-        return kisData.output?.toDomain()
+        return kisData.output?.toDomain(stockCode)
     }
 
     override suspend fun getExchangeRate(): Double {

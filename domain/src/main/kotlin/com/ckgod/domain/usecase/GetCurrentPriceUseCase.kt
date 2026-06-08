@@ -8,7 +8,8 @@ class GetCurrentPriceUseCase(
 ) {
     suspend operator fun invoke(stockCode: String): MarketPrice? {
         return repository.getCurrentPrice(
-            stockCode = stockCode
+            stockCode = stockCode,
+            includeDayMarket = true
         )
     }
 }

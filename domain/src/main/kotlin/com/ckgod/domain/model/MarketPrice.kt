@@ -19,7 +19,8 @@ data class MarketPrice(
     val high52Week: String = "",         // 52주 최고가
     val low52Week: String = "",          // 52주 최저가
     val productType: String = "",        // 상품 유형 (ETF 등)
-    val status: PriceStatus = PriceStatus.UNKNOWN // 상승/하락 상태
+    val status: PriceStatus = PriceStatus.UNKNOWN, // 상승/하락 상태
+    val isDayMarket: Boolean = false     // 현재가가 주간거래(데이마켓) 시세 기준인지 여부
 )
 
 @Serializable

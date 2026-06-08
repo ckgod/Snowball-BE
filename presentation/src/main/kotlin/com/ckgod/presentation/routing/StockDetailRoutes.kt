@@ -28,7 +28,7 @@ suspend fun RoutingContext.stockDetailRoutes(
     }
     val histories = tradeHistoryRepository.findByTicker(ticker, limit)
     val status = investmentStateRepository.get(ticker)?.let {
-        val marketPrice = stockRepository.getCurrentPrice(ticker)
+        val marketPrice = stockRepository.getCurrentPrice(ticker, includeDayMarket = true)
         val currentPrice = marketPrice?.price?.toDoubleOrNull() ?: 0.0
         val dailyChangeRate = marketPrice?.changeRate?.toDoubleOrNull() ?: 0.0
 
@@ -36,7 +36,8 @@ suspend fun RoutingContext.stockDetailRoutes(
             status = it,
             currentPrice = currentPrice,
             dailyChangeRate = dailyChangeRate,
-            exchangeRate = marketPrice?.exchangeRate?.toDoubleOrNull()
+            exchangeRate = marketPrice?.exchangeRate?.toDoubleOrNull(),
+            isDayMarket = marketPrice?.isDayMarket ?: false
         )
     }
 

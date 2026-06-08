@@ -11,7 +11,8 @@ object InvestmentStatusMapper {
         status: InvestmentStatus,
         currentPrice: Double,
         dailyChangeRate: Double,
-        exchangeRate: Double?
+        exchangeRate: Double?,
+        isDayMarket: Boolean = false
     ): InvestmentStatusResponse {
         val rawProfitRate = if (status.avgPrice > 0) {
             ((currentPrice - status.avgPrice) / status.avgPrice) * 100.0
@@ -35,6 +36,7 @@ object InvestmentStatusMapper {
             fullName = status.fullName,
             currentPrice = currentPrice,
             dailyChangeRate = dailyChangeRate,
+            isDayMarket = isDayMarket,
             tValue = status.tValue,
             totalDivision = status.division,
             starPercent = starPercent,
