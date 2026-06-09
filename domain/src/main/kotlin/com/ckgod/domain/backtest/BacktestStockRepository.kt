@@ -16,8 +16,10 @@ class BacktestStockRepository(
         val history = priceDataMap[currentDate] ?: return null
         return MarketPrice(
             ticker = stockCode,
+            // previousClose는 주문 생성 기준가("직전 완료된 정규장 종가")로 쓰인다.
+            // 백테스트에서 D일에 생성한 주문은 D+1일에 체결되므로 D일 종가가 그 기준가다.
+            previousClose = history.close.toString(),
             price = history.close.toString(),
-            previousClose = history.open.toString(),
             changeRate = "0",
             open = history.open.toString(),
             high = history.high.toString(),

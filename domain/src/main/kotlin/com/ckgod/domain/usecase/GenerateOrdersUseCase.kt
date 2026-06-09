@@ -58,9 +58,13 @@ class GenerateOrdersUseCase(
             return null
         }
 
-        val currentPrice = stockRepository.getCurrentPrice(ticker)?.price?.toDoubleOrNull() ?: 0.0
-        if (currentPrice == 0.0) {
-            logger.warn("[GenerateOrders] [$ticker] 현재가 조회 실패")
+        // 주문 기준가는 직전 정규장 종가(previousClose)를 사용한다.
+        // OrderJob(18:00 KST) 시점은 미국 프리마켓 진행 중이라 last(현재가)에 프리장 시세가 반환되는데,
+        // 무한매수법의 폭락 대비 LOC·첫 진입 별% 기준은 전일 정규장 종가여야 한다.
+        // (2026-06-09 SOXL: 프리장 +6.7% 갭업가가 기준이 되어 ladder 3건이 초과 체결된 사례)
+        val basePrice = stockRepository.getCurrentPrice(ticker)?.previousClose?.toDoubleOrNull() ?: 0.0
+        if (basePrice == 0.0) {
+            logger.warn("[GenerateOrders] [$ticker] 기준가(전일 종가) 조회 실패")
             return null
         }
 
@@ -86,7 +90,7 @@ class GenerateOrdersUseCase(
         val buyOrders = try {
             generateBuyOrders(
                 status = currentStatus,
-                currentPrice = currentPrice,
+                basePrice = basePrice,
                 maxBuyPrice = if (minSellPrice < Double.MAX_VALUE) minSellPrice - 0.01 else null
             )
         } catch (e: Exception) {
@@ -128,7 +132,7 @@ class GenerateOrdersUseCase(
 
         return OrderResult(
             ticker = ticker,
-            currentPrice = currentPrice,
+            currentPrice = basePrice,
             buyOrders = buyOrders,
             sellOrders = sellOrders
         )
@@ -157,17 +161,18 @@ class GenerateOrdersUseCase(
      *
      * 전후반 공통으로 크게 하락하는 경우를 대비해, 1회 정액 매수를 맞추기 위해 아래로 LOC 매수를 추가 시도한다.
      *
+     * @param basePrice 기준가 = 직전 정규장 종가. 폭락 대비 LOC와 첫 진입 별% 계산의 기준.
      * @param maxBuyPrice 최대 매수 가격 (매도 가격보다 낮게 설정)
      */
     private fun generateBuyOrders(
         status: InvestmentStatus,
-        currentPrice: Double,
+        basePrice: Double,
         maxBuyPrice: Double? = null
     ): List<OrderRequest> {
         val orders = mutableListOf<OrderRequest>()
 
         // 별% LOC 매수 가격
-        val rawStarBuyPrice = status.getBuyPrice(currentPrice)
+        val rawStarBuyPrice = status.getBuyPrice(basePrice)
 
         val starBuyPrice = if (maxBuyPrice != null && rawStarBuyPrice >= maxBuyPrice) {
             maxBuyPrice.roundTo2Decimal()
@@ -276,7 +281,7 @@ class GenerateOrdersUseCase(
                     return@forEach
                 }
 
-                val rawCrashPrice = currentPrice * (1.0 - rate)
+                val rawCrashPrice = basePrice * (1.0 - rate)
                 val crashPrice = if (maxBuyPrice != null && rawCrashPrice >= maxBuyPrice) {
                     logger.info("[GenerateOrders] [${status.ticker}] 폭락대비 매수가(-${(rate * 100).toInt()}%) 조정: ${"%.2f".format(rawCrashPrice)} -> ${"%.2f".format(maxBuyPrice)}")
                     maxBuyPrice
