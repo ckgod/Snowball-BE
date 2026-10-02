@@ -5,6 +5,7 @@ import com.ckgod.domain.model.OrderSide
 import com.ckgod.domain.utils.beforeDay
 import com.ckgod.domain.utils.yesterday
 import com.ckgod.kis.KisApiClient
+import com.ckgod.kis.KisOrderRejectedException
 import com.ckgod.kis.KisResponseWithHeaders
 import com.ckgod.kis.spec.KisApiSpec
 import com.ckgod.kis.request.KisOrderRequest
@@ -25,7 +26,11 @@ class KisApiService(private val apiClient: KisApiClient) {
         }
         val body = KisOrderRequest.from(apiClient.config, request)
 
-        return apiClient.request(spec, bodyParams = body)
+        val response: KisOrderResponse = apiClient.request(spec, bodyParams = body)
+        if (!response.isSuccess) {
+            throw KisOrderRejectedException(response.messageCode, response.message)
+        }
+        return response
     }
 
     suspend fun getRecentDayProfit(): KisDateProfitResponse {

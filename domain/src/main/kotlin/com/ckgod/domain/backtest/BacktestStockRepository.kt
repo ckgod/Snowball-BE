@@ -37,7 +37,7 @@ class BacktestStockRepository(
     override suspend fun postOrder(
         buyOrders: List<OrderRequest>,
         sellOrders: List<OrderRequest>
-    ): List<OrderResponse> {
+    ): OrderSubmission {
         val responses = mutableListOf<OrderResponse>()
         (sellOrders + buyOrders).forEach { order ->
             responses.add(
@@ -48,6 +48,6 @@ class BacktestStockRepository(
                 )
             )
         }
-        return responses
+        return OrderSubmission(accepted = responses, rejected = emptyList())
     }
 }

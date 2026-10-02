@@ -101,16 +101,16 @@ class GenerateOrdersUseCase(
         logger.info("[GenerateOrders] [$ticker] 주문 생성 완료 - 매수: ${buyOrders.size}개, 매도: ${sellOrders.size}개")
 
         // 주문 API 전송
-        val orderResponses = try {
+        val submission = try {
             stockRepository.postOrder(buyOrders, sellOrders)
         } catch (e: Exception) {
             logger.error("[GenerateOrders] [$ticker] 주문 전송 실패", e)
             throw e
         }
-        logger.info("[GenerateOrders] [$ticker] 주문 전송 완료 - 성공: ${orderResponses.size}개")
+        logger.info("[GenerateOrders] [$ticker] 주문 전송 완료 - 성공: ${submission.accepted.size}개, 실패: ${submission.rejected.size}개")
 
         // 주문 내역 DB 저장
-        orderResponses.forEach { response ->
+        submission.accepted.forEach { response ->
             val orderDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
 
             val history = TradeHistory(
@@ -125,6 +125,25 @@ class GenerateOrdersUseCase(
                 tValue = currentStatus.tValue,
                 crashRate = response.request.crashRate,
                 avgPrice = if (response.request.side == OrderSide.SELL) currentAvgPrice else 0.0 // 매도 주문의 경우만 평단가 입력
+            )
+            tradeHistoryRepository.save(history)
+        }
+
+        // 실패한 주문도 기록해 앱에서 확인할 수 있게 한다. KIS 주문번호가 없으므로 orderNo 는 빈 문자열.
+        // 체결 동기화는 KIS 체결 내역의 주문번호로만 갱신하므로 이 행은 건드리지 않는다.
+        submission.rejected.forEach { rejection ->
+            val history = TradeHistory(
+                ticker = ticker,
+                orderNo = "",
+                orderSide = rejection.request.side,
+                orderType = rejection.request.type,
+                orderPrice = rejection.request.price,
+                orderQuantity = rejection.request.quantity,
+                orderTime = LocalDateTime.now(ZoneId.of("Asia/Seoul")),
+                status = OrderStatus.REJECTED,
+                tValue = currentStatus.tValue,
+                crashRate = rejection.request.crashRate,
+                failReason = rejection.reason
             )
             tradeHistoryRepository.save(history)
         }

@@ -90,6 +90,15 @@ class KisApiClient(
 
 class KisApiException(message: String) : RuntimeException(message)
 
+/**
+ * KIS 가 요청을 받았지만 업무적으로 거부한 경우 (rt_cd != "0").
+ * 예: 주문가능금액 부족, 장 운영시간 아님, 호가 단위 오류.
+ */
+class KisOrderRejectedException(
+    val messageCode: String,
+    val kisMessage: String
+) : RuntimeException("[$messageCode] $kisMessage")
+
 data class KisResponseWithHeaders<T>(
     val body: T,
     val headers: Map<String, String>

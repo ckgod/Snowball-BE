@@ -22,6 +22,7 @@ data class TradeHistory(
     val filledTime: LocalDateTime? = null,      // 체결 시각
     val avgPrice: Double = 0.0,                 // 체결 당시 평단가
     val realizedProfitAmount: Double = 0.0,     // 매도 체결 시 손익
+    val failReason: String? = null,             // REJECTED 일 때 실패 사유
 
     // 전략 정보
     val tValue: Double,                         // 주문 당시 T값
@@ -39,5 +40,6 @@ enum class OrderStatus {
     PENDING,    // 주문 접수 (체결 대기 중)
     FILLED,     // 전량 체결
     PARTIAL,    // 부분 체결
-    CANCELED    // 주문 취소
+    CANCELED,   // 주문 취소
+    REJECTED    // 주문 접수 실패 (KIS 거부 또는 전송 오류). orderNo 는 빈 문자열
 }
