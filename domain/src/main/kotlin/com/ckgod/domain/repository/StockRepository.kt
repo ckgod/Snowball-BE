@@ -2,7 +2,7 @@ package com.ckgod.domain.repository
 
 import com.ckgod.domain.model.MarketPrice
 import com.ckgod.domain.model.OrderRequest
-import com.ckgod.domain.model.OrderResponse
+import com.ckgod.domain.model.OrderSubmission
 
 interface StockRepository {
     /**
@@ -16,5 +16,5 @@ interface StockRepository {
     suspend fun postOrder(
         buyOrders: List<OrderRequest> = emptyList(),
         sellOrders: List<OrderRequest> = emptyList()
-    ): List<OrderResponse>
+    ): OrderSubmission
 }

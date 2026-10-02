@@ -17,7 +17,7 @@ object TradeHistoryTable : Table("trade_history") {
     val orderQuantity = integer("order_quantity")           // 주문 수량
     val orderTime = datetime("order_time")                  // 주문 시각
 
-    val status = varchar("status", 20).default("PENDING")   // PENDING, FILLED, PARTIAL, CANCELED
+    val status = varchar("status", 20).default("PENDING")   // PENDING, FILLED, PARTIAL, CANCELED, REJECTED
     val filledQuantity = integer("filled_quantity").default(0)     // 체결된 수량
     val filledPrice = double("filled_price").default(0.0)          // 체결 평균 가격
     val filledTime = datetime("filled_time").nullable()                        // 체결 시각
@@ -25,6 +25,7 @@ object TradeHistoryTable : Table("trade_history") {
     val crashRate = double("crash_rate").nullable().default(null)  // 폭락 매수 비율
     val avgPrice = double("avg_price").default(0.0)                // 주문 당시 평단
     val realizedPropitAmount = double("realized_propit_amount").default(0.0) // 매도 체결 시 손익
+    val failReason = varchar("fail_reason", 500).nullable().default(null)   // REJECTED 사유
 
     val createdAt = datetime("created_at")                  // 생성 시각
     val updatedAt = datetime("updated_at")                  // 업데이트 시각

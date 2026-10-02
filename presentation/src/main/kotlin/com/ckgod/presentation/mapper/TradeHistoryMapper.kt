@@ -25,6 +25,7 @@ object TradeHistoryMapper {
             OrderStatus.FILLED -> TradeStatus.FILLED
             OrderStatus.CANCELED -> TradeStatus.CANCELED
             OrderStatus.PARTIAL -> TradeStatus.PARTIAL
+            OrderStatus.REJECTED -> TradeStatus.REJECTED
         }
 
         return TradeHistoryResponse(
@@ -40,6 +41,7 @@ object TradeHistoryMapper {
             filledQuantity = history.filledQuantity,
             filledPrice = history.filledPrice,
             filledTime = history.filledTime?.toString(),
+            failReason = history.failReason,
             tValue = history.tValue,
             createdAt = history.createdAt.toString(),
             crashRate = history.crashRate
