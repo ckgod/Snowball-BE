@@ -6,4 +6,6 @@ plugins {
 dependencies {
     implementation(libs.kotlinx.datetime)
     implementation(libs.ktor.serialization.kotlinx.json)
+
+    testImplementation(libs.kotlin.test.junit)
 }

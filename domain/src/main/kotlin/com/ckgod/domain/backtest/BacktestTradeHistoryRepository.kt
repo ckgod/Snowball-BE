@@ -48,6 +48,11 @@ class BacktestTradeHistoryRepository : TradeHistoryRepository {
         return histories.takeLast(limit)
     }
 
+    override suspend fun updateStatus(orderNo: String, status: OrderStatus) {
+        val index = histories.indexOfFirst { it.orderNo == orderNo }
+        if (index >= 0) histories[index] = histories[index].copy(status = status)
+    }
+
     override suspend fun findPendingOrders(): List<TradeHistory> {
         return histories.filter { it.status == OrderStatus.PENDING }
     }

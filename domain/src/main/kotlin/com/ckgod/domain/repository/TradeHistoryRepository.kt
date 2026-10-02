@@ -26,6 +26,11 @@ interface TradeHistoryRepository {
     )
 
     /**
+     * 체결 정보는 두고 상태만 바꾼다 (정정·취소 직후용)
+     */
+    suspend fun updateStatus(orderNo: String, status: OrderStatus)
+
+    /**
      * 주문번호로 조회
      */
     suspend fun findByOrderNo(orderNo: String): TradeHistory?

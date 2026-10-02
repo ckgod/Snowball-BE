@@ -7,6 +7,8 @@ import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
 import com.ckgod.domain.usecase.BacktestUseCase
+import com.ckgod.domain.usecase.ManageOrdersUseCase
+import com.ckgod.presentation.config.OrderGuard
 import com.ckgod.domain.usecase.GetCurrentPriceUseCase
 import com.ckgod.domain.usecase.GetStockPriceHistoryUseCase
 import com.ckgod.presentation.config.configureAuthPlugin
@@ -61,6 +63,11 @@ fun Application.mainModule() {
     val tradeHistoryRepository by inject<TradeHistoryRepository>()
     val stockRepository by inject<StockRepository>()
     val accountRepository by inject<AccountRepository>()
+    val manageOrdersUseCase: ManageOrdersUseCase by inject()
+
+    // 정정·취소용 별도 키. 없으면 주문 API 는 503 으로 닫힌다.
+    val orderGuard = OrderGuard(orderKey = System.getenv("ORDER_API_KEY"))
+    log.info("주문 API: ${if (orderGuard.enabled) "활성" else "비활성 (ORDER_API_KEY 미설정)"}")
 
     // ========== Scheduler ==========
     simpleScheduler = get()
@@ -74,6 +81,8 @@ fun Application.mainModule() {
         tradeHistoryRepository = tradeHistoryRepository,
         stockRepository = stockRepository,
         accountRepository = accountRepository,
-        backtestUseCase = backtestUseCase
+        backtestUseCase = backtestUseCase,
+        manageOrdersUseCase = manageOrdersUseCase,
+        orderGuard = orderGuard
     )
 }
