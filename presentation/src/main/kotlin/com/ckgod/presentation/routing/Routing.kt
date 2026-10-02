@@ -7,6 +7,8 @@ import com.ckgod.domain.repository.TradeHistoryRepository
 import com.ckgod.domain.usecase.BacktestUseCase
 import com.ckgod.domain.usecase.GetCurrentPriceUseCase
 import com.ckgod.domain.usecase.GetStockPriceHistoryUseCase
+import com.ckgod.domain.usecase.ManageOrdersUseCase
+import com.ckgod.presentation.config.OrderGuard
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 
@@ -17,7 +19,9 @@ fun Application.configureRouting(
     tradeHistoryRepository: TradeHistoryRepository,
     stockRepository: StockRepository,
     accountRepository: AccountRepository,
-    backtestUseCase: BacktestUseCase
+    backtestUseCase: BacktestUseCase,
+    manageOrdersUseCase: ManageOrdersUseCase,
+    orderGuard: OrderGuard
 ) {
     routing {
         route("/sb") {
@@ -42,6 +46,15 @@ fun Application.configureRouting(
             }
             post("/backtest") {
                 backtestRoutes(backtestUseCase)
+            }
+            get("/orders/open") {
+                openOrdersRoute(manageOrdersUseCase)
+            }
+            post("/orders/{orderNo}/cancel") {
+                cancelOrderRoute(manageOrdersUseCase, orderGuard)
+            }
+            post("/orders/{orderNo}/modify") {
+                modifyOrderRoute(manageOrdersUseCase, orderGuard)
             }
         }
     }

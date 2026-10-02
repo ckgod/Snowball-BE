@@ -8,10 +8,12 @@ import com.ckgod.kis.KisApiClient
 import com.ckgod.kis.KisOrderRejectedException
 import com.ckgod.kis.KisResponseWithHeaders
 import com.ckgod.kis.spec.KisApiSpec
+import com.ckgod.kis.request.KisModifyCancelRequest
 import com.ckgod.kis.request.KisOrderRequest
 import com.ckgod.kis.response.KisBalanceResponse
 import com.ckgod.kis.response.KisDateProfitResponse
 import com.ckgod.kis.response.KisExecutionResponse
+import com.ckgod.kis.response.KisOpenOrderResponse
 import com.ckgod.kis.response.KisOrderResponse
 import com.ckgod.kis.response.KisPresentBalanceResponse
 import com.ckgod.kis.response.KisPriceResponse
@@ -27,6 +29,37 @@ class KisApiService(private val apiClient: KisApiClient) {
         val body = KisOrderRequest.from(apiClient.config, request)
 
         val response: KisOrderResponse = apiClient.request(spec, bodyParams = body)
+        if (!response.isSuccess) {
+            throw KisOrderRejectedException(response.messageCode, response.message)
+        }
+        return response
+    }
+
+    suspend fun getOpenOrders(trCont: String, fKey: String, nKey: String): KisResponseWithHeaders<KisOpenOrderResponse> {
+        val spec = KisApiSpec.InquireNccs
+        val queryParams = spec.buildQuery(
+            accountNo = apiClient.config.accountNo,
+            accountCode = apiClient.config.accountCode,
+            fKey = fKey,
+            nKey = nKey
+        )
+        return apiClient.requestWithHeaders<KisOpenOrderResponse, Unit>(
+            spec = spec,
+            queryParams = queryParams,
+            additionalHeaders = mapOf("tr_cont" to trCont)
+        )
+    }
+
+    /** 정정 주문. 거부면 [KisOrderRejectedException]. */
+    suspend fun modifyOrder(exchange: String, ticker: String, orderNo: String, quantity: Int, price: Double): KisOrderResponse =
+        sendModifyCancel(KisModifyCancelRequest.modify(apiClient.config, exchange, ticker, orderNo, quantity, price))
+
+    /** 취소 주문. 거부면 [KisOrderRejectedException]. */
+    suspend fun cancelOrder(exchange: String, ticker: String, orderNo: String, quantity: Int): KisOrderResponse =
+        sendModifyCancel(KisModifyCancelRequest.cancel(apiClient.config, exchange, ticker, orderNo, quantity))
+
+    private suspend fun sendModifyCancel(body: KisModifyCancelRequest): KisOrderResponse {
+        val response: KisOrderResponse = apiClient.request(KisApiSpec.ModifyCancelOrder, bodyParams = body)
         if (!response.isSuccess) {
             throw KisOrderRejectedException(response.messageCode, response.message)
         }

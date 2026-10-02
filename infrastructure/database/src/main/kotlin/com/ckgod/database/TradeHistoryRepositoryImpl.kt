@@ -68,6 +68,15 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
         }
     }
 
+    override suspend fun updateStatus(orderNo: String, status: OrderStatus) {
+        transaction {
+            TradeHistoryTable.update({ TradeHistoryTable.orderNo eq orderNo }) {
+                it[TradeHistoryTable.status] = status.name
+                it[updatedAt] = LocalDateTime.now()
+            }
+        }
+    }
+
     override suspend fun findByOrderNo(orderNo: String): TradeHistory? = transaction {
         TradeHistoryTable.selectAll()
             .where { TradeHistoryTable.orderNo eq orderNo }

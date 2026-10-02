@@ -172,4 +172,41 @@ sealed class KisApiSpec(
         )
     }
 
+
+    /**
+     * 해외주식 미체결내역 [v1_해외주식-005]. 거래소 NASD 로 조회하면 미국 전체가 나온다.
+     * 모의투자는 지원하지 않는다.
+     */
+    data object InquireNccs : KisApiSpec(
+        method = HttpMethod.Get,
+        path = "/uapi/overseas-stock/v1/trading/inquire-nccs",
+        realTrId = "TTTS3018R",
+        mockTrId = "모의투자 미지원",
+        description = "해외주식 미체결내역"
+    ) {
+        fun buildQuery(
+            accountNo: String,
+            accountCode: String,
+            fKey: String,
+            nKey: String
+        ): Map<String, String> = mapOf(
+            "CANO" to accountNo,
+            "ACNT_PRDT_CD" to accountCode,
+            "OVRS_EXCG_CD" to "NASD",
+            "SORT_SQN" to "DS",
+            "CTX_AREA_FK200" to fKey,
+            "CTX_AREA_NK200" to nKey
+        )
+    }
+
+    /**
+     * 해외주식 정정취소주문 [v1_해외주식-003]. RVSE_CNCL_DVSN_CD 01 정정 / 02 취소.
+     */
+    data object ModifyCancelOrder : KisApiSpec(
+        method = HttpMethod.Post,
+        path = "/uapi/overseas-stock/v1/trading/order-rvsecncl",
+        realTrId = "TTTT1004U",
+        mockTrId = "VTTT1004U",
+        description = "해외주식 정정취소주문"
+    )
 }
