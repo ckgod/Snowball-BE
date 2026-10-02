@@ -1,4 +1,4 @@
-name: Deploy to AWS
+name: Deploy to Oracle Cloud
 
 on:
   push:
@@ -32,17 +32,17 @@ jobs:
           docker build -t trading-bot:test .
           echo "Docker 빌드 성공 - 배포 진행"
 
-      - name: Copy files to EC2
+      - name: Copy files to server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
-          source: "application/build/libs/*-all.jar, docker-compose.yml, Dockerfile, scripts/"
+          source: "application/build/libs/*-all.jar, docker-compose.yml, Dockerfile, Caddyfile, scripts/"
           target: "/home/${{ secrets.USERNAME }}/app"
           strip_components: 0
 
-      - name: Deploy on EC2
+      - name: Deploy on server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}

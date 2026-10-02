@@ -15,10 +15,28 @@ services:
       DB_HOST: db
       DB_PORT: 3306
       DB_NAME: snowball_db
-    ports:
-      - "80:8080"
+    # 외부 노출은 caddy 가 맡는다. app 은 내부 네트워크에만 연다.
+    expose:
+      - "8080"
     depends_on:
       - db
+    networks:
+      - bot-network
+
+  caddy:
+    image: caddy:2
+    container_name: snowball-caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # 인증서 보관. 이름 있는 볼륨이라 compose down 에도 유지된다 (재발급 한도 보호)
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
     networks:
       - bot-network
 
@@ -45,3 +63,7 @@ services:
 networks:
   bot-network:
     driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

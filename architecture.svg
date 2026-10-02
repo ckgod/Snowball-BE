@@ -157,12 +157,12 @@
   <!-- Docker -->
   <rect x="168" y="460" width="220" height="44" rx="7" fill="#1e293b" stroke="#0891b2" stroke-width="1.5"/>
   <text x="278" y="478" font-size="10" fill="#67e8f9" text-anchor="middle" font-weight="600">🐳 Docker Compose</text>
-  <text x="278" y="494" font-size="8" fill="#94a3b8" text-anchor="middle">app (8080) · db (3306) · Java 17 JRE + Python 3</text>
+  <text x="278" y="494" font-size="8" fill="#94a3b8" text-anchor="middle">caddy (443) · app (8080) · db (3306) · Java 17 + Python 3</text>
 
-  <!-- AWS -->
+  <!-- Oracle Cloud -->
   <rect x="414" y="460" width="220" height="44" rx="7" fill="#1e293b" stroke="#0891b2" stroke-width="1.5"/>
-  <text x="524" y="478" font-size="10" fill="#67e8f9" text-anchor="middle" font-weight="600">☁ AWS EC2</text>
-  <text x="524" y="494" font-size="8" fill="#94a3b8" text-anchor="middle">Port 80 → 8080 · GitHub Actions CI/CD</text>
+  <text x="524" y="478" font-size="10" fill="#67e8f9" text-anchor="middle" font-weight="600">☁ Oracle Cloud</text>
+  <text x="524" y="494" font-size="8" fill="#94a3b8" text-anchor="middle">Caddy HTTPS 443 → 8080 · GitHub Actions CI/CD</text>
 
   <!-- GitHub Actions -->
   <rect x="660" y="460" width="220" height="44" rx="7" fill="#1e293b" stroke="#0891b2" stroke-width="1.5"/>
@@ -221,7 +221,7 @@
   <text x="591" y="637" font-size="9" fill="#94a3b8" text-anchor="middle">GitHub Actions</text>
 
   <rect x="658" y="614" width="110" height="36" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-  <text x="713" y="637" font-size="9" fill="#94a3b8" text-anchor="middle">AWS EC2</text>
+  <text x="713" y="637" font-size="9" fill="#94a3b8" text-anchor="middle">Oracle Cloud</text>
 
   <rect x="780" y="614" width="110" height="36" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
   <text x="835" y="637" font-size="9" fill="#94a3b8" text-anchor="middle">Clean Architecture</text>
