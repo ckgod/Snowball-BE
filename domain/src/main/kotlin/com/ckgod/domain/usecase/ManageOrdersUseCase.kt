@@ -1,6 +1,7 @@
 package com.ckgod.domain.usecase
 
 import com.ckgod.domain.model.OpenOrder
+import com.ckgod.domain.model.OrderActionResult
 import com.ckgod.domain.model.OrderStatus
 import com.ckgod.domain.repository.OrderManagementRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
@@ -20,33 +21,27 @@ class ManageOrdersUseCase(
 ) {
     private val logger = LoggerFactory.getLogger(ManageOrdersUseCase::class.java)
 
-    data class ActionResult(
-        val success: Boolean,
-        val message: String,
-        val newOrderNo: String? = null
-    )
-
     suspend fun getOpenOrders(): List<OpenOrder> = orderManagementRepository.getOpenOrders()
 
-    suspend fun cancel(orderNo: String): ActionResult {
+    suspend fun cancel(orderNo: String): OrderActionResult {
         val order = findOpenOrder(orderNo)
-            ?: return ActionResult(false, "미체결 주문이 아닙니다 (이미 체결·취소됐을 수 있음)")
+            ?: return OrderActionResult(false, "미체결 주문이 아닙니다 (이미 체결·취소됐을 수 있음)")
 
         return runAction("취소", order) {
             orderManagementRepository.cancel(order)
             recordQuietly(order) { tradeHistoryRepository.updateStatus(order.orderNo, OrderStatus.CANCELED) }
-            ActionResult(true, "취소 요청이 접수됐습니다")
+            OrderActionResult(true, "취소 요청이 접수됐습니다")
         }
     }
 
-    suspend fun modify(orderNo: String, price: Double, quantity: Int?): ActionResult {
+    suspend fun modify(orderNo: String, price: Double, quantity: Int?): OrderActionResult {
         val order = findOpenOrder(orderNo)
-            ?: return ActionResult(false, "미체결 주문이 아닙니다 (이미 체결·취소됐을 수 있음)")
+            ?: return OrderActionResult(false, "미체결 주문이 아닙니다 (이미 체결·취소됐을 수 있음)")
 
         val newQuantity = quantity ?: order.unfilledQuantity
-        if (price <= 0.0) return ActionResult(false, "가격은 0보다 커야 합니다")
+        if (price <= 0.0) return OrderActionResult(false, "가격은 0보다 커야 합니다")
         if (newQuantity <= 0 || newQuantity > order.unfilledQuantity) {
-            return ActionResult(false, "수량은 1 ~ ${order.unfilledQuantity}(미체결 수량) 사이여야 합니다")
+            return OrderActionResult(false, "수량은 1 ~ ${order.unfilledQuantity}(미체결 수량) 사이여야 합니다")
         }
 
         return runAction("정정", order) {
@@ -75,7 +70,7 @@ class ManageOrdersUseCase(
                     )
                 )
             }
-            ActionResult(true, "정정 요청이 접수됐습니다", newOrderNo)
+            OrderActionResult(true, "정정 요청이 접수됐습니다", newOrderNo)
         }
     }
 
@@ -96,12 +91,12 @@ class ManageOrdersUseCase(
         }
     }
 
-    private suspend fun runAction(name: String, order: OpenOrder, block: suspend () -> ActionResult): ActionResult {
+    private suspend fun runAction(name: String, order: OpenOrder, block: suspend () -> OrderActionResult): OrderActionResult {
         return try {
             block()
         } catch (e: Exception) {
             logger.error("[ManageOrders] ${order.ticker} ${order.orderNo} $name 실패", e)
-            ActionResult(false, "$name 실패: ${e.message ?: e::class.simpleName}")
+            OrderActionResult(false, "$name 실패: ${e.message ?: e::class.simpleName}")
         }
     }
 }

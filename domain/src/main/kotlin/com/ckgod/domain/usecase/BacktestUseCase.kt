@@ -290,6 +290,15 @@ class BacktestUseCase(
                     } else null
                 }
                 OrderType.MOC -> dayData.close
+                // 백테스트 전략은 장개시 주문을 만들지 않는다. 들어오면 시가 기준으로 본다.
+                OrderType.MOO -> dayData.open
+                OrderType.LOO -> {
+                    if (order.orderSide == OrderSide.BUY && dayData.open <= order.orderPrice) {
+                        dayData.open
+                    } else if (order.orderSide == OrderSide.SELL && dayData.open >= order.orderPrice) {
+                        dayData.open
+                    } else null
+                }
             }
 
             if (filledPrice != null) {

@@ -66,11 +66,7 @@ data class InvestmentStatus(
                 }
             }
 
-    val exchange: Exchange get() = when(ticker) {
-        "TQQQ" -> Exchange.NASD
-        "SOXL", "FNGU", "SOXS" -> Exchange.AMEX
-        else -> Exchange.NASD
-    }
+    val exchange: Exchange get() = Exchange.of(ticker)
 
     val starSellPrice: Double
         get() = (avgPrice * (1.0 + starPercent / 100.0)).roundTo2Decimal()

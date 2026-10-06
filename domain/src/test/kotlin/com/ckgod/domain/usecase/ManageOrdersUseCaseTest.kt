@@ -94,7 +94,7 @@ class ManageOrdersUseCaseTest {
         val result = ManageOrdersUseCase(repo, histories).modify("0001", 19.5, null)
 
         assertTrue(result.success)
-        assertEquals("NEW-0001", result.newOrderNo)
+        assertEquals("NEW-0001", result.orderNo)
         assertEquals(Triple("0001", 4, 19.5), repo.modified.single())  // 수량 생략 시 미체결 4주 전체
         assertEquals(OrderStatus.CANCELED, histories.findByOrderNo("0001")?.status)
         val renewed = histories.findByOrderNo("NEW-0001")

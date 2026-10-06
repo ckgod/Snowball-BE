@@ -19,6 +19,8 @@ object TradeHistoryMapper {
             DomainOrderType.LIMIT -> OrderType.LIMIT
             DomainOrderType.MOC -> OrderType.MOC
             DomainOrderType.LOC -> OrderType.LOC
+            DomainOrderType.LOO -> OrderType.LOO
+            DomainOrderType.MOO -> OrderType.MOO
         }
         val orderStatus = when(history.status) {
             OrderStatus.PENDING -> TradeStatus.PENDING
@@ -42,6 +44,7 @@ object TradeHistoryMapper {
             filledPrice = history.filledPrice,
             filledTime = history.filledTime?.toString(),
             failReason = history.failReason,
+            isManual = history.isManual,
             tValue = history.tValue,
             createdAt = history.createdAt.toString(),
             crashRate = history.crashRate

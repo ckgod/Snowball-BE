@@ -43,6 +43,7 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
             it[avgPrice] = history.avgPrice
             it[realizedPropitAmount] = history.realizedProfitAmount
             it[failReason] = history.failReason?.take(500)
+            it[isManual] = history.isManual
         } get TradeHistoryTable.id
 
         history.copy(id = id)
@@ -141,7 +142,8 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
             updatedAt = this[TradeHistoryTable.updatedAt],
             avgPrice = this[TradeHistoryTable.avgPrice],
             realizedProfitAmount = this[TradeHistoryTable.realizedPropitAmount],
-            failReason = this[TradeHistoryTable.failReason]
+            failReason = this[TradeHistoryTable.failReason],
+            isManual = this[TradeHistoryTable.isManual]
         )
     }
 }

@@ -26,6 +26,7 @@ object TradeHistoryTable : Table("trade_history") {
     val avgPrice = double("avg_price").default(0.0)                // 주문 당시 평단
     val realizedPropitAmount = double("realized_propit_amount").default(0.0) // 매도 체결 시 손익
     val failReason = varchar("fail_reason", 500).nullable().default(null)   // REJECTED 사유
+    val isManual = bool("is_manual").default(false)                         // 앱 수동 주문
 
     val createdAt = datetime("created_at")                  // 생성 시각
     val updatedAt = datetime("updated_at")                  // 업데이트 시각
