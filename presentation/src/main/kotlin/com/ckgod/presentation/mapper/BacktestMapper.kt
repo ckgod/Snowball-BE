@@ -95,6 +95,8 @@ object BacktestMapper {
                 DomainOrderType.LOC -> OrderType.LOC
                 DomainOrderType.LIMIT -> OrderType.LIMIT
                 DomainOrderType.MOC -> OrderType.MOC
+                DomainOrderType.LOO -> OrderType.LOO
+                DomainOrderType.MOO -> OrderType.MOO
             },
             orderPrice = trade.orderPrice,
             filledPrice = trade.filledPrice,

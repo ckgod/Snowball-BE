@@ -21,14 +21,33 @@ enum class OrderSide {
 
 enum class OrderType(val code: String) {
     LIMIT("00"), // 지정가
-    MOC("33"), // 장마감 시장가 (매도에만 적용가능)
-    LOC("34") // 장마감 지정가
+    MOO("31"), // 장개시 시장가 (매도만)
+    LOO("32"), // 장개시 지정가
+    MOC("33"), // 장마감 시장가 (매도만)
+    LOC("34"); // 장마감 지정가
+
+    /** 가격 없이 나가는 시장가 계열 */
+    val isMarket: Boolean get() = this == MOO || this == MOC
+
+    /** KIS 미국 주문에서 이 방향으로 쓸 수 있는지 (매수는 LIMIT·LOO·LOC 만) */
+    fun supports(side: OrderSide): Boolean = side == OrderSide.SELL || !isMarket
 }
 
 enum class Exchange(val code: String) {
     NASD("NASD"),
     AMEX("AMEX"),
-    NYSE("NYSE")
+    NYSE("NYSE");
+
+    companion object {
+        /** 운용 중인 종목은 알려진 거래소로, 그 밖은 나스닥으로 추정한다 */
+        fun of(ticker: String): Exchange = when (ticker) {
+            "TQQQ" -> NASD
+            "SOXL", "FNGU", "SOXS" -> AMEX
+            else -> NASD
+        }
+
+        fun fromCode(code: String): Exchange? = entries.find { it.code == code.uppercase() }
+    }
 }
 
 /** 주문 한 건을 보낸 결과. 접수(OrderResponse) 또는 실패(OrderRejection). */

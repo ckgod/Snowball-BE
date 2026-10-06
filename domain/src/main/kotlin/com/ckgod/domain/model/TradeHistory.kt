@@ -23,6 +23,7 @@ data class TradeHistory(
     val avgPrice: Double = 0.0,                 // 체결 당시 평단가
     val realizedProfitAmount: Double = 0.0,     // 매도 체결 시 손익
     val failReason: String? = null,             // REJECTED 일 때 실패 사유
+    val isManual: Boolean = false,              // 앱에서 직접 넣은 주문
 
     // 전략 정보
     val tValue: Double,                         // 주문 당시 T값

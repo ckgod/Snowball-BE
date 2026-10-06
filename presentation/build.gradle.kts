@@ -10,4 +10,6 @@ dependencies {
     implementation(libs.bundles.ktor.server)
     implementation(libs.kotlinx.datetime)
     implementation(libs.ktor.serialization.kotlinx.json)
+
+    testImplementation(libs.kotlin.test.junit)
 }
