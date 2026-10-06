@@ -73,4 +73,11 @@ class OrderGuardTest {
         assertEquals(1, calls)
         assertEquals(first, second)
     }
+
+    /** 앱 OrderSignerTest 와 같은 벡터. 한쪽 규칙만 바뀌면 둘 중 하나가 깨진다. */
+    @Test
+    fun `앱과 같은 서명을 만든다`() {
+        val signature = OrderGuard.sign("test-key", 1_700_000_000, "post", "/sb/orders", """{"ticker":"TQQQ"}""")
+        assertEquals("8bf571b847039a9eea44b43cb0007f65398eb3da753996d422c4f59fe98fce65", signature)
+    }
 }
