@@ -47,6 +47,11 @@ class SyncStrategyUseCase(
     private suspend fun syncOrderExecution() {
         val executionList = executionRepository.getExecutionList()
         executionList.forEach { execution ->
+            // 거래소가 거부한 주문을 미체결 취소(CANCELED)와 섞지 않는다
+            execution.rejectReason?.let { reason ->
+                historyRepository.markRejected(execution.orderNo, OrderRejectionChecker.describeRejection(reason))
+                return@forEach
+            }
             val status = when {
                 execution.isFullyFilled -> OrderStatus.FILLED
                 execution.isPartiallyFilled -> OrderStatus.PARTIAL

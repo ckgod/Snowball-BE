@@ -10,7 +10,7 @@ class ExecutionRepositoryImpl(
 ): ExecutionRepository {
     private val logger = LoggerFactory.getLogger(ExecutionRepositoryImpl::class.java)
 
-    override suspend fun getExecutionList(): List<ExecutionInfo> {
+    override suspend fun getExecutionList(startDate: String, endDate: String): List<ExecutionInfo> {
         val allExecutions = mutableListOf<ExecutionInfo>()
 
         var trCont = ""
@@ -23,6 +23,8 @@ class ExecutionRepositoryImpl(
             logger.info("[ExecutionRepository] 체결 내역 조회 중... (페이지: $pageCount, tr_cont 요청값: '$trCont')")
 
             val response = kisApiService.getExecution(
+                startDate = startDate,
+                endDate = endDate,
                 trCont = trCont,
                 fKey = fKey,
                 nKey = nKey

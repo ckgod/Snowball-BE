@@ -17,3 +17,4 @@ fun beforeDay(daysToSubtract: Long = 1): String {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     return yesterday.format(formatter)
 }
+fun today(): String = beforeDay(0)

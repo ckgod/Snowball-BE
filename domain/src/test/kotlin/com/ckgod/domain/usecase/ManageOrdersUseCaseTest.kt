@@ -50,7 +50,7 @@ class ManageOrdersUseCaseTest {
     @Test
     fun `미체결 목록에 없는 주문은 취소하지 않는다`() = runBlocking {
         val repo = FakeOrderRepository(listOf(open))
-        val result = ManageOrdersUseCase(repo, BacktestTradeHistoryRepository()).cancel("9999")
+        val result = ManageOrdersUseCase(repo, BacktestTradeHistoryRepository(), checker()).cancel("9999")
 
         assertFalse(result.success)
         assertTrue(repo.canceled.isEmpty())
@@ -59,7 +59,7 @@ class ManageOrdersUseCaseTest {
     @Test
     fun `빈 주문번호는 거부 기록과 섞이지 않도록 바로 실패한다`() = runBlocking {
         val repo = FakeOrderRepository(listOf(open.copy(orderNo = "")))
-        val result = ManageOrdersUseCase(repo, BacktestTradeHistoryRepository()).cancel("")
+        val result = ManageOrdersUseCase(repo, BacktestTradeHistoryRepository(), checker()).cancel("")
 
         assertFalse(result.success)
         assertTrue(repo.canceled.isEmpty())
@@ -70,7 +70,7 @@ class ManageOrdersUseCaseTest {
         val repo = FakeOrderRepository(listOf(open))
         val histories = BacktestTradeHistoryRepository().apply { save(history("0001")) }
 
-        val result = ManageOrdersUseCase(repo, histories).cancel("0001")
+        val result = ManageOrdersUseCase(repo, histories, checker()).cancel("0001")
 
         assertTrue(result.success)
         assertEquals(listOf("0001"), repo.canceled)
@@ -80,7 +80,7 @@ class ManageOrdersUseCaseTest {
     @Test
     fun `정정 수량이 미체결 수량을 넘으면 보내지 않는다`() = runBlocking {
         val repo = FakeOrderRepository(listOf(open))
-        val result = ManageOrdersUseCase(repo, BacktestTradeHistoryRepository()).modify("0001", 19.5, 5)
+        val result = ManageOrdersUseCase(repo, BacktestTradeHistoryRepository(), checker()).modify("0001", 19.5, 5)
 
         assertFalse(result.success)
         assertTrue(repo.modified.isEmpty())
@@ -91,7 +91,7 @@ class ManageOrdersUseCaseTest {
         val repo = FakeOrderRepository(listOf(open))
         val histories = BacktestTradeHistoryRepository().apply { save(history("0001")) }
 
-        val result = ManageOrdersUseCase(repo, histories).modify("0001", 19.5, null)
+        val result = ManageOrdersUseCase(repo, histories, checker()).modify("0001", 19.5, null)
 
         assertTrue(result.success)
         assertEquals("NEW-0001", result.orderNo)
@@ -108,11 +108,27 @@ class ManageOrdersUseCaseTest {
         val repo = FakeOrderRepository(listOf(open), failWith = RuntimeException("[APBK0001] 정정 불가"))
         val histories = BacktestTradeHistoryRepository().apply { save(history("0001")) }
 
-        val result = ManageOrdersUseCase(repo, histories).cancel("0001")
+        val result = ManageOrdersUseCase(repo, histories, checker()).cancel("0001")
 
         assertFalse(result.success)
         assertTrue(result.message.contains("정정 불가"))
         assertEquals(OrderStatus.PENDING, histories.findByOrderNo("0001")?.status)
         assertNull(histories.findByOrderNo("NEW-0001"))
+    }
+
+    @Test
+    fun `정정이 거래소에서 거부되면 실패를 돌려주고 원주문 기록은 PENDING 으로 둔다`() = runBlocking {
+        val repo = FakeOrderRepository(listOf(open))
+        val histories = BacktestTradeHistoryRepository().apply { save(history("0001")) }
+        val rejecting = checker(mapOf("NEW-0001" to "LimitPrice {164.05 > 30.24% Limit 30.00% thru nbbo }"))
+
+        val result = ManageOrdersUseCase(repo, histories, rejecting).modify("0001", 164.05, null)
+
+        assertFalse(result.success)
+        assertTrue(result.message.contains("원주문은 그대로"))
+        assertEquals(OrderStatus.PENDING, histories.findByOrderNo("0001")?.status)
+        val rejected = histories.findByOrderNo("NEW-0001")
+        assertEquals(OrderStatus.REJECTED, rejected?.status)
+        assertTrue(rejected?.failReason!!.contains("30% 넘게"))
     }
 }

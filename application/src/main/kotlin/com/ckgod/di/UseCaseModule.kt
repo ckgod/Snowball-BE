@@ -5,6 +5,7 @@ import com.ckgod.domain.usecase.GenerateOrdersUseCase
 import com.ckgod.domain.usecase.GetCurrentPriceUseCase
 import com.ckgod.domain.usecase.GetStockPriceHistoryUseCase
 import com.ckgod.domain.usecase.ManageOrdersUseCase
+import com.ckgod.domain.usecase.OrderRejectionChecker
 import com.ckgod.domain.usecase.PlaceOrderUseCase
 import com.ckgod.domain.usecase.SyncStrategyUseCase
 import org.koin.dsl.module
@@ -14,13 +15,15 @@ val useCaseModule = module {
 
     single<SyncStrategyUseCase> { SyncStrategyUseCase(get(), get(), get(), get()) }
 
-    single<GenerateOrdersUseCase> { GenerateOrdersUseCase(get(), get(), get(), get()) }
+    single<OrderRejectionChecker> { OrderRejectionChecker(get()) }
+
+    single<GenerateOrdersUseCase> { GenerateOrdersUseCase(get(), get(), get(), get(), get()) }
 
     single<GetStockPriceHistoryUseCase> { GetStockPriceHistoryUseCase(get()) }
 
     single<BacktestUseCase> { BacktestUseCase(get()) }
 
-    single<ManageOrdersUseCase> { ManageOrdersUseCase(get(), get()) }
+    single<ManageOrdersUseCase> { ManageOrdersUseCase(get(), get(), get()) }
 
-    single<PlaceOrderUseCase> { PlaceOrderUseCase(get(), get(), get(), get()) }
+    single<PlaceOrderUseCase> { PlaceOrderUseCase(get(), get(), get(), get(), get()) }
 }

@@ -29,6 +29,7 @@ data class KisExecutionResponse(
         @SerialName("ft_ccld_unpr3") val executionPrice: String,
         @SerialName("ft_ccld_amt3") val executionAmount: String,
         @SerialName("nccs_qty") val notExecutionQuantity: String,
+        @SerialName("rjct_rson_name") val rejectReasonName: String = "",
     ) {
         fun toDomain(): ExecutionInfo {
             return ExecutionInfo(
@@ -36,8 +37,14 @@ data class KisExecutionResponse(
                 orderNo = orderNo,
                 orderQuantity = orderQuantity.toDouble(),
                 filledPrice = executionPrice.toDouble(),
-                filledQuantity = executionQuantity.toDouble()
+                filledQuantity = executionQuantity.toDouble(),
+                rejectReason = if (executionCode == REJECTED) rejectReasonName.trim().ifBlank { "사유 없음" } else null
             )
+        }
+
+        private companion object {
+            /** prcs_stat_name: 완료·전송·거부 등. 접수 뒤 거래소가 거부하면 "거부" */
+            const val REJECTED = "거부"
         }
     }
 }

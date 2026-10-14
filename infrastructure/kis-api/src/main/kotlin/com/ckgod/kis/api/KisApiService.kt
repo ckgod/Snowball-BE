@@ -147,13 +147,19 @@ class KisApiService(private val apiClient: KisApiClient) {
         )
     }
 
-    suspend fun getExecution(trCont: String = "", fKey: String = "", nKey: String = ""): KisResponseWithHeaders<KisExecutionResponse> {
+    suspend fun getExecution(
+        startDate: String = yesterday(),
+        endDate: String = yesterday(),
+        trCont: String = "",
+        fKey: String = "",
+        nKey: String = ""
+    ): KisResponseWithHeaders<KisExecutionResponse> {
         val spec = KisApiSpec.InquireCCnl()
         val queryParams = spec.buildQuery(
             accountNo = apiClient.config.accountNo,
             accountCode = apiClient.config.accountCode,
-            startDate = yesterday(),
-            endDate = yesterday(),
+            startDate = startDate,
+            endDate = endDate,
             nKey = nKey,
             fKey = fKey
         )

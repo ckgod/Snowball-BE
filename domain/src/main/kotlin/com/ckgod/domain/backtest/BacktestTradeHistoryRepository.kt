@@ -53,6 +53,11 @@ class BacktestTradeHistoryRepository : TradeHistoryRepository {
         if (index >= 0) histories[index] = histories[index].copy(status = status)
     }
 
+    override suspend fun markRejected(orderNo: String, reason: String) {
+        val index = histories.indexOfFirst { it.orderNo == orderNo }
+        if (index >= 0) histories[index] = histories[index].copy(status = OrderStatus.REJECTED, failReason = reason)
+    }
+
     override suspend fun findPendingOrders(): List<TradeHistory> {
         return histories.filter { it.status == OrderStatus.PENDING }
     }

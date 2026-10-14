@@ -17,7 +17,8 @@ import java.time.ZoneId
  */
 class ManageOrdersUseCase(
     private val orderManagementRepository: OrderManagementRepository,
-    private val tradeHistoryRepository: TradeHistoryRepository
+    private val tradeHistoryRepository: TradeHistoryRepository,
+    private val rejectionChecker: OrderRejectionChecker
 ) {
     private val logger = LoggerFactory.getLogger(ManageOrdersUseCase::class.java)
 
@@ -47,10 +48,13 @@ class ManageOrdersUseCase(
         return runAction("정정", order) {
             val newOrderNo = orderManagementRepository.modify(order, newQuantity, price)
 
-            // 정정되면 원주문은 사라지고 새 주문번호로 이어진다. 기록도 그대로 따라간다.
+            // 새 주문번호를 받아도 거래소가 정정을 거부할 수 있다. 그때 원주문은 그대로 살아 있다.
+            val rejectReason = rejectionChecker.findRejected(listOf(newOrderNo))[newOrderNo]
+
             recordQuietly(order) {
                 val origin = tradeHistoryRepository.findByOrderNo(order.orderNo) ?: return@recordQuietly
-                tradeHistoryRepository.updateStatus(origin.orderNo, OrderStatus.CANCELED)
+                // 정정되면 원주문은 사라지고 새 주문번호로 이어진다. 거부면 원주문 기록은 건드리지 않는다.
+                if (rejectReason == null) tradeHistoryRepository.updateStatus(origin.orderNo, OrderStatus.CANCELED)
                 val now = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
                 tradeHistoryRepository.save(
                     origin.copy(
@@ -59,18 +63,24 @@ class ManageOrdersUseCase(
                         orderPrice = price,
                         orderQuantity = newQuantity,
                         orderTime = now,
-                        status = OrderStatus.PENDING,
+                        status = if (rejectReason == null) OrderStatus.PENDING else OrderStatus.REJECTED,
                         filledQuantity = 0,
                         filledPrice = 0.0,
                         filledTime = null,
                         realizedProfitAmount = 0.0,
-                        failReason = null,
+                        failReason = rejectReason,
                         createdAt = now,
                         updatedAt = now
                     )
                 )
             }
-            OrderActionResult(true, "정정 요청이 접수됐습니다", newOrderNo)
+
+            if (rejectReason != null) {
+                logger.warn("[ManageOrders] ${order.ticker} ${order.orderNo} 정정 거부 - $newOrderNo: $rejectReason")
+                OrderActionResult(false, "정정이 거부됐습니다. 원주문은 그대로 남아 있습니다 - $rejectReason", newOrderNo)
+            } else {
+                OrderActionResult(true, "정정 요청이 접수됐습니다", newOrderNo)
+            }
         }
     }
 

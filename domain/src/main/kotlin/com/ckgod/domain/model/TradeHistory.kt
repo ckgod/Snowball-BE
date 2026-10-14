@@ -42,5 +42,5 @@ enum class OrderStatus {
     FILLED,     // 전량 체결
     PARTIAL,    // 부분 체결
     CANCELED,   // 주문 취소
-    REJECTED    // 주문 접수 실패 (KIS 거부 또는 전송 오류). orderNo 는 빈 문자열
+    REJECTED    // 주문 실패. 접수 전 실패(KIS 거부·전송 오류)는 orderNo 빈 문자열, 접수 뒤 거래소 거부는 주문번호 있음
 }
