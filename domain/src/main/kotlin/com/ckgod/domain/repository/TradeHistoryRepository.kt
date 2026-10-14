@@ -31,6 +31,11 @@ interface TradeHistoryRepository {
     suspend fun updateStatus(orderNo: String, status: OrderStatus)
 
     /**
+     * 접수 뒤 거래소·KIS 가 거부한 주문을 REJECTED 와 사유로 고친다
+     */
+    suspend fun markRejected(orderNo: String, reason: String)
+
+    /**
      * 주문번호로 조회
      */
     suspend fun findByOrderNo(orderNo: String): TradeHistory?

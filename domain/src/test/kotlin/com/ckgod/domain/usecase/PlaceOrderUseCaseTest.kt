@@ -36,8 +36,11 @@ class PlaceOrderUseCaseTest {
         override suspend fun getTotalAsset(): TotalAsset = throw UnsupportedOperationException()
     }
 
-    private fun useCase(stock: FakeStockRepository, histories: BacktestTradeHistoryRepository) =
-        PlaceOrderUseCase(stock, account, BacktestInvestmentStatusRepository(), histories)
+    private fun useCase(
+        stock: FakeStockRepository,
+        histories: BacktestTradeHistoryRepository,
+        rejectionChecker: OrderRejectionChecker = checker()
+    ) = PlaceOrderUseCase(stock, account, BacktestInvestmentStatusRepository(), histories, rejectionChecker)
 
     private fun command(side: OrderSide = OrderSide.BUY, type: OrderType = OrderType.LIMIT, price: Double = 20.0, quantity: Int = 1) =
         PlaceOrderUseCase.Command(ticker = "soxl", side = side, type = type, price = price, quantity = quantity)
@@ -94,5 +97,19 @@ class PlaceOrderUseCaseTest {
         val result = useCase(stock, BacktestTradeHistoryRepository())(command(price = 0.0))
         assertFalse(result.success)
         assertTrue(stock.sent.isEmpty())
+    }
+
+    @Test
+    fun `접수 뒤 거래소가 거부하면 주문번호와 함께 REJECTED 로 기록한다`() = runBlocking {
+        val histories = BacktestTradeHistoryRepository()
+        val rejecting = checker(mapOf("0001" to "[6008] Limit Price Too Aggressive"))
+
+        val result = useCase(FakeStockRepository(), histories, rejecting)(command())
+
+        assertFalse(result.success)
+        assertEquals("0001", result.orderNo)
+        val saved = histories.findByOrderNo("0001")!!
+        assertEquals(OrderStatus.REJECTED, saved.status)
+        assertTrue(saved.failReason!!.contains("Too Aggressive"))
     }
 }

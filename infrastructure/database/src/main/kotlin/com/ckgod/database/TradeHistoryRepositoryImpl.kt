@@ -78,6 +78,16 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
         }
     }
 
+    override suspend fun markRejected(orderNo: String, reason: String) {
+        transaction {
+            TradeHistoryTable.update({ TradeHistoryTable.orderNo eq orderNo }) {
+                it[status] = OrderStatus.REJECTED.name
+                it[failReason] = reason.take(500)
+                it[updatedAt] = LocalDateTime.now()
+            }
+        }
+    }
+
     override suspend fun findByOrderNo(orderNo: String): TradeHistory? = transaction {
         TradeHistoryTable.selectAll()
             .where { TradeHistoryTable.orderNo eq orderNo }

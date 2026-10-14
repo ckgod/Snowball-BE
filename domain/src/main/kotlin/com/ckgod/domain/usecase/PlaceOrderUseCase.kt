@@ -25,7 +25,8 @@ class PlaceOrderUseCase(
     private val stockRepository: StockRepository,
     private val accountRepository: AccountRepository,
     private val investmentStatusRepository: InvestmentStatusRepository,
-    private val tradeHistoryRepository: TradeHistoryRepository
+    private val tradeHistoryRepository: TradeHistoryRepository,
+    private val rejectionChecker: OrderRejectionChecker
 ) {
     private val logger = LoggerFactory.getLogger(PlaceOrderUseCase::class.java)
 
@@ -65,13 +66,20 @@ class PlaceOrderUseCase(
 
         val accepted = submission.accepted.firstOrNull()
         val rejected = submission.rejected.firstOrNull()
-        record(request, accepted?.orderNo, rejected?.reason)
+        // 주문번호를 받은 뒤 거래소가 거부할 수 있다 (예: 지정가가 호가에서 30% 넘게 벗어남)
+        val exchangeRejectReason = accepted?.let { rejectionChecker.findRejected(listOf(it.orderNo))[it.orderNo] }
+        record(request, accepted?.orderNo, rejected?.reason ?: exchangeRejectReason, rejected = accepted == null || exchangeRejectReason != null)
 
-        return if (accepted != null) {
-            logger.info("[PlaceOrder] $ticker ${command.side} ${command.type} ${command.quantity}주 @${request.price} → ${accepted.orderNo}")
-            OrderActionResult(true, "주문이 접수됐습니다", accepted.orderNo)
-        } else {
-            OrderActionResult(false, rejected?.reason ?: "주문이 접수되지 않았습니다")
+        return when {
+            accepted == null -> OrderActionResult(false, rejected?.reason ?: "주문이 접수되지 않았습니다")
+            exchangeRejectReason != null -> {
+                logger.warn("[PlaceOrder] $ticker ${accepted.orderNo} 거래소 거부: $exchangeRejectReason")
+                OrderActionResult(false, "주문이 거부됐습니다 - $exchangeRejectReason", accepted.orderNo)
+            }
+            else -> {
+                logger.info("[PlaceOrder] $ticker ${command.side} ${command.type} ${command.quantity}주 @${request.price} → ${accepted.orderNo}")
+                OrderActionResult(true, "주문이 접수됐습니다", accepted.orderNo)
+            }
         }
     }
 
@@ -88,7 +96,7 @@ class PlaceOrderUseCase(
     /**
      * KIS 처리 결과와 별개로, 기록 실패가 응답을 실패로 바꾸지 않게 한다 (같은 주문을 다시 넣게 되므로).
      */
-    private suspend fun record(request: OrderRequest, orderNo: String?, failReason: String?) {
+    private suspend fun record(request: OrderRequest, orderNo: String?, failReason: String?, rejected: Boolean) {
         try {
             val status = investmentStatusRepository.get(request.ticker)
             // 매도 체결 시 실현 손익 계산에 쓰는 평단 (자동 주문과 같은 규칙)
@@ -105,7 +113,7 @@ class PlaceOrderUseCase(
                     orderPrice = request.price,
                     orderQuantity = request.quantity,
                     orderTime = LocalDateTime.now(ZoneId.of("Asia/Seoul")),
-                    status = if (orderNo != null) OrderStatus.PENDING else OrderStatus.REJECTED,
+                    status = if (rejected) OrderStatus.REJECTED else OrderStatus.PENDING,
                     tValue = status?.tValue ?: 0.0,
                     avgPrice = avgPrice,
                     failReason = failReason,

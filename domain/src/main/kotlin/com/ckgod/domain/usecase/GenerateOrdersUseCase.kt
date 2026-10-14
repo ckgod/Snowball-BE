@@ -7,6 +7,8 @@ import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
 import com.ckgod.domain.utils.roundTo2Decimal
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDateTime
 import java.time.ZoneId
 import kotlin.math.abs
@@ -22,7 +24,9 @@ class GenerateOrdersUseCase(
     private val stockRepository: StockRepository,
     private val accountRepository: AccountRepository,
     private val investmentStatusRepository: InvestmentStatusRepository,
-    private val tradeHistoryRepository: TradeHistoryRepository
+    private val tradeHistoryRepository: TradeHistoryRepository,
+    /** 실주문 직후 거래소 거부 확인. 백테스트는 null (확인 안 함) */
+    private val rejectionChecker: OrderRejectionChecker? = null
 ) {
     private val logger = LoggerFactory.getLogger(GenerateOrdersUseCase::class.java)
 
@@ -62,11 +66,13 @@ class GenerateOrdersUseCase(
         // OrderJob(18:00 KST) 시점은 미국 프리마켓 진행 중이라 last(현재가)에 프리장 시세가 반환되는데,
         // 무한매수법의 폭락 대비 LOC·첫 진입 별% 기준은 전일 정규장 종가여야 한다.
         // (2026-06-09 SOXL: 프리장 +6.7% 갭업가가 기준이 되어 ladder 3건이 초과 체결된 사례)
-        val basePrice = stockRepository.getCurrentPrice(ticker)?.previousClose?.toDoubleOrNull() ?: 0.0
+        val marketPrice = stockRepository.getCurrentPrice(ticker)
+        val basePrice = marketPrice?.previousClose?.toDoubleOrNull() ?: 0.0
         if (basePrice == 0.0) {
             logger.warn("[GenerateOrders] [$ticker] 기준가(전일 종가) 조회 실패")
             return null
         }
+        val locBuyCap = locBuyPriceCap(basePrice, marketPrice?.price?.toDoubleOrNull())
 
         val holding = accountRepository.getBalance(ticker)
         val currentQuantity = holding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
@@ -92,7 +98,7 @@ class GenerateOrdersUseCase(
                 status = currentStatus,
                 basePrice = basePrice,
                 maxBuyPrice = if (minSellPrice < Double.MAX_VALUE) minSellPrice - 0.01 else null
-            )
+            ).map { capLocBuyPrice(it, locBuyCap) }
         } catch (e: Exception) {
             logger.error("[GenerateOrders] [$ticker] 매수 주문 생성 실패", e)
             throw e
@@ -149,12 +155,45 @@ class GenerateOrdersUseCase(
         }
         logger.info("[GenerateOrders] [$ticker] 주문 내역 DB 저장 완료")
 
+        // 주문번호를 받은 뒤 거래소가 거부한 주문을 바로 REJECTED 로 고친다 (안 그러면 새벽 정산 전까지 PENDING 으로 보인다)
+        rejectionChecker?.findRejected(submission.accepted.map { it.orderNo })?.forEach { (orderNo, reason) ->
+            logger.warn("[GenerateOrders] [$ticker] 거래소 거부 - $orderNo: $reason")
+            // 주문은 이미 나갔으니 기록 실패로 Job 을 실패시키지 않는다. 새벽 정산이 다시 고친다
+            runCatching { tradeHistoryRepository.markRejected(orderNo, reason) }
+                .onFailure { logger.error("[GenerateOrders] [$ticker] 거부 기록 실패 - $orderNo", it) }
+        }
+
         return OrderResult(
             ticker = ticker,
             currentPrice = basePrice,
             buyOrders = buyOrders,
             sellOrders = sellOrders
         )
+    }
+
+    /**
+     * LOC 매수가 상한.
+     *
+     * 미국 거래소는 호가보다 일정 비율(SOXL 기준 30%) 넘게 높은 매수 지정가를 접수 직후 거부한다.
+     * 주가가 평단·별% 기준가보다 크게 떨어지면 별%·평단 LOC 매수가가 이 한도를 넘어
+     * 매일 가장 큰 매수가 빠진다 (2026-10-13~14 SOXL 166.05·164.05 거부, 호가 약 126).
+     * LOC 는 종가에 체결되므로 상한으로 낮춰도 장중 상한 넘게 오르지 않는 한 결과가 같다.
+     *
+     * 기준은 전일 종가와 현재 호가 중 낮은 쪽이다 (프리장 하락 시 호가 기준으로 잘린다).
+     */
+    private fun locBuyPriceCap(basePrice: Double, livePrice: Double?): Double {
+        val reference = livePrice?.takeIf { it > 0.0 }?.let { minOf(it, basePrice) } ?: basePrice
+        // Double 곱셈 오차로 한 틱 내려가지 않게 (125.96 * 1.25 = 157.4499..) 십진수로 계산한다
+        return BigDecimal.valueOf(reference)
+            .multiply(BigDecimal.ONE + LOC_BUY_CAP_RATE)
+            .setScale(2, RoundingMode.FLOOR)
+            .toDouble()
+    }
+
+    private fun capLocBuyPrice(order: OrderRequest, cap: Double): OrderRequest {
+        if (order.side != OrderSide.BUY || order.type != OrderType.LOC || order.price <= cap) return order
+        logger.info("[GenerateOrders] [${order.ticker}] LOC 매수가 상한 적용: ${"%.2f".format(order.price)} -> ${"%.2f".format(cap)}")
+        return order.copy(price = cap)
     }
 
     /**
@@ -407,6 +446,11 @@ class GenerateOrdersUseCase(
         }
 
         return orders
+    }
+
+    private companion object {
+        /** 거래소 한도(30%)보다 여유를 둔다. 프리장 호가가 주문 사이에 움직여도 걸리지 않게 */
+        val LOC_BUY_CAP_RATE: BigDecimal = BigDecimal("0.25")
     }
 
     /**
