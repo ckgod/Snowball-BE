@@ -20,7 +20,7 @@ data class PresentAccountStatus(
     val totalProfitRate: Double,       // 총 수익률(%)
 
     val totalCashUsd: Double,          // 외화예수금
-    val orderableCashUsd: Double,      // 주문가능금액
+    val orderableCashUsd: Double,      // 체결 기준 현금 (예수금 - 미결제 매수 + 미결제 매도)
     val lockedCashUsd: Double,         // 묶인 돈(증거금)
 
     val holdings: List<HoldingStock>    // 보유 종목 리스트
