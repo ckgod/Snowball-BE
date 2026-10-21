@@ -1,3 +1,5 @@
 ckg-snowball.duckdns.org {
+	# 가격 기록(종목당 약 700KB)·백테스트 결과(최대 1MB) JSON 을 압축해 보낸다
+	encode zstd gzip
 	reverse_proxy app:8080
 }
