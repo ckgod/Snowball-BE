@@ -6,6 +6,7 @@ import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
 import com.ckgod.domain.utils.roundTo2Decimal
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -26,9 +27,10 @@ class GenerateOrdersUseCase(
     private val investmentStatusRepository: InvestmentStatusRepository,
     private val tradeHistoryRepository: TradeHistoryRepository,
     /** 실주문 직후 거래소 거부 확인. 백테스트는 null (확인 안 함) */
-    private val rejectionChecker: OrderRejectionChecker? = null
+    private val rejectionChecker: OrderRejectionChecker? = null,
+    /** 백테스트는 하루마다 부르므로 NOP 로거를 넘긴다 (10년치면 로그 수만 줄) */
+    private val logger: Logger = LoggerFactory.getLogger(GenerateOrdersUseCase::class.java)
 ) {
-    private val logger = LoggerFactory.getLogger(GenerateOrdersUseCase::class.java)
 
     suspend operator fun invoke(ticker: String? = null): List<OrderResult> {
         logger.info("[GenerateOrders] 시작 - ticker: ${ticker ?: "전체"}")

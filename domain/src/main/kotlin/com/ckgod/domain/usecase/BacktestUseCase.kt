@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
+import org.slf4j.helpers.NOPLogger
 
 class BacktestUseCase(
     private val stockPriceHistoryRepository: StockPriceHistoryRepository
@@ -75,7 +76,8 @@ class BacktestUseCase(
             stockRepository = backtestStockRepo,
             accountRepository = backtestAccountRepo,
             investmentStatusRepository = backtestStatusRepo,
-            tradeHistoryRepository = backtestHistoryRepo
+            tradeHistoryRepository = backtestHistoryRepo,
+            logger = NOPLogger.NOP_LOGGER
         )
 
         // 6. 시뮬레이션 루프
