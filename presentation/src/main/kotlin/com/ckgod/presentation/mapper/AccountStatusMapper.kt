@@ -42,6 +42,32 @@ object TotalAssetMapper {
     }
 
     /**
+     * 보유 종목을 주어진 시세로 다시 평가한다. 시세가 없는 종목은 잔고 API 의 현재가를 그대로 쓴다.
+     */
+    internal fun repriced(status: PresentAccountStatus, prices: Map<String, Double>): PresentAccountStatus {
+        if (prices.isEmpty()) return status
+        val holdings = status.holdings.map { holding ->
+            val price = prices[holding.ticker] ?: return@map holding
+            val avg = holding.avgPrice.toDoubleOrNull() ?: 0.0
+            holding.copy(
+                currentPrice = price.toString(),
+                profitRate = if (avg > 0) ((price - avg) / avg * 100).roundTo2Decimal().toString() else holding.profitRate
+            )
+        }
+        val evaluation = holdings.sumOf {
+            (it.quantity.toDoubleOrNull() ?: 0.0) * (it.currentPrice.toDoubleOrNull() ?: 0.0)
+        }
+        val profit = evaluation - status.totalBuyingValueUsd
+        return status.copy(
+            totalAssetValueUsd = (status.orderableCashUsd + evaluation).roundTo2Decimal(),
+            totalEvalValueUsd = evaluation.roundTo2Decimal(),
+            totalProfitUsd = profit.roundTo2Decimal(),
+            totalProfitRate = if (status.totalBuyingValueUsd > 0) (profit / status.totalBuyingValueUsd * 100).roundTo2Decimal() else 0.0,
+            holdings = holdings
+        )
+    }
+
+    /**
      * 자산현황(CTRP6548R)은 결제 기준이라 체결됐지만 결제 전(T+1)인 매수분이 해외주식에서 빠지고 외화 현금에 남는다.
      * 봇이 매일 사므로 늘 어긋난다. 해외주식·외화 칸은 체결 기준 잔고(CTRP6504R)의 달러 값으로 바꾸고 합계와 비중을 다시 낸다.
      * 원화로만 오는 나머지 칸(RP 등)은 그대로 둔다.

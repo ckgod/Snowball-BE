@@ -1,6 +1,7 @@
 package com.ckgod.presentation.mapper
 
 import com.ckgod.domain.model.AssetItem
+import com.ckgod.domain.model.HoldingStock
 import com.ckgod.domain.model.PresentAccountStatus
 import com.ckgod.domain.model.TotalAsset
 import com.ckgod.snowball.model.AssetType
@@ -62,5 +63,31 @@ class TotalAssetMapperTest {
     fun `자산현황이 비어 있으면 빈 목록을 돌려준다`() {
         val response = TotalAssetMapper.toResponse(executed, TotalAsset(emptyList()), emptyList(), exchangeRate = 1000.0)
         assertEquals(emptyList(), response.assets)
+    }
+
+    @Test
+    fun `보유 종목을 시세로 다시 평가한다`() {
+        val status = executed.copy(
+            holdings = listOf(
+                HoldingStock("SOXL", "SOXL", "20", "55.0", "50.0", "-9.09", "1100.0"),
+                HoldingStock("TQQQ", "TQQQ", "2", "40.0", "45.0", "12.5", "80.0"),
+            ),
+            totalBuyingValueUsd = 1180.0,
+        )
+
+        val repriced = TotalAssetMapper.repriced(status, mapOf("SOXL" to 60.0))
+
+        val soxl = repriced.holdings.first { it.ticker == "SOXL" }
+        assertEquals("60.0", soxl.currentPrice)
+        assertEquals("9.09", soxl.profitRate)
+        assertEquals("45.0", repriced.holdings.first { it.ticker == "TQQQ" }.currentPrice)
+        assertEquals(1290.0, repriced.totalEvalValueUsd)
+        assertEquals(110.0, repriced.totalProfitUsd)
+        assertEquals(1790.0, repriced.totalAssetValueUsd)
+    }
+
+    @Test
+    fun `시세가 없으면 잔고 값을 그대로 쓴다`() {
+        assertEquals(executed, TotalAssetMapper.repriced(executed, emptyMap()))
     }
 }
