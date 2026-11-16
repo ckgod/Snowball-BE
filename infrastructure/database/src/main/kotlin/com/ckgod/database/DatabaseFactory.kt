@@ -4,13 +4,15 @@ import com.ckgod.database.auth.AuthTokens
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
+import org.slf4j.LoggerFactory
 
 object DatabaseFactory {
+    private val logger = LoggerFactory.getLogger(DatabaseFactory::class.java)
     private var initialized = false
 
     fun init() {
         if (initialized) {
-            println("Database already initialized, skipping...")
+            logger.info("Database already initialized, skipping...")
             return
         }
 
@@ -18,7 +20,7 @@ object DatabaseFactory {
         val dbUser = System.getenv("DB_USER") ?: "root"
         val dbPassword = System.getenv("DB_PASSWORD") ?: ""
 
-        println("Initializing MariaDB Connection...")
+        logger.info("Initializing MariaDB Connection...")
         Database.connect(
             url = dbUrl,
             driver = "org.mariadb.jdbc.Driver",
@@ -35,18 +37,18 @@ object DatabaseFactory {
             )
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(*allTables)
             if (statements.isNotEmpty()) {
-                println("Database migration required. Executing ${statements.size} statement(s)...")
+                logger.warn("Database migration required. Executing ${statements.size} statement(s)...")
                 statements.forEach { statement ->
-                    println("  Executing: $statement")
+                    logger.warn("  Executing: $statement")
                     exec(statement)
                 }
-                println("Database migration completed successfully")
+                logger.info("Database migration completed successfully")
             } else {
-                println("No database migration required")
+                logger.info("No database migration required")
             }
         }
 
         initialized = true
-        println("Database initialized successfully")
+        logger.info("Database initialized successfully")
     }
 }

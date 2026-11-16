@@ -1,5 +1,6 @@
 package com.ckgod
 
+import org.slf4j.LoggerFactory
 import com.ckgod.database.DatabaseFactory
 import com.ckgod.di.configureKoin
 import com.ckgod.domain.repository.AccountRepository
@@ -29,7 +30,7 @@ fun main() {
     val server = embeddedServer(Netty, port = 8080, module = Application::mainModule)
 
     Runtime.getRuntime().addShutdownHook(Thread {
-        println("서버 종료 중...")
+        LoggerFactory.getLogger("Application").info("서버 종료 중...")
         if (::simpleScheduler.isInitialized) {
             simpleScheduler.stop()
         }

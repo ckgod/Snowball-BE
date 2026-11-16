@@ -30,7 +30,9 @@ class StockRepositoryImpl(private val kisApiService: KisApiService) : StockRepos
     }
 
     override suspend fun getExchangeRate(): Double {
-        return kisApiService.getMarketCurrentPrice("TQQQ").output?.exchangeRate?.toDoubleOrNull() ?: 1450.0
+        val rate = kisApiService.getMarketCurrentPrice("TQQQ").output?.exchangeRate?.toDoubleOrNull()
+        if (rate == null) logger.warn("환율 조회 실패 - 기본값 $FALLBACK_EXCHANGE_RATE 으로 표시")
+        return rate ?: FALLBACK_EXCHANGE_RATE
     }
 
     override suspend fun postOrder(buyOrders: List<OrderRequest>, sellOrders: List<OrderRequest>): OrderSubmission {
@@ -64,5 +66,10 @@ class StockRepositoryImpl(private val kisApiService: KisApiService) : StockRepos
                 reason = "전송 오류(실제 접수 여부 확인 필요): ${e.message ?: e::class.simpleName}"
             )
         }
+    }
+
+    private companion object {
+        /** 화면의 원화 환산에만 쓴다. 주문 계산에는 쓰이지 않는다 */
+        const val FALLBACK_EXCHANGE_RATE = 1450.0
     }
 }

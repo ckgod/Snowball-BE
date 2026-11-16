@@ -13,6 +13,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -22,6 +23,8 @@ class KisAuthService(
     private val client: HttpClient,
     private val authTokenRepository: AuthTokenRepository
 ) {
+    private val logger = LoggerFactory.getLogger(KisAuthService::class.java)
+
     private var accessToken: String? = null
     private var tokenExpiryTime: LocalDateTime? = null
 
@@ -34,9 +37,9 @@ class KisAuthService(
             tokenExpiryTime = savedToken.expireAt
 
             val remainingSeconds = Duration.between(LocalDateTime.now(), tokenExpiryTime).seconds
-            println("[${config.mode}] DB에서 기존 토큰 로드 완료 (남은 시간: ${remainingSeconds}초)")
+            logger.info("[${config.mode}] DB에서 기존 토큰 로드 완료 (남은 시간: ${remainingSeconds}초)")
         } else if (savedToken != null) {
-            println("[${config.mode}] DB에 저장된 토큰이 만료되었습니다. 새로 발급이 필요합니다.")
+            logger.info("[${config.mode}] DB에 저장된 토큰이 만료되었습니다. 새로 발급이 필요합니다.")
         }
     }
 
@@ -75,10 +78,10 @@ class KisAuthService(
         tokenExpiryTime = parseExpiryTime(expiredStr)
 
         val remainingSeconds = Duration.between(LocalDateTime.now(), tokenExpiryTime).seconds
-        println("[${config.mode}] success refresh token (expires at: $expiredStr, remaining: ${remainingSeconds}s)")
+        logger.info("[${config.mode}] success refresh token (expires at: $expiredStr, remaining: ${remainingSeconds}s)")
 
         authTokenRepository.saveToken(config.mode.toString(), accessToken!!, tokenExpiryTime!!)
-        println("[${config.mode}] 토큰이 DB에 저장되었습니다.")
+        logger.info("[${config.mode}] 토큰이 DB에 저장되었습니다.")
 
         return accessToken!!
     }
@@ -89,7 +92,7 @@ class KisAuthService(
                 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 LocalDateTime.parse(expiredStr, formatter)
             } catch (_: Exception) {
-                println("[${config.mode}] 만료 시간 파싱 실패: $expiredStr, 기본값(24시간) 사용")
+                logger.warn("[${config.mode}] 만료 시간 파싱 실패: $expiredStr, 기본값(24시간) 사용")
                 LocalDateTime.now().plusDays(1)
             }
         } else {
