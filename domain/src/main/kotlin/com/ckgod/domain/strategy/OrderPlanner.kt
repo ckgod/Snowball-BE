@@ -1,167 +1,48 @@
-package com.ckgod.domain.usecase
+package com.ckgod.domain.strategy
 
-import com.ckgod.domain.model.*
-import com.ckgod.domain.repository.AccountRepository
-import com.ckgod.domain.repository.InvestmentStatusRepository
-import com.ckgod.domain.repository.StockRepository
-import com.ckgod.domain.repository.TradeHistoryRepository
+import com.ckgod.domain.model.InvestmentStatus
+import com.ckgod.domain.model.OrderRequest
+import com.ckgod.domain.model.OrderSide
+import com.ckgod.domain.model.OrderType
+import com.ckgod.domain.model.TradePhase
 import com.ckgod.domain.utils.roundTo2Decimal
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.time.LocalDateTime
-import java.time.ZoneId
 import kotlin.math.abs
 
 /**
- * 주문 생성 UseCase
- *
- * 역할:
- * - ticker == null: 전체 종목 주문 생성 (Job용)
- * - ticker != null: 단일 종목 주문 생성 (API/백테스트용)
+ * 무한매수법 하루치 주문 계산. 저장소·API 를 부르지 않고 상태와 가격만으로 주문 목록을 만든다.
+ * 실주문(PlaceStrategyOrdersUseCase)과 백테스트가 같은 계산을 쓴다.
  */
-class GenerateOrdersUseCase(
-    private val stockRepository: StockRepository,
-    private val accountRepository: AccountRepository,
-    private val investmentStatusRepository: InvestmentStatusRepository,
-    private val tradeHistoryRepository: TradeHistoryRepository,
-    /** 실주문 직후 거래소 거부 확인. 백테스트는 null (확인 안 함) */
-    private val rejectionChecker: OrderRejectionChecker? = null,
-    /** 백테스트는 하루마다 부르므로 NOP 로거를 넘긴다 (10년치면 로그 수만 줄) */
-    private val logger: Logger = LoggerFactory.getLogger(GenerateOrdersUseCase::class.java)
-) {
+object OrderPlanner {
 
-    suspend operator fun invoke(ticker: String? = null): List<OrderResult> {
-        logger.info("[GenerateOrders] 시작 - ticker: ${ticker ?: "전체"}")
+    /**
+     * @param notes 계산 중 기본 규칙에서 벗어난 조정(1주 강제 매수, LOC 상한 등). 실주문은 로그로 남긴다
+     */
+    data class Plan(
+        val buyOrders: List<OrderRequest>,
+        val sellOrders: List<OrderRequest>,
+        val notes: List<String>
+    )
 
-        val targets = if (ticker != null) {
-            val status = investmentStatusRepository.get(ticker)
-            if (status != null) listOf(status) else emptyList()
-        } else {
-            investmentStatusRepository.findAll()
-        }
-
-        logger.info("[GenerateOrders] 대상 종목: ${targets.size}개")
-
-        return targets.mapNotNull { status ->
-            try {
-                generateSingle(status)
-            } catch (e: Exception) {
-                logger.error("[GenerateOrders] [${status.ticker}] 주문 생성 실패", e)
-                null // 실패한 종목은 제외
-            }
-        }
-    }
-
-    private suspend fun generateSingle(status: InvestmentStatus): OrderResult? {
-        val ticker = status.ticker
-
-        val currentStatus = investmentStatusRepository.get(ticker)
-        if (currentStatus == null) {
-            logger.warn("[GenerateOrders] [$ticker] DB에 상태 정보 없음")
-            return null
-        }
-
-        // 기준가는 전일 정규장 종가다. 주문 시각(18:05 KST)엔 프리장이 열려 있어 현재가가 프리장 시세다.
-        val marketPrice = stockRepository.getCurrentPrice(ticker)
-        val basePrice = marketPrice?.previousClose?.toDoubleOrNull() ?: 0.0
-        if (basePrice == 0.0) {
-            logger.warn("[GenerateOrders] [$ticker] 기준가(전일 종가) 조회 실패")
-            return null
-        }
-        val locBuyCap = locBuyPriceCap(basePrice, marketPrice?.price?.toDoubleOrNull())
-
-        val holding = accountRepository.getBalance(ticker)
-        val currentQuantity = holding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
-        val currentAvgPrice = holding?.avgPrice?.toDoubleOrNull() ?: 0.0
-
-        val sellOrders = try {
-            generateSellOrders(
-                status = currentStatus,
-                currentQuantity = currentQuantity,
-            )
-        } catch (e: Exception) {
-            logger.error("[GenerateOrders] [$ticker] 매도 주문 생성 실패", e)
-            throw e
-        }
-
-        val minSellPrice = sellOrders.filter { it.price > 0 }.minOfOrNull { it.price } ?: Double.MAX_VALUE
-
-        val buyOrders = try {
-            generateBuyOrders(
-                status = currentStatus,
-                basePrice = basePrice,
-                maxBuyPrice = if (minSellPrice < Double.MAX_VALUE) minSellPrice - 0.01 else null
-            ).map { capLocBuyPrice(it, locBuyCap) }
-        } catch (e: Exception) {
-            logger.error("[GenerateOrders] [$ticker] 매수 주문 생성 실패", e)
-            throw e
-        }
-
-        logger.info("[GenerateOrders] [$ticker] 주문 생성 완료 - 매수: ${buyOrders.size}개, 매도: ${sellOrders.size}개")
-
-        val submission = try {
-            stockRepository.postOrder(buyOrders, sellOrders)
-        } catch (e: Exception) {
-            logger.error("[GenerateOrders] [$ticker] 주문 전송 실패", e)
-            throw e
-        }
-        logger.info("[GenerateOrders] [$ticker] 주문 전송 완료 - 성공: ${submission.accepted.size}개, 실패: ${submission.rejected.size}개")
-
-        submission.accepted.forEach { response ->
-            val orderDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
-
-            val history = TradeHistory(
-                ticker = ticker,
-                orderNo = response.orderNo,
-                orderSide = response.request.side,
-                orderType = response.request.type,
-                orderPrice = response.request.price,
-                orderQuantity = response.request.quantity,
-                orderTime = orderDateTime,
-                status = OrderStatus.PENDING,
-                tValue = currentStatus.tValue,
-                crashRate = response.request.crashRate,
-                avgPrice = if (response.request.side == OrderSide.SELL) currentAvgPrice else 0.0 // 매도 주문의 경우만 평단가 입력
-            )
-            tradeHistoryRepository.save(history)
-        }
-
-        // 실패한 주문도 기록해 앱에서 확인할 수 있게 한다. KIS 주문번호가 없으므로 orderNo 는 빈 문자열.
-        // 체결 동기화는 KIS 체결 내역의 주문번호로만 갱신하므로 이 행은 건드리지 않는다.
-        submission.rejected.forEach { rejection ->
-            val history = TradeHistory(
-                ticker = ticker,
-                orderNo = "",
-                orderSide = rejection.request.side,
-                orderType = rejection.request.type,
-                orderPrice = rejection.request.price,
-                orderQuantity = rejection.request.quantity,
-                orderTime = LocalDateTime.now(ZoneId.of("Asia/Seoul")),
-                status = OrderStatus.REJECTED,
-                tValue = currentStatus.tValue,
-                crashRate = rejection.request.crashRate,
-                failReason = rejection.reason
-            )
-            tradeHistoryRepository.save(history)
-        }
-        logger.info("[GenerateOrders] [$ticker] 주문 내역 DB 저장 완료")
-
-        // 주문번호를 받은 뒤 거래소가 거부한 주문을 바로 REJECTED 로 고친다 (안 그러면 새벽 정산 전까지 PENDING 으로 보인다)
-        rejectionChecker?.findRejected(submission.accepted.map { it.orderNo })?.forEach { (orderNo, reason) ->
-            logger.warn("[GenerateOrders] [$ticker] 거래소 거부 - $orderNo: $reason")
-            // 주문은 이미 나갔으니 기록 실패로 Job 을 실패시키지 않는다. 새벽 정산이 다시 고친다
-            runCatching { tradeHistoryRepository.markRejected(orderNo, reason) }
-                .onFailure { logger.error("[GenerateOrders] [$ticker] 거부 기록 실패 - $orderNo", it) }
-        }
-
-        return OrderResult(
-            ticker = ticker,
-            currentPrice = basePrice,
-            buyOrders = buyOrders,
-            sellOrders = sellOrders
-        )
+    /**
+     * @param basePrice 기준가 = 전일 정규장 종가
+     * @param livePrice 현재 호가. LOC 매수가 상한 계산에만 쓴다
+     * @param currentQuantity 계좌의 실제 보유 수량
+     */
+    fun plan(status: InvestmentStatus, basePrice: Double, livePrice: Double?, currentQuantity: Int): Plan {
+        val notes = mutableListOf<String>()
+        val sellOrders = generateSellOrders(status, currentQuantity)
+        // 매수가는 가장 낮은 매도가보다 1센트 아래로 둔다 (MOC 는 가격이 없어 제외)
+        val minSellPrice = sellOrders.filter { it.price > 0 }.minOfOrNull { it.price }
+        val locBuyCap = locBuyPriceCap(basePrice, livePrice)
+        val buyOrders = generateBuyOrders(
+            status = status,
+            basePrice = basePrice,
+            maxBuyPrice = minSellPrice?.let { it - 0.01 },
+            notes = notes
+        ).map { capLocBuyPrice(it, locBuyCap, notes) }
+        return Plan(buyOrders, sellOrders, notes)
     }
 
     /**
@@ -183,9 +64,9 @@ class GenerateOrdersUseCase(
             .toDouble()
     }
 
-    private fun capLocBuyPrice(order: OrderRequest, cap: Double): OrderRequest {
+    private fun capLocBuyPrice(order: OrderRequest, cap: Double, notes: MutableList<String>): OrderRequest {
         if (order.side != OrderSide.BUY || order.type != OrderType.LOC || order.price <= cap) return order
-        logger.info("[GenerateOrders] [${order.ticker}] LOC 매수가 상한 적용: ${"%.2f".format(order.price)} -> ${"%.2f".format(cap)}")
+        notes += "LOC 매수가 상한 적용: ${"%.2f".format(order.price)} -> ${"%.2f".format(cap)}"
         return order.copy(price = cap)
     }
 
@@ -218,7 +99,8 @@ class GenerateOrdersUseCase(
     private fun generateBuyOrders(
         status: InvestmentStatus,
         basePrice: Double,
-        maxBuyPrice: Double? = null
+        maxBuyPrice: Double?,
+        notes: MutableList<String>
     ): List<OrderRequest> {
         val orders = mutableListOf<OrderRequest>()
 
@@ -245,7 +127,7 @@ class GenerateOrdersUseCase(
 
                     if (starBuyQty > 0) {
                         if (starBuyPrice > halfAmount) {
-                            logger.info("[GenerateOrders] [${status.ticker}] 별% 1주 단가(${"%.2f".format(starBuyPrice)})가 halfAmount(${"%.2f".format(halfAmount)}) 초과 - 매수 누락 방지를 위해 1주 강제 매수")
+                            notes += "별% 1주 단가(${"%.2f".format(starBuyPrice)})가 halfAmount(${"%.2f".format(halfAmount)}) 초과 - 매수 누락 방지를 위해 1주 강제 매수"
                         }
                         orders.add(OrderRequest(
                             ticker = status.ticker,
@@ -256,7 +138,7 @@ class GenerateOrdersUseCase(
                             quantity = starBuyQty,
                         ))
                     } else {
-                        logger.info("[GenerateOrders] [${status.ticker}] 별% 1주 단가(${"%.2f".format(starBuyPrice)})가 1회 매수금(${"%.2f".format(status.oneTimeAmount)}) 초과 - 별% 매수 포기, 평단가에 전액 할당")
+                        notes += "별% 1주 단가(${"%.2f".format(starBuyPrice)})가 1회 매수금(${"%.2f".format(status.oneTimeAmount)}) 초과 - 별% 매수 포기, 평단가에 전액 할당"
                     }
 
                     val remainAmount = status.oneTimeAmount - usedAmountForStar
@@ -319,7 +201,7 @@ class GenerateOrdersUseCase(
 
                 val rawCrashPrice = basePrice * (1.0 - rate)
                 val crashPrice = if (maxBuyPrice != null && rawCrashPrice >= maxBuyPrice) {
-                    logger.info("[GenerateOrders] [${status.ticker}] 폭락대비 매수가(-${(rate * 100).toInt()}%) 조정: ${"%.2f".format(rawCrashPrice)} -> ${"%.2f".format(maxBuyPrice)}")
+                    notes += "폭락대비 매수가(-${(rate * 100).toInt()}%) 조정: ${"%.2f".format(rawCrashPrice)} -> ${"%.2f".format(maxBuyPrice)}"
                     maxBuyPrice
                 } else {
                     rawCrashPrice
@@ -419,18 +301,6 @@ class GenerateOrdersUseCase(
         return orders
     }
 
-    private companion object {
-        /** 거래소 한도(30%)보다 여유를 둔다. 프리장 호가가 주문 사이에 움직여도 걸리지 않게 */
-        val LOC_BUY_CAP_RATE: BigDecimal = BigDecimal("0.25")
-    }
-
-    /**
-     * 주문 생성 결과
-     */
-    data class OrderResult(
-        val ticker: String,
-        val currentPrice: Double,
-        val buyOrders: List<OrderRequest>,
-        val sellOrders: List<OrderRequest>
-    )
+    /** 거래소 한도(30%)보다 여유를 둔다. 프리장 호가가 주문 사이에 움직여도 걸리지 않게 */
+    private val LOC_BUY_CAP_RATE: BigDecimal = BigDecimal("0.25")
 }

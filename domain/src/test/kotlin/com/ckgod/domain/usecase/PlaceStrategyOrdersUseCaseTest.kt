@@ -10,7 +10,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class GenerateOrdersUseCaseTest {
+class PlaceStrategyOrdersUseCaseTest {
 
     /** 2026-10-14 SOXL 상황: 평단 146.08, 전일 종가 127.57, 프리장 호가 약 125.96 */
     private class FakeStockRepository(private val previousClose: Double, private val live: Double) : StockRepository {
@@ -47,7 +47,7 @@ class GenerateOrdersUseCaseTest {
     @Test
     fun `LOC 매수가는 호가의 125% 를 넘지 않는다`() = runBlocking {
         val stock = FakeStockRepository(previousClose = 127.57, live = 125.96)
-        GenerateOrdersUseCase(stock, account, statusRepo(), BacktestTradeHistoryRepository())("SOXL")
+        PlaceStrategyOrdersUseCase(stock, account, statusRepo(), BacktestTradeHistoryRepository(), checker())("SOXL")
 
         val cap = 157.45  // floor(min(127.57, 125.96) * 1.25, 2)
         val locBuys = stock.sent.filter { it.side == OrderSide.BUY && it.type == OrderType.LOC }
@@ -62,7 +62,7 @@ class GenerateOrdersUseCaseTest {
     @Test
     fun `호가가 전일 종가보다 높으면 전일 종가 기준으로 자른다`() = runBlocking {
         val stock = FakeStockRepository(previousClose = 120.0, live = 130.0)
-        GenerateOrdersUseCase(stock, account, statusRepo(), BacktestTradeHistoryRepository())("SOXL")
+        PlaceStrategyOrdersUseCase(stock, account, statusRepo(), BacktestTradeHistoryRepository(), checker())("SOXL")
 
         val locBuys = stock.sent.filter { it.side == OrderSide.BUY && it.type == OrderType.LOC }
         assertTrue(locBuys.all { it.price <= 150.0 }, "${locBuys.map { it.price }}")
@@ -74,7 +74,7 @@ class GenerateOrdersUseCaseTest {
         val histories = BacktestTradeHistoryRepository()
         val rejecting = checker(mapOf("0001" to "[6008] Limit Price Too Aggressive"))
 
-        GenerateOrdersUseCase(stock, account, statusRepo(), histories, rejecting)("SOXL")
+        PlaceStrategyOrdersUseCase(stock, account, statusRepo(), histories, rejecting)("SOXL")
 
         val rejected = histories.findByOrderNo("0001")!!
         assertEquals(OrderStatus.REJECTED, rejected.status)

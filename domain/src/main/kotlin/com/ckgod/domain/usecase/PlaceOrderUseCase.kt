@@ -3,9 +3,10 @@ package com.ckgod.domain.usecase
 import com.ckgod.domain.model.Exchange
 import com.ckgod.domain.model.InvestmentStatus
 import com.ckgod.domain.model.OrderActionResult
+import com.ckgod.domain.model.OrderOutcome
+import com.ckgod.domain.model.OrderRejection
 import com.ckgod.domain.model.OrderRequest
 import com.ckgod.domain.model.OrderSide
-import com.ckgod.domain.model.OrderStatus
 import com.ckgod.domain.model.OrderType
 import com.ckgod.domain.model.TradeHistory
 import com.ckgod.domain.repository.AccountRepository
@@ -70,10 +71,11 @@ class PlaceOrderUseCase(
         val rejected = submission.rejected.firstOrNull()
         // 주문번호를 받은 뒤 거래소가 거부할 수 있다 (예: 지정가가 호가에서 30% 넘게 벗어남)
         val exchangeRejectReason = accepted?.let { rejectionChecker.findRejected(listOf(it.orderNo))[it.orderNo] }
-        record(request, accepted?.orderNo, rejected?.reason ?: exchangeRejectReason, rejected = accepted == null || exchangeRejectReason != null)
+        val outcome = accepted ?: rejected ?: OrderRejection(request, NOT_ACCEPTED)
+        record(outcome, exchangeRejectReason)
 
         return when {
-            accepted == null -> OrderActionResult(false, rejected?.reason ?: "주문이 접수되지 않았습니다")
+            accepted == null -> OrderActionResult(false, rejected?.reason ?: NOT_ACCEPTED)
             exchangeRejectReason != null -> {
                 logger.warn("[PlaceOrder] $ticker ${accepted.orderNo} 거래소 거부: $exchangeRejectReason")
                 OrderActionResult(false, "주문이 거부됐습니다 - $exchangeRejectReason", accepted.orderNo)
@@ -98,29 +100,22 @@ class PlaceOrderUseCase(
     /**
      * KIS 처리 결과와 별개로, 기록 실패가 응답을 실패로 바꾸지 않게 한다 (같은 주문을 다시 넣게 되므로).
      */
-    private suspend fun record(request: OrderRequest, orderNo: String?, failReason: String?, rejected: Boolean) {
+    private suspend fun record(outcome: OrderOutcome, exchangeRejectReason: String?) {
+        val ticker = outcome.request.ticker
         try {
-            val status = investmentStatusRepository.get(request.ticker)
-            val avgPrice = if (request.side == OrderSide.SELL) sellAvgPrice(request.ticker, status) else 0.0
-
+            val status = investmentStatusRepository.get(ticker)
             tradeHistoryRepository.save(
-                TradeHistory(
-                    ticker = request.ticker,
-                    orderNo = orderNo ?: "",
-                    orderSide = request.side,
-                    orderType = request.type,
-                    orderPrice = request.price,
-                    orderQuantity = request.quantity,
-                    orderTime = LocalDateTime.now(ZoneId.of("Asia/Seoul")),
-                    status = if (rejected) OrderStatus.REJECTED else OrderStatus.PENDING,
+                TradeHistory.of(
+                    outcome = outcome,
                     tValue = status?.tValue ?: 0.0,
-                    avgPrice = avgPrice,
-                    failReason = failReason,
-                    isManual = true
+                    sellAvgPrice = if (outcome.request.side == OrderSide.SELL) sellAvgPrice(ticker, status) else 0.0,
+                    orderTime = LocalDateTime.now(ZoneId.of("Asia/Seoul")),
+                    isManual = true,
+                    exchangeRejectReason = exchangeRejectReason
                 )
             )
         } catch (e: Exception) {
-            logger.error("[PlaceOrder] ${request.ticker} 주문 기록 실패 (KIS 처리 결과와 무관)", e)
+            logger.error("[PlaceOrder] $ticker 주문 기록 실패 (KIS 처리 결과와 무관)", e)
         }
     }
 
@@ -138,5 +133,9 @@ class PlaceOrderUseCase(
             null
         }
         return accountAvg ?: status?.avgPrice ?: 0.0
+    }
+
+    private companion object {
+        const val NOT_ACCEPTED = "주문이 접수되지 않았습니다"
     }
 }

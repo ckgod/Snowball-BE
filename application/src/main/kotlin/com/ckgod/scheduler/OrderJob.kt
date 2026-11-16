@@ -1,6 +1,6 @@
 package com.ckgod.scheduler
 
-import com.ckgod.domain.usecase.GenerateOrdersUseCase
+import com.ckgod.domain.usecase.PlaceStrategyOrdersUseCase
 import kotlinx.coroutines.runBlocking
 import org.quartz.Job
 import org.quartz.JobExecutionContext
@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
  * DB의 모든 종목에 대해 주문 생성
  */
 class OrderJob(
-    private val generateOrdersUseCase: GenerateOrdersUseCase
+    private val placeStrategyOrdersUseCase: PlaceStrategyOrdersUseCase
 ) : Job {
 
     private val logger = LoggerFactory.getLogger(OrderJob::class.java)
@@ -22,7 +22,7 @@ class OrderJob(
 
         runBlocking {
             try {
-                val results = generateOrdersUseCase(ticker = null)
+                val results = placeStrategyOrdersUseCase(ticker = null)
 
                 if (results.isEmpty()) {
                     logger.warn("투자 중인 종목이 없습니다.")

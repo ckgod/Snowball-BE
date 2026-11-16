@@ -1,7 +1,7 @@
 package com.ckgod.di
 
 import com.ckgod.domain.usecase.BacktestUseCase
-import com.ckgod.domain.usecase.GenerateOrdersUseCase
+import com.ckgod.domain.usecase.PlaceStrategyOrdersUseCase
 import com.ckgod.domain.usecase.GetCurrentPriceUseCase
 import com.ckgod.domain.usecase.GetStockPriceHistoryUseCase
 import com.ckgod.domain.usecase.ManageOrdersUseCase
@@ -17,7 +17,7 @@ val useCaseModule = module {
 
     single<OrderRejectionChecker> { OrderRejectionChecker(get()) }
 
-    single<GenerateOrdersUseCase> { GenerateOrdersUseCase(get(), get(), get(), get(), get()) }
+    single<PlaceStrategyOrdersUseCase> { PlaceStrategyOrdersUseCase(get(), get(), get(), get(), get()) }
 
     single<GetStockPriceHistoryUseCase> { GetStockPriceHistoryUseCase(get()) }
 

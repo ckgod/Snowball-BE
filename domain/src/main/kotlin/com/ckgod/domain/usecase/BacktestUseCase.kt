@@ -2,16 +2,15 @@ package com.ckgod.domain.usecase
 
 import com.ckgod.domain.backtest.BacktestAccountRepository
 import com.ckgod.domain.backtest.BacktestInvestmentStatusRepository
-import com.ckgod.domain.backtest.BacktestStockRepository
 import com.ckgod.domain.backtest.BacktestTradeHistoryRepository
 import com.ckgod.domain.model.*
 import com.ckgod.domain.repository.StockPriceHistoryRepository
+import com.ckgod.domain.strategy.OrderPlanner
 import com.ckgod.domain.utils.roundTo2Decimal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
-import org.slf4j.helpers.NOPLogger
 
 class BacktestUseCase(
     private val stockPriceHistoryRepository: StockPriceHistoryRepository
@@ -45,9 +44,6 @@ class BacktestUseCase(
         }
         logger.info("[Backtest] 가격 데이터 ${priceData.size}일 조회 완료")
 
-        val priceDataMap = priceData.associateBy { it.date }
-
-        val backtestStockRepo = BacktestStockRepository(priceDataMap)
         val backtestAccountRepo = BacktestAccountRepository(request.initialCapital)
         val backtestStatusRepo = BacktestInvestmentStatusRepository()
         val backtestHistoryRepo = BacktestTradeHistoryRepository()
@@ -68,23 +64,14 @@ class BacktestUseCase(
         )
         backtestStatusRepo.initialize(initialStatus)
 
-        val generateOrdersUseCase = GenerateOrdersUseCase(
-            stockRepository = backtestStockRepo,
-            accountRepository = backtestAccountRepo,
-            investmentStatusRepository = backtestStatusRepo,
-            tradeHistoryRepository = backtestHistoryRepo,
-            logger = NOPLogger.NOP_LOGGER
-        )
-
         val dailySnapshots = mutableListOf<DailySnapshot>()
         val backtestTrades = mutableListOf<BacktestTrade>()
         var totalOrders = 0
         var filledOrders = 0
+        var orderSequence = 1L
 
         for (i in priceData.indices) {
             val today = priceData[i]
-
-            backtestStockRepo.currentDate = today.date
 
             // 전날 낸 주문을 오늘 가격으로 체결한다
             val pendingOrders = backtestHistoryRepo.findPendingOrders()
@@ -179,14 +166,20 @@ class BacktestUseCase(
 
             val currentStatus = backtestStatusRepo.get(request.ticker)
             if (currentStatus != null && currentStatus.phase != TradePhase.EXHAUSTED) {
-                try {
-                    val results = generateOrdersUseCase(request.ticker)
-                    results.forEach { result ->
-                        totalOrders += result.buyOrders.size + result.sellOrders.size
-                    }
-                } catch (e: Exception) {
-                    logger.debug("[Backtest] [${today.date}] 주문 생성 스킵: ${e.message}")
+                val holding = backtestAccountRepo.getHolding(request.ticker)
+                // D일에 낸 주문은 D+1일에 체결되므로 D일 종가가 기준가다
+                val plan = OrderPlanner.plan(
+                    status = currentStatus,
+                    basePrice = today.close,
+                    livePrice = today.close,
+                    currentQuantity = holding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
+                )
+                val sellAvgPrice = holding?.avgPrice?.toDoubleOrNull() ?: 0.0
+                (plan.sellOrders + plan.buyOrders).forEach { order ->
+                    val accepted = OrderResponse(order, orderNo = "BT-${orderSequence++}", orderTime = today.date.toString())
+                    backtestHistoryRepo.save(TradeHistory.of(accepted, currentStatus.tValue, sellAvgPrice, java.time.LocalDateTime.now()))
                 }
+                totalOrders += plan.buyOrders.size + plan.sellOrders.size
             }
 
             val snapshotStatus = backtestStatusRepo.get(request.ticker)
