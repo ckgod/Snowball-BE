@@ -31,15 +31,15 @@ data class KisPresentBalanceResponse(
         val usdAccount = currencyDetails.firstOrNull()
 
         // output3 의 달러 합계(pchs_amt_smtl 등)는 소수점 아래가 잘려 와서 종목별 값을 더한다
-        val totalBuyingValueUsd = balanceDetails.sumOf { it.foreignPurchaseAmount.toDoubleOrNull() ?: 0.0 }
-        val totalEvaluateValueUsd = balanceDetails.sumOf { it.foreignEvaluationAmount.toDoubleOrNull() ?: 0.0 }
-        val totalProfitUsd = balanceDetails.sumOf { it.evaluationProfitLossAmount.toDoubleOrNull() ?: 0.0 }
-        val totalUsdCash = usdAccount?.foreignDepositAmount?.toDoubleOrNull() ?: 0.0
+        val totalBuyingValueUsd = balanceDetails.sumOf { it.foreignPurchaseAmount.kisNumber() }
+        val totalEvaluateValueUsd = balanceDetails.sumOf { it.foreignEvaluationAmount.kisNumber() }
+        val totalProfitUsd = balanceDetails.sumOf { it.evaluationProfitLossAmount.kisNumber() }
+        val totalUsdCash = usdAccount?.foreignDepositAmount?.kisNumber() ?: 0.0
         // 예수금은 결제 기준이라 체결됐지만 아직 결제 전(T+1)인 매수 대금이 남아 있고 매도 대금은 빠져 있다.
         // 보유 수량(체결 기준)과 맞추려면 미결제 매수·매도 금액을 반영해야 한다
         val executedBasisCash = totalUsdCash -
-            (usdAccount?.foreignBuyAmountTotal?.toDoubleOrNull() ?: 0.0) +
-            (usdAccount?.foreignSellAmountTotal?.toDoubleOrNull() ?: 0.0)
+            (usdAccount?.foreignBuyAmountTotal?.kisNumber() ?: 0.0) +
+            (usdAccount?.foreignSellAmountTotal?.kisNumber() ?: 0.0)
 
         return PresentAccountStatus(
             totalAssetValueUsd = (executedBasisCash + totalEvaluateValueUsd).roundTo2Decimal(),

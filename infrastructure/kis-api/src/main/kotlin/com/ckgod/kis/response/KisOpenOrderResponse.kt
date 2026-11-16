@@ -37,7 +37,7 @@ data class KisOpenOrderResponse(
             ticker = ticker,
             exchange = exchange,
             side = if (sellBuyCode == "01") OrderSide.SELL else OrderSide.BUY,
-            orderPrice = orderPrice.toDoubleOrNull() ?: 0.0,
+            orderPrice = orderPrice.kisNumber(),
             orderQuantity = orderQuantity.toDoubleOrNull()?.toInt() ?: 0,
             filledQuantity = filledQuantity.toDoubleOrNull()?.toInt() ?: 0,
             unfilledQuantity = unfilledQuantity.toDoubleOrNull()?.toInt() ?: 0,

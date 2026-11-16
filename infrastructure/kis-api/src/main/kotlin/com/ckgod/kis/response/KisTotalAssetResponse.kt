@@ -59,12 +59,12 @@ data class KisTotalAssetResponse(
         val assets = output1.mapIndexed { index, item ->
             AssetItem(
                 type = assetTypes[index],
-                purchaseAmount = item.purchaseAmount.toDoubleOrNull() ?: 0.0,
-                evaluationAmount = item.evaluationAmount.toDoubleOrNull() ?: 0.0,
-                evaluationProfitLoss = item.evaluationProfitLossAmount.toDoubleOrNull() ?: 0.0,
-                creditLoanAmount = item.creditLoanAmount.toDoubleOrNull() ?: 0.0,
-                realNetAssetAmount = item.realNetAssetAmount.toDoubleOrNull() ?: 0.0,
-                wholeWeightRate = item.wholeWeightRate.toDoubleOrNull() ?: 0.0
+                purchaseAmount = item.purchaseAmount.kisNumber(),
+                evaluationAmount = item.evaluationAmount.kisNumber(),
+                evaluationProfitLoss = item.evaluationProfitLossAmount.kisNumber(),
+                creditLoanAmount = item.creditLoanAmount.kisNumber(),
+                realNetAssetAmount = item.realNetAssetAmount.kisNumber(),
+                wholeWeightRate = item.wholeWeightRate.kisNumber()
             )
         }
 
