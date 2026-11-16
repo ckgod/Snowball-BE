@@ -36,11 +36,37 @@ class PlaceOrderUseCaseTest {
         override suspend fun getTotalAsset(): TotalAsset = throw UnsupportedOperationException()
     }
 
+    private val failingAccount = object : AccountRepository by account {
+        override suspend fun getBalance(ticker: String): HoldingStock? = throw IllegalStateException("잔고 조회 실패")
+    }
+
     private fun useCase(
         stock: FakeStockRepository,
         histories: BacktestTradeHistoryRepository,
-        rejectionChecker: OrderRejectionChecker = checker()
-    ) = PlaceOrderUseCase(stock, account, BacktestInvestmentStatusRepository(), histories, rejectionChecker)
+        rejectionChecker: OrderRejectionChecker = checker(),
+        accountRepository: AccountRepository = account,
+        statuses: BacktestInvestmentStatusRepository = BacktestInvestmentStatusRepository()
+    ) = PlaceOrderUseCase(stock, accountRepository, statuses, histories, rejectionChecker)
+
+    @Test
+    fun `매도 기록 중 잔고 조회가 실패해도 정산 평단으로 기록을 남긴다`() = runBlocking {
+        val histories = BacktestTradeHistoryRepository()
+        val statuses = BacktestInvestmentStatusRepository().apply {
+            initialize(
+                InvestmentStatus(
+                    ticker = "SOXL", totalInvested = 1000.0, oneTimeAmount = 100.0, initialCapital = 3000.0,
+                    avgPrice = 50.0, targetRate = 20.0, realizedTotalProfit = 0.0, updatedAt = ""
+                )
+            )
+        }
+
+        val result = useCase(FakeStockRepository(), histories, accountRepository = failingAccount, statuses = statuses)(
+            command(side = OrderSide.SELL)
+        )
+
+        assertTrue(result.success)
+        assertEquals(50.0, histories.findByOrderNo("0001")!!.avgPrice)
+    }
 
     private fun command(side: OrderSide = OrderSide.BUY, type: OrderType = OrderType.LIMIT, price: Double = 20.0, quantity: Int = 1) =
         PlaceOrderUseCase.Command(ticker = "soxl", side = side, type = type, price = price, quantity = quantity)

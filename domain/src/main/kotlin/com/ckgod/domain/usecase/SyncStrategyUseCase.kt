@@ -58,11 +58,13 @@ class SyncStrategyUseCase(
                 else -> OrderStatus.CANCELED
             }
             val realizedAmount = historyRepository.findByOrderNo(execution.orderNo)?.let { history ->
-                if (history.orderSide == OrderSide.SELL && status != OrderStatus.CANCELED) {
-                    val originPrice = history.avgPrice * execution.filledQuantity
-                    val totalPrice = execution.filledPrice * execution.filledQuantity
-                    (totalPrice - originPrice)
-                } else null
+                if (history.orderSide != OrderSide.SELL || status == OrderStatus.CANCELED) return@let null
+                // 평단을 모르는 매도는 매도 대금 전체가 수익으로 잡혀 1회 매수금이 부풀므로 손익을 넣지 않는다
+                if (history.avgPrice <= 0.0) {
+                    logger.warn("[SyncStrategy] ${execution.orderNo} 매도 평단 없음 - 실현 손익 미반영")
+                    return@let null
+                }
+                (execution.filledPrice - history.avgPrice) * execution.filledQuantity
             }
             historyRepository.updateOrderStatus(
                 execution.orderNo,
