@@ -35,7 +35,6 @@ class StockRepositoryImpl(private val kisApiService: KisApiService) : StockRepos
 
     override suspend fun postOrder(buyOrders: List<OrderRequest>, sellOrders: List<OrderRequest>): OrderSubmission {
         return coroutineScope {
-            // 매도를 먼저 보내고 매수를 보낸다 (기존 순서 유지)
             val sellResults = sellOrders.map { order -> async { submit(order) } }.awaitAll()
             val buyResults = buyOrders.map { order -> async { submit(order) } }.awaitAll()
             val results = sellResults + buyResults

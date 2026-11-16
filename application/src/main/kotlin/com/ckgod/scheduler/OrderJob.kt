@@ -39,12 +39,10 @@ class OrderJob(
                           - 매도 주문: ${result.sellOrders.size}개
                     """.trimIndent())
 
-                    // 매수 주문 로깅
                     result.buyOrders.forEach { order ->
                         logger.info("  [BUY] ${order.type.name} ${order.quantity}주 @$${"%.2f".format(order.price)}")
                     }
 
-                    // 매도 주문 로깅
                     result.sellOrders.forEach { order ->
                         val priceStr = if (order.type.name == "MOC") "MOC" else "$${"%.2f".format(order.price)}"
                         logger.info("  [SELL] ${order.type.name} ${order.quantity}주 @${priceStr}")

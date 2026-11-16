@@ -39,24 +39,19 @@ fun main() {
 }
 
 fun Application.mainModule() {
-    // ============= DI ============
     configureKoin()
 
-    // ========== Database ==========
     DatabaseFactory.init()
 
-    // ========== Security ==========
     val config = environment.config
     val apiKey = config.property("api.key").getString()
     val maxRequests = config.property("api.rateLimit.maxRequests").getString().toInt()
     val windowSeconds = config.property("api.rateLimit.windowSeconds").getString().toLong()
 
-    // ========== Server Configuration ==========
     configureAuthPlugin(apiKey)
     configureRateLimiter(maxRequests, windowSeconds)
     configureSerialization()
 
-    // ========== Use Case ===========
     val getCurrentPriceUseCase: GetCurrentPriceUseCase by inject()
     val getStockPriceHistoryUseCase: GetStockPriceHistoryUseCase by inject()
     val backtestUseCase: BacktestUseCase by inject()
@@ -71,11 +66,9 @@ fun Application.mainModule() {
     val orderGuard = OrderGuard(orderKey = System.getenv("ORDER_API_KEY"))
     log.info("주문 API: ${if (orderGuard.enabled) "활성" else "비활성 (ORDER_API_KEY 미설정)"}")
 
-    // ========== Scheduler ==========
     simpleScheduler = get()
     simpleScheduler.start()
 
-    // ========== API Routing ==========
     configureRouting(
         getCurrentPriceUseCase = getCurrentPriceUseCase,
         getStockPriceHistoryUseCase = getStockPriceHistoryUseCase,

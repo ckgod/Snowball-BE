@@ -31,9 +31,8 @@ data class InvestmentStatus(
         }
 
     /**
-     * 별% 계산: targetRate × (1 - 2T / division)
-     * T = division / 2일 때 0%가 됨
-     * T = division / 2/3일 때 0%가 됨
+     * 별%. P1_2 는 targetRate × (1 - 2T / division) 로 T = division / 2 에서 0%,
+     * P2_3 은 targetRate × (1 - 1.5T / division) 로 T = division × 2/3 에서 0%.
      */
     val starPercent: Double
         get() = when (starMode) {

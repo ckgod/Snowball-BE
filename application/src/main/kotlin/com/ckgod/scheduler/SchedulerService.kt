@@ -34,20 +34,17 @@ class SchedulerService(
             }
         }
 
-        // 1. 주식 가격 동기화 Job (오전 5시 - 미국 동부 시간)
         scheduleStockPriceSyncJob()
 
-        // 2. 정산 Job (오전 6시 20분)
         scheduleSyncJob()
 
-        // 3. 주문 Job (오후 6시)
         scheduleOrderJob()
 
         scheduler.start()
         logger.info("스케줄러 시작 완료")
         logger.info("  - 주식 가격 동기화: 매일 오전 5시 (America/New_York)")
         logger.info("  - 정산: 매일 오전 6시 20분 (Asia/Seoul)")
-        logger.info("  - 주문: 매일 오후 6시 5분 (Asia/Seoul)")
+        logger.info("  - 주문: 평일 오후 6시 5분 (Asia/Seoul)")
     }
 
     private fun scheduleSyncJob() {

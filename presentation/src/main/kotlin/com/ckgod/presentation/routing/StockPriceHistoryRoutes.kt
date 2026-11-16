@@ -21,7 +21,6 @@ import kotlinx.datetime.LocalDate
 suspend fun RoutingContext.stockPriceHistoryRoutes(
     getStockPriceHistoryUseCase: GetStockPriceHistoryUseCase
 ) {
-    // 쿼리 파라미터 추출
     val ticker = call.request.queryParameters["ticker"]
         ?: return call.respond(
             HttpStatusCode.BadRequest,
@@ -41,11 +40,9 @@ suspend fun RoutingContext.stockPriceHistoryRoutes(
         )
 
     try {
-        // 날짜 파싱
         val startDate = LocalDate.parse(startDateStr)
         val endDate = LocalDate.parse(endDateStr)
 
-        // 날짜 범위 검증
         if (startDate > endDate) {
             return call.respond(
                 HttpStatusCode.BadRequest,
@@ -53,10 +50,8 @@ suspend fun RoutingContext.stockPriceHistoryRoutes(
             )
         }
 
-        // 가격 히스토리 조회
         val priceHistory = getStockPriceHistoryUseCase(ticker.uppercase(), startDate, endDate)
 
-        // 응답 변환
         val response = StockPriceHistoryResponse(
             ticker = ticker.uppercase(),
             prices = priceHistory.map { price ->

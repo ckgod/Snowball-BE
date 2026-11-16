@@ -20,7 +20,7 @@ class BacktestUseCase(
     private val mutex = Mutex()
 
     suspend fun run(request: BacktestRequest): BacktestResult {
-        // 어차피 나 혼자 쓰니까 mutex로 동시 실행 제어
+        // 한 번에 하나만 돌린다. 겹친 요청은 기다리게 하지 않고 거절한다
         if (!mutex.tryLock()) {
             throw IllegalStateException("백테스트가 이미 실행 중입니다")
         }
@@ -36,7 +36,7 @@ class BacktestUseCase(
     private suspend fun runInternal(request: BacktestRequest): BacktestResult {
         logger.info("[Backtest] 시작 - ${request.ticker} (${request.startDate} ~ ${request.endDate})")
 
-        // 1. 히스토리 가격 데이터 조회 (유일한 DB 호출)
+        // DB 는 여기서 한 번만 읽는다. 이후 시뮬레이션은 메모리에서만 돈다
         val priceData = stockPriceHistoryRepository.getPriceRange(
             request.ticker, request.startDate, request.endDate
         )
@@ -45,16 +45,13 @@ class BacktestUseCase(
         }
         logger.info("[Backtest] 가격 데이터 ${priceData.size}일 조회 완료")
 
-        // 2. 가격 데이터를 Map으로 변환 (이후 DB 호출 없음)
         val priceDataMap = priceData.associateBy { it.date }
 
-        // 3. Backtest 전용 Repository 생성
         val backtestStockRepo = BacktestStockRepository(priceDataMap)
         val backtestAccountRepo = BacktestAccountRepository(request.initialCapital)
         val backtestStatusRepo = BacktestInvestmentStatusRepository()
         val backtestHistoryRepo = BacktestTradeHistoryRepository()
 
-        // 4. 초기 InvestmentStatus 설정
         val initialStatus = InvestmentStatus(
             ticker = request.ticker,
             fullName = request.ticker,
@@ -71,7 +68,6 @@ class BacktestUseCase(
         )
         backtestStatusRepo.initialize(initialStatus)
 
-        // 5. GenerateOrdersUseCase 생성 (backtest repos 주입)
         val generateOrdersUseCase = GenerateOrdersUseCase(
             stockRepository = backtestStockRepo,
             accountRepository = backtestAccountRepo,
@@ -80,7 +76,6 @@ class BacktestUseCase(
             logger = NOPLogger.NOP_LOGGER
         )
 
-        // 6. 시뮬레이션 루프
         val dailySnapshots = mutableListOf<DailySnapshot>()
         val backtestTrades = mutableListOf<BacktestTrade>()
         var totalOrders = 0
@@ -89,17 +84,15 @@ class BacktestUseCase(
         for (i in priceData.indices) {
             val today = priceData[i]
 
-            // 현재 날짜 설정
             backtestStockRepo.currentDate = today.date
 
-            // 전일 주문 체결 시뮬레이션 (첫 날 제외)
+            // 전날 낸 주문을 오늘 가격으로 체결한다
             val pendingOrders = backtestHistoryRepo.findPendingOrders()
             if (pendingOrders.isNotEmpty()) {
                 val fillResults = simulateFills(pendingOrders, today)
                 fillResults.forEach { (history, filledPrice) ->
                     val currentStatus = backtestStatusRepo.get(request.ticker)!!
 
-                    // 매수 체결 시 현금 잔고 확인
                     if (history.orderSide == OrderSide.BUY) {
                         val cost = (history.orderQuantity * filledPrice).roundTo2Decimal()
                         if (!backtestAccountRepo.deductCash(cost)) {
@@ -115,7 +108,6 @@ class BacktestUseCase(
                         }
                     }
 
-                    // 체결 상태 업데이트
                     backtestHistoryRepo.updateOrderStatus(
                         orderNo = history.orderNo,
                         status = OrderStatus.FILLED,
@@ -124,7 +116,6 @@ class BacktestUseCase(
                         filledTime = java.time.LocalDateTime.now()
                     )
 
-                    // 포트폴리오 업데이트
                     val holding = backtestAccountRepo.getHolding(request.ticker)
                     val currentQty = holding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
                     val currentAvgPrice = holding?.avgPrice?.toDoubleOrNull() ?: 0.0
@@ -144,11 +135,9 @@ class BacktestUseCase(
                         backtestAccountRepo.updateHolding(
                             request.ticker, newQty, currentAvgPrice, newInvested
                         )
-                        // 매도 대금 현금에 가산
                         backtestAccountRepo.addCash((history.orderQuantity * filledPrice).roundTo2Decimal())
                     }
 
-                    // InvestmentStatus 업데이트
                     val updatedHolding = backtestAccountRepo.getHolding(request.ticker)
                     val updatedStatus = currentStatus.updateFromAccount(
                         name = request.ticker,
@@ -174,7 +163,6 @@ class BacktestUseCase(
                     )
                 }
 
-                // 미체결 주문 취소
                 pendingOrders.forEach { history ->
                     val current = backtestHistoryRepo.findByOrderNo(history.orderNo)
                     if (current?.status == OrderStatus.PENDING) {
@@ -189,7 +177,6 @@ class BacktestUseCase(
                 }
             }
 
-            // 주문 생성 (자금 소진 전까지)
             val currentStatus = backtestStatusRepo.get(request.ticker)
             if (currentStatus != null && currentStatus.phase != TradePhase.EXHAUSTED) {
                 try {
@@ -202,7 +189,6 @@ class BacktestUseCase(
                 }
             }
 
-            // 일별 스냅샷 기록
             val snapshotStatus = backtestStatusRepo.get(request.ticker)
             val snapshotHolding = backtestAccountRepo.getHolding(request.ticker)
             val qty = snapshotHolding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
@@ -221,7 +207,6 @@ class BacktestUseCase(
             )
         }
 
-        // 7. 결과 집계
         val finalStatus = backtestStatusRepo.get(request.ticker)
         val finalHolding = backtestAccountRepo.getHolding(request.ticker)
         val finalQty = finalHolding?.quantity?.toDoubleOrNull()?.toInt() ?: 0

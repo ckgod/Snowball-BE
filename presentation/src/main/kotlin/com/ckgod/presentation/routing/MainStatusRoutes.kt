@@ -18,7 +18,6 @@ suspend fun RoutingContext.mainStatusRoute(
     val ticker = call.request.queryParameters["ticker"]
 
     if (ticker != null) {
-        // 단일 종목 조회
         val status = investmentStatusRepository.get(ticker)
 
         if (status == null) {
@@ -44,7 +43,6 @@ suspend fun RoutingContext.mainStatusRoute(
 
         call.respond(HttpStatusCode.OK, response)
     } else {
-        // 전체 종목 조회
         val allStatuses = investmentStatusRepository.findAll()
 
         if (allStatuses.isEmpty()) {
