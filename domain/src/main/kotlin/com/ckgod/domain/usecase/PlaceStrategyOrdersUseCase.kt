@@ -8,9 +8,10 @@ import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
 import com.ckgod.domain.strategy.OrderPlanner
+import com.ckgod.domain.utils.systemKstClock
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.Clock
 
 /**
  * 무한매수법 하루 주문을 계산해 실제로 전송하고 기록한다. 주문 Job 이 부른다.
@@ -21,7 +22,8 @@ class PlaceStrategyOrdersUseCase(
     private val accountRepository: AccountRepository,
     private val investmentStatusRepository: InvestmentStatusRepository,
     private val tradeHistoryRepository: TradeHistoryRepository,
-    private val rejectionChecker: OrderRejectionChecker
+    private val rejectionChecker: OrderRejectionChecker,
+    private val clock: Clock = systemKstClock
 ) {
     private val logger = LoggerFactory.getLogger(PlaceStrategyOrdersUseCase::class.java)
 
@@ -74,7 +76,7 @@ class PlaceStrategyOrdersUseCase(
                     outcome = outcome,
                     tValue = status.tValue,
                     sellAvgPrice = currentAvgPrice,
-                    orderTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+                    orderTime = LocalDateTime.now(clock)
                 )
             )
         }

@@ -89,7 +89,8 @@ data class InvestmentStatus(
         totalInvested: Double,
         avgPrice: Double,
         quantity: Int,
-        dailyProfit: Double
+        dailyProfit: Double,
+        updatedAt: LocalDateTime
     ): InvestmentStatus {
         val newOneTimeAmount = if (dailyProfit > 0) {
             oneTimeAmount + (dailyProfit / (division * 2).toDouble())
@@ -104,7 +105,7 @@ data class InvestmentStatus(
             avgPrice = avgPrice,
             quantity = quantity,
             realizedTotalProfit = realizedTotalProfit + dailyProfit,
-            updatedAt = LocalDateTime.now().toString()
+            updatedAt = updatedAt.toString()
         )
     }
 }

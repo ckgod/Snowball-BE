@@ -6,7 +6,10 @@ import com.ckgod.domain.model.*
 import com.ckgod.domain.repository.AccountRepository
 import com.ckgod.domain.repository.ExecutionRepository
 import kotlinx.coroutines.runBlocking
+import java.time.Clock
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -22,12 +25,39 @@ class SyncStrategyUseCaseTest {
     private class FailingAccount : AccountRepository {
         override suspend fun getAccountBalance(): AccountStatus = throw IllegalStateException("잔고 조회 실패 [EGW00201]")
         override suspend fun getPresentAccountBalance(): PresentAccountStatus = throw UnsupportedOperationException()
-        override suspend fun getDailyProfit(ticker: String): List<Double> = emptyList()
         override suspend fun getTotalAsset(): TotalAsset = throw UnsupportedOperationException()
     }
 
     private class Executions(private val list: List<ExecutionInfo>) : ExecutionRepository {
-        override suspend fun getExecutionList(startDate: String, endDate: String) = list
+        val requested = mutableListOf<Pair<String, String>>()
+        override suspend fun getExecutionList(startDate: String, endDate: String): List<ExecutionInfo> {
+            requested += startDate to endDate
+            return list
+        }
+    }
+
+    private class Holding(private val holding: HoldingStock) : AccountRepository {
+        override suspend fun getAccountBalance() = AccountStatus("0", "0", "0", "0", listOf(holding))
+        override suspend fun getPresentAccountBalance(): PresentAccountStatus = throw UnsupportedOperationException()
+        override suspend fun getTotalAsset(): TotalAsset = throw UnsupportedOperationException()
+    }
+
+    @Test
+    fun `새벽 정산은 전날(KST) 주문의 체결과 손익만 반영한다`() = runBlocking {
+        val clock = Clock.fixed(ZonedDateTime.of(2026, 11, 17, 6, 20, 0, 0, ZoneId.of("Asia/Seoul")).toInstant(), ZoneId.of("Asia/Seoul"))
+        val histories = BacktestTradeHistoryRepository()
+        histories.save(sell("Y", 80.0).copy(orderTime = LocalDateTime.of(2026, 11, 16, 18, 5), realizedProfitAmount = 100.0))
+        histories.save(sell("OLD", 80.0).copy(orderTime = LocalDateTime.of(2026, 11, 15, 18, 5), realizedProfitAmount = 50.0))
+        val statuses = BacktestInvestmentStatusRepository().apply { initialize(soxl) }
+        val executions = Executions(emptyList())
+        val account = Holding(HoldingStock("SOXL", "SOXL", "125", "85.9906", "0", "0", "10748.83"))
+
+        SyncStrategyUseCase(account, statuses, executions, histories, clock)()
+
+        assertEquals(listOf("20261116" to "20261116"), executions.requested)
+        val after = statuses.get("SOXL")!!
+        assertEquals(soxl.realizedTotalProfit + 100.0, after.realizedTotalProfit)
+        assertEquals("2026-11-17T06:20", after.updatedAt)
     }
 
     @Test

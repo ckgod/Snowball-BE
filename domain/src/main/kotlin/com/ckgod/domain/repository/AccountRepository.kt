@@ -18,10 +18,5 @@ interface AccountRepository {
         return account.holdings.find { it.ticker == ticker }
     }
 
-    /**
-     * 일일 수익 조회
-     */
-    suspend fun getDailyProfit(ticker: String): List<Double>
-
     suspend fun getTotalAsset(): TotalAsset
 }

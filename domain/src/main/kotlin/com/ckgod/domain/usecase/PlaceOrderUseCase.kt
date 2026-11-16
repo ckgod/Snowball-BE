@@ -14,9 +14,10 @@ import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
 import kotlinx.coroutines.CancellationException
+import com.ckgod.domain.utils.systemKstClock
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.Clock
 
 /**
  * 앱에서 직접 넣는 신규 주문.
@@ -29,7 +30,8 @@ class PlaceOrderUseCase(
     private val accountRepository: AccountRepository,
     private val investmentStatusRepository: InvestmentStatusRepository,
     private val tradeHistoryRepository: TradeHistoryRepository,
-    private val rejectionChecker: OrderRejectionChecker
+    private val rejectionChecker: OrderRejectionChecker,
+    private val clock: Clock = systemKstClock
 ) {
     private val logger = LoggerFactory.getLogger(PlaceOrderUseCase::class.java)
 
@@ -109,7 +111,7 @@ class PlaceOrderUseCase(
                     outcome = outcome,
                     tValue = status?.tValue ?: 0.0,
                     sellAvgPrice = if (outcome.request.side == OrderSide.SELL) sellAvgPrice(ticker, status) else 0.0,
-                    orderTime = LocalDateTime.now(ZoneId.of("Asia/Seoul")),
+                    orderTime = LocalDateTime.now(clock),
                     isManual = true,
                     exchangeRejectReason = exchangeRejectReason
                 )

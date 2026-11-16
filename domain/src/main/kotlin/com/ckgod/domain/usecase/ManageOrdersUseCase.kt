@@ -5,9 +5,10 @@ import com.ckgod.domain.model.OrderActionResult
 import com.ckgod.domain.model.OrderStatus
 import com.ckgod.domain.repository.OrderManagementRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
+import com.ckgod.domain.utils.systemKstClock
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.Clock
 
 /**
  * 미체결 주문 조회·정정·취소.
@@ -18,7 +19,8 @@ import java.time.ZoneId
 class ManageOrdersUseCase(
     private val orderManagementRepository: OrderManagementRepository,
     private val tradeHistoryRepository: TradeHistoryRepository,
-    private val rejectionChecker: OrderRejectionChecker
+    private val rejectionChecker: OrderRejectionChecker,
+    private val clock: Clock = systemKstClock
 ) {
     private val logger = LoggerFactory.getLogger(ManageOrdersUseCase::class.java)
 
@@ -55,7 +57,7 @@ class ManageOrdersUseCase(
                 val origin = tradeHistoryRepository.findByOrderNo(order.orderNo) ?: return@recordQuietly
                 // 정정되면 원주문은 사라지고 새 주문번호로 이어진다. 거부면 원주문 기록은 건드리지 않는다.
                 if (rejectReason == null) tradeHistoryRepository.updateStatus(origin.orderNo, OrderStatus.CANCELED)
-                val now = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+                val now = LocalDateTime.now(clock)
                 tradeHistoryRepository.save(
                     origin.copy(
                         id = 0,
