@@ -131,7 +131,8 @@ class BacktestUseCase(
                         totalInvested = updatedHolding?.investedAmount?.toDoubleOrNull() ?: 0.0,
                         avgPrice = updatedHolding?.avgPrice?.toDoubleOrNull() ?: 0.0,
                         quantity = updatedHolding?.quantity?.toDoubleOrNull()?.toInt() ?: 0,
-                        dailyProfit = dailyProfit
+                        dailyProfit = dailyProfit,
+                        updatedAt = java.time.LocalDateTime.now()
                     )
                     backtestStatusRepo.save(updatedStatus)
 

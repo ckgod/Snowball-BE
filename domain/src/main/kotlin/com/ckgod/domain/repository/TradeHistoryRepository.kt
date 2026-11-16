@@ -2,6 +2,7 @@ package com.ckgod.domain.repository
 
 import com.ckgod.domain.model.OrderStatus
 import com.ckgod.domain.model.TradeHistory
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
@@ -55,8 +56,6 @@ interface TradeHistoryRepository {
      */
     suspend fun findPendingOrders(): List<TradeHistory>
 
-    /**
-     * 어제 날짜에 주문된 내역 조회
-     */
-    suspend fun findByYesterdayOrderTime(ticker: String): List<TradeHistory>
+    /** 주문 시각이 [date] 하루(KST) 안인 내역 */
+    suspend fun findByOrderDate(ticker: String, date: LocalDate): List<TradeHistory>
 }

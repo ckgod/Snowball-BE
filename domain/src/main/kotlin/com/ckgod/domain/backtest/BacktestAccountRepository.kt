@@ -45,8 +45,6 @@ class BacktestAccountRepository(
         )
     }
 
-    override suspend fun getDailyProfit(ticker: String): List<Double> = emptyList()
-
     override suspend fun getTotalAsset(): TotalAsset = TotalAsset(assets = emptyList())
 
     fun updateHolding(ticker: String, quantity: Int, avgPrice: Double, investedAmount: Double) {

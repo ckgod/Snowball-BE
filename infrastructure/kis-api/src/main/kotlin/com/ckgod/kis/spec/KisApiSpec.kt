@@ -78,34 +78,6 @@ sealed class KisApiSpec(
         )
     }
 
-    data object InquirePeriodProfit : KisApiSpec(
-        method = HttpMethod.Get,
-        path = "/uapi/overseas-stock/v1/trading/inquire-period-profit",
-        realTrId = "TTTS3039R",
-        mockTrId = "모의투자 미지원",
-        description = "해외주식 기간손익"
-    ) {
-        fun buildQuery(
-            accountNo: String,
-            accountCode: String,
-            startDate: String,
-            endDate: String,
-            overseaCurrency: String = "01"
-        ): Map<String, String> = mapOf(
-            "CANO" to accountNo,
-            "ACNT_PRDT_CD" to accountCode,
-            "INQR_STRT_DT" to startDate,
-            "INQR_END_DT" to endDate,
-            "WCRC_FRCR_DVSN_CD" to overseaCurrency, // 원화 외화 구분 코드
-            "OVRS_EXCG_CD" to "NASD", // 해외 거래소 코드
-            "NATN_CD" to "", // 국가 코드
-            "CRCY_CD" to "USD", // 통화 코드
-            "PDNO" to "",
-            "CTX_AREA_FK200" to "",
-            "CTX_AREA_NK200" to ""
-        )
-    }
-
     data object BuyOrder : KisApiSpec(
         method = HttpMethod.Post,
         path = "/uapi/overseas-stock/v1/trading/order",

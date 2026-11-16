@@ -31,7 +31,6 @@ class PlaceStrategyOrdersUseCaseTest {
         override suspend fun getAccountBalance(): AccountStatus = throw UnsupportedOperationException()
         override suspend fun getBalance(ticker: String) = HoldingStock(ticker, ticker, "16", "146.08", "126", "-13", "2337")
         override suspend fun getPresentAccountBalance(): PresentAccountStatus = throw UnsupportedOperationException()
-        override suspend fun getDailyProfit(ticker: String): List<Double> = emptyList()
         override suspend fun getTotalAsset(): TotalAsset = throw UnsupportedOperationException()
     }
 

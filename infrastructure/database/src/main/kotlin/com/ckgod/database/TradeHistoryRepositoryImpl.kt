@@ -117,16 +117,15 @@ class TradeHistoryRepositoryImpl : TradeHistoryRepository {
             .map { it.toTradeHistory() }
     }
 
-    override suspend fun findByYesterdayOrderTime(ticker: String): List<TradeHistory> = transaction {
-        val yesterday = LocalDate.now().minusDays(1)
-        val yesterdayStart = yesterday.atStartOfDay()
-        val yesterdayEnd = yesterday.plusDays(1).atStartOfDay()
+    override suspend fun findByOrderDate(ticker: String, date: LocalDate): List<TradeHistory> = transaction {
+        val dayStart = date.atStartOfDay()
+        val dayEnd = date.plusDays(1).atStartOfDay()
 
         TradeHistoryTable.selectAll()
             .where {
                 (TradeHistoryTable.ticker eq ticker) and
-                (TradeHistoryTable.orderTime greaterEq yesterdayStart) and
-                (TradeHistoryTable.orderTime less yesterdayEnd)
+                (TradeHistoryTable.orderTime greaterEq dayStart) and
+                (TradeHistoryTable.orderTime less dayEnd)
             }
             .orderBy(TradeHistoryTable.orderTime to SortOrder.DESC)
             .map { it.toTradeHistory() }

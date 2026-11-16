@@ -3,6 +3,7 @@ package com.ckgod.domain.backtest
 import com.ckgod.domain.model.OrderStatus
 import com.ckgod.domain.model.TradeHistory
 import com.ckgod.domain.repository.TradeHistoryRepository
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class BacktestTradeHistoryRepository : TradeHistoryRepository {
@@ -73,9 +74,8 @@ class BacktestTradeHistoryRepository : TradeHistoryRepository {
         return pendingIndexes.map { histories[it] }
     }
 
-    override suspend fun findByYesterdayOrderTime(ticker: String): List<TradeHistory> {
-        return emptyList()
-    }
+    override suspend fun findByOrderDate(ticker: String, date: LocalDate): List<TradeHistory> =
+        histories.filter { it.ticker == ticker && it.orderTime.toLocalDate() == date }
 
     fun getAllHistories(): List<TradeHistory> = histories.toList()
 }

@@ -1,10 +1,12 @@
 package com.ckgod.domain.usecase
 
 import com.ckgod.domain.repository.ExecutionRepository
-import com.ckgod.domain.utils.today
-import com.ckgod.domain.utils.yesterday
+import com.ckgod.domain.utils.systemKstClock
+import com.ckgod.domain.utils.toKisDate
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
+import java.time.Clock
+import java.time.LocalDate
 
 /**
  * 접수된 주문이 직후 거래소에서 거부됐는지 확인한다.
@@ -17,7 +19,8 @@ import org.slf4j.LoggerFactory
  */
 class OrderRejectionChecker(
     private val executionRepository: ExecutionRepository,
-    private val waitMillis: Long = 3_000
+    private val waitMillis: Long = 3_000,
+    private val clock: Clock = systemKstClock
 ) {
     private val logger = LoggerFactory.getLogger(OrderRejectionChecker::class.java)
 
@@ -29,7 +32,8 @@ class OrderRejectionChecker(
         delay(waitMillis)
         return try {
             // 자정 전후 주문도 잡도록 어제~오늘 주문일을 함께 본다
-            executionRepository.getExecutionList(startDate = yesterday(), endDate = today())
+            val today = LocalDate.now(clock)
+            executionRepository.getExecutionList(startDate = today.minusDays(1).toKisDate(), endDate = today.toKisDate())
                 .filter { it.orderNo in targets }
                 .mapNotNull { execution -> execution.rejectReason?.let { execution.orderNo to describeRejection(it) } }
                 .toMap()

@@ -2,8 +2,6 @@ package com.ckgod.kis.api
 
 import com.ckgod.domain.model.OrderRequest
 import com.ckgod.domain.model.OrderSide
-import com.ckgod.domain.utils.beforeDay
-import com.ckgod.domain.utils.yesterday
 import com.ckgod.kis.KisApiClient
 import com.ckgod.kis.KisOrderRejectedException
 import com.ckgod.kis.KisResponseWithHeaders
@@ -11,7 +9,6 @@ import com.ckgod.kis.spec.KisApiSpec
 import com.ckgod.kis.request.KisModifyCancelRequest
 import com.ckgod.kis.request.KisOrderRequest
 import com.ckgod.kis.response.KisBalanceResponse
-import com.ckgod.kis.response.KisDateProfitResponse
 import com.ckgod.kis.response.KisExecutionResponse
 import com.ckgod.kis.response.KisOpenOrderResponse
 import com.ckgod.kis.response.KisOrderResponse
@@ -64,22 +61,6 @@ class KisApiService(private val apiClient: KisApiClient) {
             throw KisOrderRejectedException(response.messageCode, response.message)
         }
         return response
-    }
-
-    suspend fun getRecentDayProfit(): KisDateProfitResponse {
-        val spec = KisApiSpec.InquirePeriodProfit
-
-        val queryParams = spec.buildQuery(
-            accountNo = apiClient.config.accountNo,
-            accountCode = apiClient.config.accountCode,
-            startDate = beforeDay(3),
-            endDate = yesterday()
-        )
-
-        return apiClient.request<KisDateProfitResponse, Unit>(
-            spec = spec,
-            queryParams = queryParams
-        )
     }
 
     /**
@@ -148,8 +129,8 @@ class KisApiService(private val apiClient: KisApiClient) {
     }
 
     suspend fun getExecution(
-        startDate: String = yesterday(),
-        endDate: String = yesterday(),
+        startDate: String,
+        endDate: String,
         trCont: String = "",
         fKey: String = "",
         nKey: String = ""
