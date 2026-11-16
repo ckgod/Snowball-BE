@@ -127,7 +127,7 @@ class PlaceOrderUseCase(
      */
     private suspend fun sellAvgPrice(ticker: String, status: InvestmentStatus?): Double {
         val accountAvg = try {
-            accountRepository.getBalance(ticker)?.avgPrice?.toDoubleOrNull()
+            accountRepository.getBalance(ticker)?.avgPrice
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

@@ -21,11 +21,11 @@ data class KisPresentBalanceResponse(
             HoldingStock(
                 ticker = item.productNumber,
                 name = item.productName,
-                quantity = item.executedQuantityTotal.ifEmpty { "0" },
-                avgPrice = item.averageUnitPrice.ifEmpty { "0.0" },
-                investedAmount = item.foreignPurchaseAmount.ifEmpty { "0.0" },
-                currentPrice = item.overseasCurrentPrice.ifEmpty { "0.0" },
-                profitRate = item.evaluationProfitLossRate.ifEmpty { "0.0" }
+                quantity = item.executedQuantityTotal.kisNumber(),
+                avgPrice = item.averageUnitPrice.kisNumber(),
+                investedAmount = item.foreignPurchaseAmount.kisNumber(),
+                currentPrice = item.overseasCurrentPrice.kisNumber(),
+                profitRate = item.evaluationProfitLossRate.kisNumber()
             )
         }
         val usdAccount = currencyDetails.firstOrNull()

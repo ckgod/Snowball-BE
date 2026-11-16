@@ -60,8 +60,8 @@ class PlaceStrategyOrdersUseCase(
         }
 
         val holding = accountRepository.getBalance(ticker)
-        val currentQuantity = holding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
-        val currentAvgPrice = holding?.avgPrice?.toDoubleOrNull() ?: 0.0
+        val currentQuantity = holding?.quantity?.toInt() ?: 0
+        val currentAvgPrice = holding?.avgPrice ?: 0.0
 
         val plan = OrderPlanner.plan(status, basePrice, marketPrice?.price?.toDoubleOrNull(), currentQuantity)
         plan.notes.forEach { logger.info("[PlaceStrategyOrders] [$ticker] $it") }

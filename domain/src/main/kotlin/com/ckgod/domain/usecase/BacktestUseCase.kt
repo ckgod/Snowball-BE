@@ -104,9 +104,9 @@ class BacktestUseCase(
                     )
 
                     val holding = backtestAccountRepo.getHolding(request.ticker)
-                    val currentQty = holding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
-                    val currentAvgPrice = holding?.avgPrice?.toDoubleOrNull() ?: 0.0
-                    val currentInvested = holding?.investedAmount?.toDoubleOrNull() ?: 0.0
+                    val currentQty = holding?.quantity?.toInt() ?: 0
+                    val currentAvgPrice = holding?.avgPrice ?: 0.0
+                    val currentInvested = holding?.investedAmount ?: 0.0
 
                     var dailyProfit = 0.0
 
@@ -128,9 +128,9 @@ class BacktestUseCase(
                     val updatedHolding = backtestAccountRepo.getHolding(request.ticker)
                     val updatedStatus = currentStatus.updateFromAccount(
                         name = request.ticker,
-                        totalInvested = updatedHolding?.investedAmount?.toDoubleOrNull() ?: 0.0,
-                        avgPrice = updatedHolding?.avgPrice?.toDoubleOrNull() ?: 0.0,
-                        quantity = updatedHolding?.quantity?.toDoubleOrNull()?.toInt() ?: 0,
+                        totalInvested = updatedHolding?.investedAmount ?: 0.0,
+                        avgPrice = updatedHolding?.avgPrice ?: 0.0,
+                        quantity = updatedHolding?.quantity?.toInt() ?: 0,
                         dailyProfit = dailyProfit,
                         updatedAt = java.time.LocalDateTime.now()
                     )
@@ -173,9 +173,9 @@ class BacktestUseCase(
                     status = currentStatus,
                     basePrice = today.close,
                     livePrice = today.close,
-                    currentQuantity = holding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
+                    currentQuantity = holding?.quantity?.toInt() ?: 0
                 )
-                val sellAvgPrice = holding?.avgPrice?.toDoubleOrNull() ?: 0.0
+                val sellAvgPrice = holding?.avgPrice ?: 0.0
                 (plan.sellOrders + plan.buyOrders).forEach { order ->
                     val accepted = OrderResponse(order, orderNo = "BT-${orderSequence++}", orderTime = today.date.toString())
                     backtestHistoryRepo.save(TradeHistory.of(accepted, currentStatus.tValue, sellAvgPrice, java.time.LocalDateTime.now()))
@@ -185,16 +185,16 @@ class BacktestUseCase(
 
             val snapshotStatus = backtestStatusRepo.get(request.ticker)
             val snapshotHolding = backtestAccountRepo.getHolding(request.ticker)
-            val qty = snapshotHolding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
+            val qty = snapshotHolding?.quantity?.toInt() ?: 0
             dailySnapshots.add(
                 DailySnapshot(
                     date = today.date,
                     closePrice = today.close.roundTo2Decimal(),
                     quantity = qty,
-                    avgPrice = snapshotHolding?.avgPrice?.toDoubleOrNull() ?: 0.0,
+                    avgPrice = snapshotHolding?.avgPrice ?: 0.0,
                     tValue = snapshotStatus?.tValue ?: 0.0,
                     starPercent = snapshotStatus?.starPercent ?: 0.0,
-                    totalInvested = snapshotHolding?.investedAmount?.toDoubleOrNull() ?: 0.0,
+                    totalInvested = snapshotHolding?.investedAmount ?: 0.0,
                     portfolioValue = (qty * today.close).roundTo2Decimal(),
                     availableCash = backtestAccountRepo.availableCash.roundTo2Decimal()
                 )
@@ -203,9 +203,9 @@ class BacktestUseCase(
 
         val finalStatus = backtestStatusRepo.get(request.ticker)
         val finalHolding = backtestAccountRepo.getHolding(request.ticker)
-        val finalQty = finalHolding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
-        val finalAvgPrice = finalHolding?.avgPrice?.toDoubleOrNull() ?: 0.0
-        val finalInvested = finalHolding?.investedAmount?.toDoubleOrNull() ?: 0.0
+        val finalQty = finalHolding?.quantity?.toInt() ?: 0
+        val finalAvgPrice = finalHolding?.avgPrice ?: 0.0
+        val finalInvested = finalHolding?.investedAmount ?: 0.0
         val lastPrice = priceData.last().close
         val unrealizedProfit = if (finalQty > 0) ((lastPrice - finalAvgPrice) * finalQty).roundTo2Decimal() else 0.0
         val realizedProfit = finalStatus?.realizedTotalProfit ?: 0.0

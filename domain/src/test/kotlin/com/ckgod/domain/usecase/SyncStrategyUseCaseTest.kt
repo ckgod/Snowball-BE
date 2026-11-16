@@ -50,7 +50,7 @@ class SyncStrategyUseCaseTest {
         histories.save(sell("OLD", 80.0).copy(orderTime = LocalDateTime.of(2026, 11, 15, 18, 5), realizedProfitAmount = 50.0))
         val statuses = BacktestInvestmentStatusRepository().apply { initialize(soxl) }
         val executions = Executions(emptyList())
-        val account = Holding(HoldingStock("SOXL", "SOXL", "125", "85.9906", "0", "0", "10748.83"))
+        val account = Holding(HoldingStock("SOXL", "SOXL", 125.0, 85.9906, 0.0, 0.0, 10748.83))
 
         SyncStrategyUseCase(account, statuses, executions, histories, clock)()
 
