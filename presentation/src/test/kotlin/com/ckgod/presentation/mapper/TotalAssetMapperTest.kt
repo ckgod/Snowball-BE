@@ -69,8 +69,8 @@ class TotalAssetMapperTest {
     fun `보유 종목을 시세로 다시 평가한다`() {
         val status = executed.copy(
             holdings = listOf(
-                HoldingStock("SOXL", "SOXL", "20", "55.0", "50.0", "-9.09", "1100.0"),
-                HoldingStock("TQQQ", "TQQQ", "2", "40.0", "45.0", "12.5", "80.0"),
+                HoldingStock("SOXL", "SOXL", 20.0, 55.0, 50.0, -9.09, 1100.0),
+                HoldingStock("TQQQ", "TQQQ", 2.0, 40.0, 45.0, 12.5, 80.0),
             ),
             totalBuyingValueUsd = 1180.0,
         )
@@ -78,9 +78,9 @@ class TotalAssetMapperTest {
         val repriced = TotalAssetMapper.repriced(status, mapOf("SOXL" to 60.0))
 
         val soxl = repriced.holdings.first { it.ticker == "SOXL" }
-        assertEquals("60.0", soxl.currentPrice)
-        assertEquals("9.09", soxl.profitRate)
-        assertEquals("45.0", repriced.holdings.first { it.ticker == "TQQQ" }.currentPrice)
+        assertEquals(60.0, soxl.currentPrice)
+        assertEquals(9.09, soxl.profitRate)
+        assertEquals(45.0, repriced.holdings.first { it.ticker == "TQQQ" }.currentPrice)
         assertEquals(1290.0, repriced.totalEvalValueUsd)
         assertEquals(110.0, repriced.totalProfitUsd)
         assertEquals(1790.0, repriced.totalAssetValueUsd)

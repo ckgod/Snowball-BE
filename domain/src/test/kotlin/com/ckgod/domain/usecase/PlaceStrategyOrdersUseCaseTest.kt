@@ -29,7 +29,7 @@ class PlaceStrategyOrdersUseCaseTest {
 
     private val account = object : AccountRepository {
         override suspend fun getAccountBalance(): AccountStatus = throw UnsupportedOperationException()
-        override suspend fun getBalance(ticker: String) = HoldingStock(ticker, ticker, "16", "146.08", "126", "-13", "2337")
+        override suspend fun getBalance(ticker: String) = HoldingStock(ticker, ticker, 16.0, 146.08, 126.0, -13.0, 2337.0)
         override suspend fun getPresentAccountBalance(): PresentAccountStatus = throw UnsupportedOperationException()
         override suspend fun getTotalAsset(): TotalAsset = throw UnsupportedOperationException()
     }

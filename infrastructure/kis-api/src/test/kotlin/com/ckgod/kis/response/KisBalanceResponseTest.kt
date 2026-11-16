@@ -31,6 +31,17 @@ class KisBalanceResponseTest {
     }
 
     @Test
+    fun `숫자가 아닌 값은 0 이 아니라 예외다`() {
+        val body = """
+            {"rt_cd":"0","msg_cd":"","msg1":"",
+             "output1":[{"ovrs_pdno":"SOXL","ovrs_item_name":"S","ovrs_cblc_qty":"125","pchs_avg_pric":"N/A",
+                         "frcr_pchs_amt1":"1","ovrs_stck_evlu_amt":"1","frcr_evlu_pfls_amt":"0","evlu_pfls_rt":"0","now_pric2":"1"}]}
+        """.trimIndent()
+
+        assertFailsWith<NumberFormatException> { json.decodeFromString<KisBalanceResponse>(body).toDomain() }
+    }
+
+    @Test
     fun `성공 응답에 보유 종목이 없으면 빈 목록이다`() {
         val body = """{"rt_cd":"0","msg_cd":"KIOK0510","msg1":"조회가 완료되었습니다","output1":[],"output2":null}"""
 
@@ -52,8 +63,8 @@ class KisBalanceResponseTest {
         val holding = json.decodeFromString<KisBalanceResponse>(body).toDomain().holdings.single()
 
         assertEquals("SOXL", holding.ticker)
-        assertEquals("125", holding.quantity)
-        assertEquals("85.9906", holding.avgPrice)
-        assertEquals("10748.83", holding.investedAmount)
+        assertEquals(125.0, holding.quantity)
+        assertEquals(85.9906, holding.avgPrice)
+        assertEquals(10748.83, holding.investedAmount)
     }
 }

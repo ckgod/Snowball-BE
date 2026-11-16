@@ -27,11 +27,11 @@ data class KisBalanceResponse(
             HoldingStock(
                 ticker = item.ticker,
                 name = item.itemName,
-                quantity = item.quantity.ifEmpty { "0" },
-                avgPrice = item.avgPrice.ifEmpty { "0.0" },
-                investedAmount = item.purchaseAmt.ifEmpty { "0.0" },
-                currentPrice = item.currentPrice.ifEmpty { "0.0" },
-                profitRate = item.profitRate.ifEmpty { "0.0" }
+                quantity = item.quantity.kisNumber(),
+                avgPrice = item.avgPrice.kisNumber(),
+                investedAmount = item.purchaseAmt.kisNumber(),
+                currentPrice = item.currentPrice.kisNumber(),
+                profitRate = item.profitRate.kisNumber()
             )
         }
 

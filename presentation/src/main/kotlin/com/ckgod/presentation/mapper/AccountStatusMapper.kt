@@ -48,15 +48,13 @@ object TotalAssetMapper {
         if (prices.isEmpty()) return status
         val holdings = status.holdings.map { holding ->
             val price = prices[holding.ticker] ?: return@map holding
-            val avg = holding.avgPrice.toDoubleOrNull() ?: 0.0
+            val avg = holding.avgPrice
             holding.copy(
-                currentPrice = price.toString(),
-                profitRate = if (avg > 0) ((price - avg) / avg * 100).roundTo2Decimal().toString() else holding.profitRate
+                currentPrice = price,
+                profitRate = if (avg > 0) ((price - avg) / avg * 100).roundTo2Decimal() else holding.profitRate
             )
         }
-        val evaluation = holdings.sumOf {
-            (it.quantity.toDoubleOrNull() ?: 0.0) * (it.currentPrice.toDoubleOrNull() ?: 0.0)
-        }
+        val evaluation = holdings.sumOf { it.quantity * it.currentPrice }
         val profit = evaluation - status.totalBuyingValueUsd
         return status.copy(
             totalAssetValueUsd = (status.orderableCashUsd + evaluation).roundTo2Decimal(),
@@ -127,11 +125,11 @@ object HoldingStockMapper {
         return HoldingStockResponse(
             ticker = stock.ticker,
             name = stock.name,
-            quantity = stock.quantity.toDouble().toInt(),
-            avgPrice = stock.avgPrice.toDouble().roundTo2Decimal(),
-            currentPrice = stock.currentPrice.toDouble().roundTo2Decimal(),
-            profitRate = stock.profitRate.toDouble().roundTo2Decimal(),
-            investedAmount = stock.investedAmount.toDouble().roundTo2Decimal(),
+            quantity = stock.quantity.toInt(),
+            avgPrice = stock.avgPrice.roundTo2Decimal(),
+            currentPrice = stock.currentPrice.roundTo2Decimal(),
+            profitRate = stock.profitRate.roundTo2Decimal(),
+            investedAmount = stock.investedAmount.roundTo2Decimal(),
             capital = capital
         )
     }

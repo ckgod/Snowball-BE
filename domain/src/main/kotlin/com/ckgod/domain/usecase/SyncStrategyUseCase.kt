@@ -92,9 +92,9 @@ class SyncStrategyUseCase(
             logger.warn("[SyncStrategy] [$ticker] 계좌에 보유 종목 없음")
         }
 
-        val totalInvested = balance?.investedAmount?.toDoubleOrNull() ?: 0.0
-        val avgPrice = balance?.avgPrice?.toDoubleOrNull() ?: 0.0
-        val quantity = balance?.quantity?.toDoubleOrNull()?.toInt() ?: 0
+        val totalInvested = balance?.investedAmount ?: 0.0
+        val avgPrice = balance?.avgPrice ?: 0.0
+        val quantity = balance?.quantity?.toInt() ?: 0
 
         val dailyProfit = historyRepository.findByOrderDate(ticker, orderDate).sumOf { history ->
             history.realizedProfitAmount

@@ -51,14 +51,15 @@ class BacktestAccountRepository(
         if (quantity <= 0) {
             holdings.remove(ticker)
         } else {
+            // KIS 잔고처럼 평단·매수액을 소수 둘째 자리까지만 들고 있는다
             holdings[ticker] = HoldingStock(
                 ticker = ticker,
                 name = ticker,
-                quantity = quantity.toString(),
-                avgPrice = "%.2f".format(avgPrice),
-                currentPrice = "0",
-                profitRate = "0",
-                investedAmount = "%.2f".format(investedAmount)
+                quantity = quantity.toDouble(),
+                avgPrice = "%.2f".format(avgPrice).toDouble(),
+                currentPrice = 0.0,
+                profitRate = 0.0,
+                investedAmount = "%.2f".format(investedAmount).toDouble()
             )
         }
     }
