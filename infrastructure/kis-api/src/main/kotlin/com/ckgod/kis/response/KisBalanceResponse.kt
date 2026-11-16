@@ -2,6 +2,7 @@ package com.ckgod.kis.response
 
 import com.ckgod.domain.model.AccountStatus
 import com.ckgod.domain.model.HoldingStock
+import com.ckgod.kis.KisApiException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -9,12 +10,20 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class KisBalanceResponse(
     @SerialName("rt_cd") val returnCode: String,
+    @SerialName("msg_cd") val messageCode: String = "",
     @SerialName("msg1") val message: String,
-    @SerialName("output1") val holdings: List<KisHoldingItem>?, // 보유 종목 리스트
-    @SerialName("output2") val summary: KisAccountSummary?      // 계좌 전체 현황
+    @SerialName("output1") val holdings: List<KisHoldingItem>? = null, // 보유 종목 리스트
+    @SerialName("output2") val summary: KisAccountSummary? = null      // 계좌 전체 현황
 ) {
+    /**
+     * 조회 실패면 예외를 던진다. 실패를 "보유 종목 없음"으로 바꾸면
+     * 정산이 평단·누적 매수액을 0으로 덮어써 다음 주문이 첫 진입으로 나간다.
+     */
     fun toDomain(): AccountStatus {
-        val holdingList = this.holdings?.map { item ->
+        if (returnCode != "0") {
+            throw KisApiException("잔고 조회 실패 [$messageCode] $message")
+        }
+        val holdingList = holdings.orEmpty().map { item ->
             HoldingStock(
                 ticker = item.ticker,
                 name = item.itemName,
@@ -24,7 +33,7 @@ data class KisBalanceResponse(
                 currentPrice = item.currentPrice.ifEmpty { "0.0" },
                 profitRate = item.profitRate.ifEmpty { "0.0" }
             )
-        } ?: emptyList()
+        }
 
         val summaryItem = this.summary
 

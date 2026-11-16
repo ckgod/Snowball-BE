@@ -1,6 +1,7 @@
 package com.ckgod.domain.usecase
 
 import com.ckgod.domain.model.Exchange
+import com.ckgod.domain.model.InvestmentStatus
 import com.ckgod.domain.model.OrderActionResult
 import com.ckgod.domain.model.OrderRequest
 import com.ckgod.domain.model.OrderSide
@@ -11,6 +12,7 @@ import com.ckgod.domain.repository.AccountRepository
 import com.ckgod.domain.repository.InvestmentStatusRepository
 import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.repository.TradeHistoryRepository
+import kotlinx.coroutines.CancellationException
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -99,10 +101,7 @@ class PlaceOrderUseCase(
     private suspend fun record(request: OrderRequest, orderNo: String?, failReason: String?, rejected: Boolean) {
         try {
             val status = investmentStatusRepository.get(request.ticker)
-            // 매도 체결 시 실현 손익 계산에 쓰는 평단 (자동 주문과 같은 규칙)
-            val avgPrice = if (request.side == OrderSide.SELL) {
-                accountRepository.getBalance(request.ticker)?.avgPrice?.toDoubleOrNull() ?: 0.0
-            } else 0.0
+            val avgPrice = if (request.side == OrderSide.SELL) sellAvgPrice(request.ticker, status) else 0.0
 
             tradeHistoryRepository.save(
                 TradeHistory(
@@ -123,5 +122,21 @@ class PlaceOrderUseCase(
         } catch (e: Exception) {
             logger.error("[PlaceOrder] ${request.ticker} 주문 기록 실패 (KIS 처리 결과와 무관)", e)
         }
+    }
+
+    /**
+     * 매도 체결 시 실현 손익 계산에 쓰는 평단. 잔고 조회가 실패해도 주문 기록은 남겨야 하므로
+     * 마지막 정산 평단으로 대신한다.
+     */
+    private suspend fun sellAvgPrice(ticker: String, status: InvestmentStatus?): Double {
+        val accountAvg = try {
+            accountRepository.getBalance(ticker)?.avgPrice?.toDoubleOrNull()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logger.warn("[PlaceOrder] $ticker 잔고 조회 실패 - 정산 평단으로 기록: ${e.message}")
+            null
+        }
+        return accountAvg ?: status?.avgPrice ?: 0.0
     }
 }
