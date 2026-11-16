@@ -8,7 +8,7 @@ val serviceModule = module {
     single {
         SchedulerService(
             syncStrategyUseCase = get(),
-            generateOrdersUseCase = get()
+            placeStrategyOrdersUseCase = get()
         )
     }
 }

@@ -32,6 +32,44 @@ data class TradeHistory(
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
+    companion object {
+        /**
+         * 주문 한 건의 전송 결과를 기록으로 만든다. 자동·수동 주문이 같은 규칙을 쓴다.
+         *
+         * - 접수: PENDING. [exchangeRejectReason] 이 있으면 주문번호를 받은 뒤 거래소가 거부한 것이라 REJECTED
+         * - 접수 실패: 주문번호 없이 REJECTED. 체결 동기화는 주문번호로만 갱신하므로 이 행은 건드리지 않는다
+         * - 매도는 체결 시 실현 손익 계산에 쓰도록 [sellAvgPrice] 를 남긴다
+         */
+        fun of(
+            outcome: OrderOutcome,
+            tValue: Double,
+            sellAvgPrice: Double,
+            orderTime: LocalDateTime,
+            isManual: Boolean = false,
+            exchangeRejectReason: String? = null
+        ): TradeHistory {
+            val request = outcome.request
+            val (orderNo, failReason) = when (outcome) {
+                is OrderResponse -> outcome.orderNo to exchangeRejectReason
+                is OrderRejection -> "" to outcome.reason
+            }
+            return TradeHistory(
+                ticker = request.ticker,
+                orderNo = orderNo,
+                orderSide = request.side,
+                orderType = request.type,
+                orderPrice = request.price,
+                orderQuantity = request.quantity,
+                orderTime = orderTime,
+                crashRate = request.crashRate,
+                status = if (failReason == null) OrderStatus.PENDING else OrderStatus.REJECTED,
+                avgPrice = if (request.side == OrderSide.SELL) sellAvgPrice else 0.0,
+                failReason = failReason,
+                isManual = isManual,
+                tValue = tValue
+            )
+        }
+    }
 }
 
 /**

@@ -1,6 +1,6 @@
 package com.ckgod.scheduler
 
-import com.ckgod.domain.usecase.GenerateOrdersUseCase
+import com.ckgod.domain.usecase.PlaceStrategyOrdersUseCase
 import com.ckgod.domain.usecase.SyncStrategyUseCase
 import org.quartz.*
 import org.quartz.impl.StdSchedulerFactory
@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
  */
 class SchedulerService(
     private val syncStrategyUseCase: SyncStrategyUseCase,
-    private val generateOrdersUseCase: GenerateOrdersUseCase
+    private val placeStrategyOrdersUseCase: PlaceStrategyOrdersUseCase
 ) {
     private val logger = LoggerFactory.getLogger(SchedulerService::class.java)
     private lateinit var scheduler: Scheduler
@@ -28,7 +28,7 @@ class SchedulerService(
         scheduler.setJobFactory { bundle, _ ->
             when {
                 bundle.jobDetail.key.name.startsWith("syncJob") -> SyncJob(syncStrategyUseCase)
-                bundle.jobDetail.key.name.startsWith("orderJob") -> OrderJob(generateOrdersUseCase)
+                bundle.jobDetail.key.name.startsWith("orderJob") -> OrderJob(placeStrategyOrdersUseCase)
                 bundle.jobDetail.key.name.startsWith("stockPriceSyncJob") -> StockPriceSyncJob()
                 else -> throw IllegalArgumentException("Unknown job: ${bundle.jobDetail.key.name}")
             }
