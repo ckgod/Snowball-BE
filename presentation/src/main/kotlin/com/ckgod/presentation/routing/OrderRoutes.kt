@@ -28,7 +28,7 @@ suspend fun RoutingContext.openOrdersRoute(useCase: ManageOrdersUseCase) {
         val orders = useCase.getOpenOrders()
         call.respond(OpenOrdersResponse(orders = orders.map { it.toResponse() }))
     } catch (e: Exception) {
-        e.printStackTrace()
+        routeLogger.error("미체결 조회 실패", e)
         call.respond(HttpStatusCode.BadGateway, mapOf("error" to "미체결 조회 실패: ${e.message}"))
     }
 }

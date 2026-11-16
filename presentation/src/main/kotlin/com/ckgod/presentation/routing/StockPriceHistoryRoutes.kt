@@ -75,8 +75,7 @@ suspend fun RoutingContext.stockPriceHistoryRoutes(
             mapOf("error" to "날짜 형식이 잘못되었습니다 (YYYY-MM-DD)")
         )
     } catch (e: Exception) {
-        println("Error processing stock price history request: ${e.message}")
-        e.printStackTrace()
+        routeLogger.error("가격 기록 요청 처리 실패", e)
         call.respond(
             HttpStatusCode.InternalServerError,
             mapOf("error" to "요청 처리 중 오류가 발생했습니다")
