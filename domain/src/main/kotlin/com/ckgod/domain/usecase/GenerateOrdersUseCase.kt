@@ -44,7 +44,6 @@ class GenerateOrdersUseCase(
 
         logger.info("[GenerateOrders] 대상 종목: ${targets.size}개")
 
-        // 각 종목 주문 생성
         return targets.mapNotNull { status ->
             try {
                 generateSingle(status)
@@ -64,10 +63,7 @@ class GenerateOrdersUseCase(
             return null
         }
 
-        // 주문 기준가는 직전 정규장 종가(previousClose)를 사용한다.
-        // OrderJob(18:00 KST) 시점은 미국 프리마켓 진행 중이라 last(현재가)에 프리장 시세가 반환되는데,
-        // 무한매수법의 폭락 대비 LOC·첫 진입 별% 기준은 전일 정규장 종가여야 한다.
-        // (2026-06-09 SOXL: 프리장 +6.7% 갭업가가 기준이 되어 ladder 3건이 초과 체결된 사례)
+        // 기준가는 전일 정규장 종가다. 주문 시각(18:05 KST)엔 프리장이 열려 있어 현재가가 프리장 시세다.
         val marketPrice = stockRepository.getCurrentPrice(ticker)
         val basePrice = marketPrice?.previousClose?.toDoubleOrNull() ?: 0.0
         if (basePrice == 0.0) {
@@ -80,7 +76,6 @@ class GenerateOrdersUseCase(
         val currentQuantity = holding?.quantity?.toDoubleOrNull()?.toInt() ?: 0
         val currentAvgPrice = holding?.avgPrice?.toDoubleOrNull() ?: 0.0
 
-        // 매도 주문 생성
         val sellOrders = try {
             generateSellOrders(
                 status = currentStatus,
@@ -91,10 +86,8 @@ class GenerateOrdersUseCase(
             throw e
         }
 
-        // 최저 매도 가격 계산 (MOC 주문 제외)
         val minSellPrice = sellOrders.filter { it.price > 0 }.minOfOrNull { it.price } ?: Double.MAX_VALUE
 
-        // 매수 주문 생성
         val buyOrders = try {
             generateBuyOrders(
                 status = currentStatus,
@@ -108,7 +101,6 @@ class GenerateOrdersUseCase(
 
         logger.info("[GenerateOrders] [$ticker] 주문 생성 완료 - 매수: ${buyOrders.size}개, 매도: ${sellOrders.size}개")
 
-        // 주문 API 전송
         val submission = try {
             stockRepository.postOrder(buyOrders, sellOrders)
         } catch (e: Exception) {
@@ -117,7 +109,6 @@ class GenerateOrdersUseCase(
         }
         logger.info("[GenerateOrders] [$ticker] 주문 전송 완료 - 성공: ${submission.accepted.size}개, 실패: ${submission.rejected.size}개")
 
-        // 주문 내역 DB 저장
         submission.accepted.forEach { response ->
             val orderDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
 
@@ -178,7 +169,7 @@ class GenerateOrdersUseCase(
      *
      * 미국 거래소는 호가보다 일정 비율(SOXL 기준 30%) 넘게 높은 매수 지정가를 접수 직후 거부한다.
      * 주가가 평단·별% 기준가보다 크게 떨어지면 별%·평단 LOC 매수가가 이 한도를 넘어
-     * 매일 가장 큰 매수가 빠진다 (2026-10-13~14 SOXL 166.05·164.05 거부, 호가 약 126).
+     * 매일 가장 큰 매수가 빠진다.
      * LOC 는 종가에 체결되므로 상한으로 낮춰도 장중 상한 넘게 오르지 않는 한 결과가 같다.
      *
      * 기준은 전일 종가와 현재 호가 중 낮은 쪽이다 (프리장 하락 시 호가 기준으로 잘린다).
@@ -231,7 +222,6 @@ class GenerateOrdersUseCase(
     ): List<OrderRequest> {
         val orders = mutableListOf<OrderRequest>()
 
-        // 별% LOC 매수 가격
         val rawStarBuyPrice = status.getBuyPrice(basePrice)
 
         val starBuyPrice = if (maxBuyPrice != null && rawStarBuyPrice >= maxBuyPrice) {
@@ -242,17 +232,9 @@ class GenerateOrdersUseCase(
 
         when (status.phase) {
             TradePhase.FRONT_HALF -> {
-                // 첫 진입이 아닐 경우 기본 로직
                 if (status.avgPrice > 0) {
 
-                    // 1. 별% LOC 매수
-                    //
-                    // halfAmount(1회 매수금의 절반)을 기준으로 별% 수량을 결정하되,
-                    // 고가 종목에서 1주조차 못 사 매수가 누락되는 사태를 피하기 위해
-                    // 3단계 우선순위로 fallback 한다. (함수 KDoc의 Case A/B/C 참조)
-                    //   - Case A: 별% 1주 ≤ halfAmount       → 표준: halfAmount / starBuyPrice
-                    //   - Case B: halfAmount < 별% 1주 ≤ oneTimeAmount → 별% 1주 강제
-                    //   - Case C: 별% 1주 > oneTimeAmount    → 별% 포기 (평단가에 전액)
+                    // 별% 수량: KDoc 의 Case A/B/C
                     val halfAmount = status.oneTimeAmount / 2.0
                     val starBuyQty = when {
                         starBuyPrice <= halfAmount -> (halfAmount / starBuyPrice).toInt()
@@ -277,10 +259,6 @@ class GenerateOrdersUseCase(
                         logger.info("[GenerateOrders] [${status.ticker}] 별% 1주 단가(${"%.2f".format(starBuyPrice)})가 1회 매수금(${"%.2f".format(status.oneTimeAmount)}) 초과 - 별% 매수 포기, 평단가에 전액 할당")
                     }
 
-                    // 2. 평단가(0%) LOC 매수
-                    //
-                    // 1회 매수금에서 별% 사용액을 뺀 금액을 평단가 LOC에 모두 할당해
-                    // 매수 기회를 최대화한다. Case C에서는 1회 매수금 전체가 평단가로 들어간다.
                     val remainAmount = status.oneTimeAmount - usedAmountForStar
 
                     val avgBuyPrice = if (maxBuyPrice != null && status.avgPrice >= maxBuyPrice) {
@@ -302,7 +280,6 @@ class GenerateOrdersUseCase(
                         ))
                     }
                 }
-                // 첫 진입일 경우 1회 매수액 전부 소비
                 else {
                     val starBuyQty = (status.oneTimeAmount / starBuyPrice).toInt()
                     if (starBuyQty > 0) {
@@ -318,7 +295,6 @@ class GenerateOrdersUseCase(
                 }
             }
             TradePhase.BACK_HALF -> {
-                // 후반전: 1회 매수액 전체를 별% LOC
                 val fullBuyQty = (status.oneTimeAmount / starBuyPrice).toInt()
                 if (fullBuyQty > 0) {
                     orders.add(OrderRequest(
@@ -369,13 +345,13 @@ class GenerateOrdersUseCase(
     /**
      * 매도 주문 생성
      *
-     * T <= division - 1 인 경우 전후반전 상관없이 공통으로 적용
-     * - 누적수량의 1/4 분량을 별% LOC 매도 시도
-     * - 누적수량의 3/4 분량을 별% 지정가 매도 시도
+     * 전반전·후반전 (T < division - 1)
+     * - 보유 수량의 1/4 을 별% LOC 매도
+     * - 나머지 3/4 를 목표가(targetRate) 지정가 매도
      *
-     * division - 1 < T < division 인 경우 쿼터 손절 기간
-     * - 누적 수량의 1/4 분량을 MOC 매도로 걸어서 무조건 매도를 시도 (쿼터 손절)
-     * - 누적 수량의 3/4 분량을 별% 지정가 매도 시도
+     * 쿼터모드 (division - 1 <= T < division)
+     * - 보유 수량의 1/4 을 MOC 매도 (쿼터 손절)
+     * - 나머지 3/4 를 목표가(targetRate) 지정가 매도
      */
     private fun generateSellOrders(
         status: InvestmentStatus,
@@ -387,15 +363,11 @@ class GenerateOrdersUseCase(
 
         val orders = mutableListOf<OrderRequest>()
 
-        // 수량 계산
         val quarterQty = (currentQuantity / 4.0).toInt()
         val threeQuarterQty = currentQuantity - quarterQty
 
         when(status.phase) {
             TradePhase.FRONT_HALF, TradePhase.BACK_HALF -> {
-                // 일반 매도
-
-                // 1. 1/4 수량을 별% LOC 매도
                 if (quarterQty > 0) {
                     orders.add(OrderRequest(
                         ticker = status.ticker,
@@ -407,7 +379,6 @@ class GenerateOrdersUseCase(
                     ))
                 }
 
-                // 2. 3/4 수량을 목표 지정가 매도
                 if (threeQuarterQty > 0) {
                     orders.add(OrderRequest(
                         ticker = status.ticker,
@@ -420,19 +391,17 @@ class GenerateOrdersUseCase(
                 }
             }
             TradePhase.QUARTER_MODE -> {
-                // 1. 1/4 수량을 MOC 매도 (무조건 매도)
                 if (quarterQty > 0) {
                     orders.add(OrderRequest(
                         ticker = status.ticker,
                         exchange = status.exchange,
                         side = OrderSide.SELL,
                         type = OrderType.MOC,
-                        price = 0.0, // MOC는 가격 불필요
+                        price = 0.0,
                         quantity = quarterQty
                     ))
                 }
 
-                // 2. 3/4 수량을 별% 지정가 매도
                 if (threeQuarterQty > 0) {
                     orders.add(OrderRequest(
                         ticker = status.ticker,

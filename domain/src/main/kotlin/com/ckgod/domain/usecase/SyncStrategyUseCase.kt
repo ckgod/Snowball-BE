@@ -80,7 +80,6 @@ class SyncStrategyUseCase(
     private suspend fun syncSingle(currentStatus: InvestmentStatus): SyncResult? {
         val ticker = currentStatus.ticker
 
-        // 잔고 조회
         val balance = accountRepository.getBalance(ticker)
         if (balance == null) {
             logger.warn("[SyncStrategy] [$ticker] 계좌에 보유 종목 없음")
@@ -90,19 +89,11 @@ class SyncStrategyUseCase(
         val avgPrice = balance?.avgPrice?.toDoubleOrNull() ?: 0.0
         val quantity = balance?.quantity?.toDoubleOrNull()?.toInt() ?: 0
 
-//        val dailyProfit = try {
-//            accountRepository.getDailyProfit(ticker).sum()
-//        } catch (e: Exception) {
-//            logger.error("[SyncStrategy] [$ticker] 일일 수익 조회 실패", e)
-//            throw e
-//        }
-
         val dailyProfit = historyRepository.findByYesterdayOrderTime(ticker).sumOf { history ->
             history.realizedProfitAmount
         }
         logger.info("[SyncStrategy] [$ticker] 일일 수익: $dailyProfit")
 
-        // 상태 업데이트 및 저장
         val updatedStatus = currentStatus.updateFromAccount(
             name = balance?.name,
             totalInvested = totalInvested,

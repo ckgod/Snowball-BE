@@ -56,14 +56,12 @@ class StockPriceSyncJob : Job {
                 redirectErrorStream(true)
             }.start()
 
-            // 스크립트 실행 로그 실시간 출력
             val reader = BufferedReader(InputStreamReader(process.inputStream))
             var line: String?
             while (reader.readLine().also { line = it } != null) {
                 logger.info("[Python] $line")
             }
 
-            // 프로세스 종료 대기 (최대 10분)
             val finished = process.waitFor(10, TimeUnit.MINUTES)
 
             if (!finished) {
