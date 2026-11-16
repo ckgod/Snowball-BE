@@ -4,11 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AccountStatus(
-    val totalPurchaseAmount: String, // 총 매수 금액 (USD)
-    val totalEvaluationAmount: String, // 총 평가 금액 (USD)
-    val totalProfitOrLoss: String, // 총 손익 (USD)
-    val totalProfitRate: String, // 총 수익률 (%)
-    val holdings: List<HoldingStock> // 보유 종목 리스트
+    val holdings: List<HoldingStock>
 )
 
 @Serializable

@@ -3,9 +3,8 @@ package com.ckgod.scheduler
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.slf4j.LoggerFactory
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 
 /**
  * 주식 가격 동기화 Job (매일 오전 5시 실행)
@@ -56,19 +55,20 @@ class StockPriceSyncJob : Job {
                 redirectErrorStream(true)
             }.start()
 
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            var line: String?
-            while (reader.readLine().also { line = it } != null) {
-                logger.info("[Python] $line")
+            // 출력은 따로 읽는다. 여기서 끝까지 읽고 나서 기다리면 스크립트가 멈췄을 때 시간 제한이 걸리지 않는다
+            val output = thread(name = "stock-price-sync-output") {
+                process.inputStream.bufferedReader().forEachLine { logger.info("[Python] $it") }
             }
 
             val finished = process.waitFor(10, TimeUnit.MINUTES)
 
             if (!finished) {
                 logger.error("Python 스크립트가 10분 내에 완료되지 않아 강제 종료합니다.")
-                process.destroy()
+                process.destroyForcibly()
+                output.join(5_000)
                 return
             }
+            output.join()
 
             val exitCode = process.exitValue()
             if (exitCode == 0) {

@@ -37,7 +37,7 @@ class SyncStrategyUseCaseTest {
     }
 
     private class Holding(private val holding: HoldingStock) : AccountRepository {
-        override suspend fun getAccountBalance() = AccountStatus("0", "0", "0", "0", listOf(holding))
+        override suspend fun getAccountBalance() = AccountStatus(listOf(holding))
         override suspend fun getPresentAccountBalance(): PresentAccountStatus = throw UnsupportedOperationException()
         override suspend fun getTotalAsset(): TotalAsset = throw UnsupportedOperationException()
     }

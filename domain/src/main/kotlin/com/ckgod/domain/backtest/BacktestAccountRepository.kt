@@ -22,13 +22,7 @@ class BacktestAccountRepository(
     }
 
     override suspend fun getAccountBalance(): AccountStatus {
-        return AccountStatus(
-            totalPurchaseAmount = "0",
-            totalEvaluationAmount = "0",
-            totalProfitOrLoss = "0",
-            totalProfitRate = "0",
-            holdings = holdings.values.toList()
-        )
+        return AccountStatus(holdings = holdings.values.toList())
     }
 
     override suspend fun getPresentAccountBalance(): PresentAccountStatus {
