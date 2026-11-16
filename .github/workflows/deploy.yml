@@ -21,10 +21,10 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Build with Gradle
+      - name: Test and build
         run: |
           chmod +x gradlew
-          ./gradlew :application:shadowJar -x test
+          ./gradlew test :application:shadowJar
 
       - name: Validate Docker build
         run: |
