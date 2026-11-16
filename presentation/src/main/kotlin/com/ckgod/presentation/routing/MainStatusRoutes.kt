@@ -28,20 +28,7 @@ suspend fun RoutingContext.mainStatusRoute(
             return
         }
 
-        // 현재가 조회 (대시보드: 주간거래 세션 중 실시간 시세 우선)
-        val marketPrice = stockRepository.getCurrentPrice(ticker, includeDayMarket = true)
-        val currentPrice = marketPrice?.price?.toDoubleOrNull() ?: 0.0
-        val dailyChangeRate = marketPrice?.changeRate?.toDoubleOrNull() ?: 0.0
-
-        val response = InvestmentStatusMapper.toResponse(
-            status = status,
-            currentPrice = currentPrice,
-            dailyChangeRate = dailyChangeRate,
-            exchangeRate = marketPrice?.exchangeRate?.toDoubleOrNull(),
-            isDayMarket = marketPrice?.isDayMarket ?: false
-        )
-
-        call.respond(HttpStatusCode.OK, response)
+        call.respond(HttpStatusCode.OK, InvestmentStatusMapper.toResponse(status, stockRepository))
     } else {
         val allStatuses = investmentStatusRepository.findAll()
 
@@ -57,19 +44,7 @@ suspend fun RoutingContext.mainStatusRoute(
         val responses = coroutineScope {
             allStatuses.map { status ->
                 totalProfit += status.realizedTotalProfit
-                async {
-                    val marketPrice = stockRepository.getCurrentPrice(status.ticker, includeDayMarket = true)
-                    val currentPrice = marketPrice?.price?.toDoubleOrNull() ?: 0.0
-                    val dailyChangeRate = marketPrice?.changeRate?.toDoubleOrNull() ?: 0.0
-
-                    InvestmentStatusMapper.toResponse(
-                        status = status,
-                        currentPrice = currentPrice,
-                        dailyChangeRate = dailyChangeRate,
-                        exchangeRate = marketPrice?.exchangeRate?.toDoubleOrNull(),
-                        isDayMarket = marketPrice?.isDayMarket ?: false
-                    )
-                }
+                async { InvestmentStatusMapper.toResponse(status, stockRepository) }
             }.awaitAll()
         }
 

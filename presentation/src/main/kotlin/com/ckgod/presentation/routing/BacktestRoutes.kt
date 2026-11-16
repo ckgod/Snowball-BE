@@ -44,8 +44,7 @@ suspend fun RoutingContext.backtestRoutes(
             mapOf("error" to (e.message ?: "잘못된 요청입니다"))
         )
     } catch (e: Exception) {
-        println("Error processing backtest request: ${e.message}")
-        e.printStackTrace()
+        routeLogger.error("백테스트 요청 처리 실패", e)
         call.respond(
             HttpStatusCode.InternalServerError,
             mapOf("error" to "백테스트 처리 중 오류가 발생했습니다: ${e.message}")

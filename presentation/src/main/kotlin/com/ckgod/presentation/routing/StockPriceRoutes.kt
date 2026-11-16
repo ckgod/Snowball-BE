@@ -28,8 +28,7 @@ suspend fun RoutingContext.stockPriceRoutes(
             mapOf("error" to "잘못된 요청입니다")
         )
     } catch (e: Exception) {
-        println("Error processing stock price request: ${e.message}")
-        e.printStackTrace()
+        routeLogger.error("현재가 요청 처리 실패", e)
         call.respond(
             HttpStatusCode.InternalServerError,
             mapOf("error" to "요청 처리 중 오류가 발생했습니다")

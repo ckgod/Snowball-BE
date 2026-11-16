@@ -24,26 +24,7 @@ class KisApiClient(
         queryParams: Map<String, String> = emptyMap(),
         bodyParams: Body? = null,
         additionalHeaders: Map<String, String>? = null
-    ): T {
-        val token = authService.getAccessToken()
-        val url = "${config.baseUrl}${spec.path}"
-        val trId = spec.getTrId(config.mode)
-
-        val response = when (spec.method) {
-            HttpMethod.Get -> client.get(url) {
-                headers { applyKisHeaders(token, trId, additionalHeaders) }
-                url { queryParams.forEach { (key, value) -> parameters.append(key, value) } }
-            }
-            HttpMethod.Post -> client.post(url) {
-                headers { applyKisHeaders(token, trId, additionalHeaders) }
-                contentType(ContentType.Application.Json)
-                setBody(bodyParams)
-            }
-            else -> throw KisApiException("Unsupported HTTP method: ${spec.method}")
-        }
-
-        return json.decodeFromString<T>(response.bodyAsText())
-    }
+    ): T = requestWithHeaders<T, Body>(spec, queryParams, bodyParams, additionalHeaders).body
 
     internal suspend inline fun <reified T, reified Body> requestWithHeaders(
         spec: KisApiSpec,

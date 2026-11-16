@@ -1,12 +1,25 @@
 package com.ckgod.presentation.mapper
 
 import com.ckgod.domain.model.InvestmentStatus
+import com.ckgod.domain.repository.StockRepository
 import com.ckgod.domain.model.TradePhase as DomainPhase
 import com.ckgod.snowball.model.TradePhase as PresentationPhase
 import com.ckgod.domain.utils.roundTo2Decimal
 import com.ckgod.snowball.model.InvestmentStatusResponse
 
 object InvestmentStatusMapper {
+    /** 현재가를 조회해 응답을 만든다. 화면용이라 주간거래 세션 중엔 주간 시세를 먼저 쓴다 */
+    suspend fun toResponse(status: InvestmentStatus, stockRepository: StockRepository): InvestmentStatusResponse {
+        val marketPrice = stockRepository.getCurrentPrice(status.ticker, includeDayMarket = true)
+        return toResponse(
+            status = status,
+            currentPrice = marketPrice?.price?.toDoubleOrNull() ?: 0.0,
+            dailyChangeRate = marketPrice?.changeRate?.toDoubleOrNull() ?: 0.0,
+            exchangeRate = marketPrice?.exchangeRate?.toDoubleOrNull(),
+            isDayMarket = marketPrice?.isDayMarket ?: false
+        )
+    }
+
     fun toResponse(
         status: InvestmentStatus,
         currentPrice: Double,

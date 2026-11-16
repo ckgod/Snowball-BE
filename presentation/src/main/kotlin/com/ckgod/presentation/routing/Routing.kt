@@ -12,6 +12,9 @@ import com.ckgod.domain.usecase.PlaceOrderUseCase
 import com.ckgod.presentation.config.OrderGuard
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
+import org.slf4j.LoggerFactory
+
+internal val routeLogger = LoggerFactory.getLogger("com.ckgod.presentation.routing")
 
 fun Application.configureRouting(
     getCurrentPriceUseCase: GetCurrentPriceUseCase,
